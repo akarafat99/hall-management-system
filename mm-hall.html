@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+
+    <link href="https://fonts.googleapis.com/css?family=Muli:300,400,700,900" rel="stylesheet">
+    <link rel="stylesheet" href="fonts/icomoon/style.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css">
+    <link rel="stylesheet" href="css/owl.carousel.min.css">
+    <link rel="stylesheet" href="css/owl.theme.default.min.css">
+    <link rel="stylesheet" href="css/owl.theme.default.min.css">
+
+    <link rel="stylesheet" href="css/jquery.fancybox.min.css">
+
+    <link rel="stylesheet" href="css/bootstrap-datepicker.css">
+
+    <link rel="stylesheet" href="fonts/flaticon/font/flaticon.css">
+
+    <link rel="stylesheet" href="css/aos.css">
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .hall-image-wrap {
+            position: relative;
+            width: 100%;
+            height: 90vh;
+        }
+
+        .hall-image-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hall-hero-image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .hall-details-section {
+            padding: 60px 0 80px 0;
+            position: relative;
+        }
+
+        .hall-notice-btn-wrapper {
+            position: sticky;
+            top: 80px;
+        }
+
+        .hall-name {
+            font-size: 3rem;
+            color: #201e1f;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .hall-description-wrapper {
+            max-width: 800px;
+        }
+
+        .hall-benefit-content-wrapper {
+            margin-top: 40px;
+        }
+
+        .hall-key-benefit {
+            font-size: 2rem;
+            color: #201e1f;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .hall-benefit-lists {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .hall-benefit-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .hall-benefit-point {
+            width: 10px;
+            height: 10px;
+            background-color: #201e1f;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+    </style>
+
+
+    <title>JUST Hall</title>
+
+</head>
+
+<body data-spy="scroll" data-target=".site-navbar-target" data-offset="300">
+
+    <div class="site-mobile-menu site-navbar-target">
+        <div class="site-mobile-menu-header">
+            <div class="site-mobile-menu-close mt-3">
+                <span class="icon-close2 js-menu-toggle"></span>
+            </div>
+        </div>
+        <div class="site-mobile-menu-body"></div>
+    </div>
+
+    <header class="site-navbar py-4 js-sticky-header site-navbar-target" role="banner">
+
+        <div class="container-fluid">
+            <div class="d-flex align-items-center">
+                <div class="site-logo mr-auto w-25"><a href="index.html">MM HALL</a></div>
+
+                <div class="mx-auto text-center">
+                    <nav class="site-navigation position-relative text-right" role="navigation">
+                        <ul class="site-menu main-menu js-clone-nav mx-auto d-none d-lg-block  m-0 p-0">
+                            <li><a href="index.html" class="nav-link">Home</a></li>
+                            <li><a href="notice.html" class="nav-link">Notices</a></li>
+                            <li class="nav-item dropdown"><a href="" class="nav-link dropdown-toggle"
+                                    id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+                                    aria-expanded="false">Apply</a>
+
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="#">Hall NOC</a>
+                                    <a class="dropdown-item" href="#">Seat in hall</a>
+                                    <a class="dropdown-item" href="#">Seat change in the hall</a>
+                                </div>
+                            </li>
+                            <li><a href="#" class="nav-link">About Us</a></li>
+                            <li><a href="#" class="nav-link">Contact Us</a></li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <div class="ml-auto w-25">
+                    <nav class="site-navigation position-relative text-right" role="navigation">
+                        <ul class="site-menu main-menu site-menu-dark js-clone-nav mr-auto d-none d-lg-block m-0 p-0">
+                            <!-- <li class="cta"> <a href="#" class="primary-button py-2 px-4">Dashboard</a></li> -->
+                            <li class="nav-item dropdown"><a href="" class="nav-link primary-button dropdown-toggle"
+                                    id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+                                    aria-expanded="false">Dashboard</a>
+
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="Admin Dashboard/Dashbaord.html">View Profile</a>
+                                    <a class="dropdown-item" href="#">My Applications</a>
+                                    <a class="dropdown-item" href="#">JUST Wallet</a>
+                                </div>
+                            </li>
+                        </ul>
+                    </nav>
+                    <a href="#"
+                        class="d-inline-block d-lg-none site-menu-toggle js-menu-toggle text-black float-right"><span
+                            class="icon-menu h3"></span></a>
+                </div>
+            </div>
+        </div>
+
+    </header>
+
+    <!-- Hero hall Image section -->
+    <section class="hall-image-wrap">
+        <div class="hall-hero-image-overlay"></div>
+        <img class="img-fluid" src="./images/hero-bannar.jpg" alt="">
+    </section>
+    <!-- Hero hall Image section -->
+
+    <!-- Hall Details Section Start -->
+    <section class="hall-details-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="hall-details-content-wrapper">
+                        <div class="hall-name-wrapper">
+                            <h1 class="hall-name">MM Hall</h1>
+                        </div>
+                        <div class="hall-contents-wrapper">
+                            <div class="hall-description-wrapper">
+                                <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eius tenetur eveniet quo
+                                    architecto
+                                    eum! Dolor labore ducimus rem libero alias, consequuntur quae eius laboriosam iusto
+                                    ipsam
+                                    similique animi incidunt vitae in voluptas saepe temporibus unde ab quo eligendi!
+                                    Nisi
+                                    deleniti natus optio nam magni eligendi fugiat saepe earum repellat quia?</p>
+                            </div>
+                            <div class="hall-benefit-content-wrapper">
+                                <h2 class="hall-key-benefit">Key Benefits</h2>
+                                <div class="hall-benefit-lists">
+                                    <div class="hall-benefit-item">
+                                        <div class="hall-benefit-point"></div>
+                                        <p>State-of-the-art sound and lighting system</p>
+                                    </div>
+                                    <div class="hall-benefit-item">
+                                        <div class="hall-benefit-point"></div>
+                                        <p>State-of-the-art sound and lighting system</p>
+                                    </div>
+                                    <div class="hall-benefit-item">
+                                        <div class="hall-benefit-point"></div>
+                                        <p>State-of-the-art sound and lighting system</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="hall-notice-btn-wrapper">
+                        <a href="#" class="primary-button  text-uppercase">View Notice</a>
+                    </div>
+                </div>
+            </div>
+    </section>
+    <!-- Hall Details Section End -->
+
+
+
+    <!-- Footer Section -->
+    <footer class="footer-section ">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="footer-logo-wrapper">
+                        <h3>HMS</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-3 ml-auto">
+                    <div class="footer-link-col">
+                        <h3>Links</h3>
+                        <ul class="list-unstyled footer-links">
+                            <li><a href="#">Home</a></li>
+                            <li><a href="#">Courses</a></li>
+                            <li><a href="#">Programs</a></li>
+                            <li><a href="#">Teachers</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-3 ml-auto">
+                    <div class="footer-link-col">
+                        <h3>Links</h3>
+                        <ul class="list-unstyled footer-links">
+                            <li><a href="#">Home</a></li>
+                            <li><a href="#">Courses</a></li>
+                            <li><a href="#">Programs</a></li>
+                            <li><a href="#">Teachers</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-3 ml-auto">
+                    <div class="footer-link-col">
+                        <h3>Social Media</h3>
+                        <ul class="list-unstyled footer-social-links">
+                            <li><a href="#"><i class="fa-brands fa-facebook"></i></a></li>
+                            <li><a href="#"><i class="fa-brands fa-linkedin"></i></a></li>
+                            <li><a href="#"><i class="fa-brands fa-twitter"></i></a></li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row pt-5 mt-5 text-center">
+                <div class="col-md-12">
+                    <div class="border-top pt-5">
+                        <p class="footer-copyright-text">
+                            <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                            Copyright &copy;
+                            <script>document.write(new Date().getFullYear());</script> JUST Credit <i class="icon-heart"
+                                aria-hidden="true"></i> by <a href="#" target="_blank">Arafat &
+                                Shakil</a>
+
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <script src="js/jquery-migrate-3.0.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+    <script src="js/jquery-ui.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/owl.carousel.min.js"></script>
+    <script src="js/jquery.stellar.min.js"></script>
+    <script src="js/jquery.countdown.min.js"></script>
+    <script src="js/bootstrap-datepicker.min.js"></script>
+    <script src="js/jquery.easing.1.3.js"></script>
+    <script src="js/aos.js"></script>
+    <script src="js/jquery.fancybox.min.js"></script>
+    <script src="js/jquery.sticky.js"></script>
+
+
+    <script src="js/main.js"></script>
+
+</body>
+
+</html>
