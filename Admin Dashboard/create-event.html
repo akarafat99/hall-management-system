@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" /> -->
+    <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <link href="../css/Dashboard/dashboard.css" rel="stylesheet" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+
+    <title>Event Create - Dashboard</title>
+
+    <style>
+        .form-info-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .primary-button {
+            background-color: #007bff;
+            color: #fff;
+            outline: none;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body class="sb-nav-fixed">
+    <nav class="sb-topnav navbar navbar-expand dashboard-nav py-4">
+        <!-- Navbar Brand-->
+        <a class="navbar-brand ps-3" href="../index.html">HMS</a>
+        <!-- Sidebar Toggle-->
+        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i
+                class="fas fa-bars"></i></button>
+        <!-- Navbar Search-->
+        <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+            <!-- <div class="input-group">
+                <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..."
+                    aria-describedby="btnNavbarSearch" />
+                <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i
+                        class="fas fa-search"></i></button>
+            </div> -->
+        </form>
+        <!-- Navbar-->
+        <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                    <li><a class="dropdown-item" href="#!">Profile</a></li>
+                    <li><a class="dropdown-item" href="#!">Activity Log</a></li>
+                    <li>
+                        <hr class="dropdown-divider" />
+                    </li>
+                    <li><a class="dropdown-item" href="#!">Logout</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+    <div id="layoutSidenav">
+        <div id="layoutSidenav_nav">
+            <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+                <div class="sb-sidenav-menu">
+                    <div class="nav">
+                        <div class="sb-sidenav-menu-heading">Pages</div>
+                        <a class="nav-link" href="./Dashbaord.html">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-house"></i></div>
+                            Dashboard
+                        </a>
+                        <a class="nav-link" href="./user-review.html">
+                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            Users Review
+                        </a>
+                        <a class="nav-link" href="manage-user.html">
+                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            Manage User
+                        </a>
+                        <a class="nav-link" href="pending-noc.html">
+                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            Pending NOC
+                        </a>
+                        <a class="nav-link" href="pending-hall-seat.html">
+                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            Pending Hall Seat
+                        </a>
+                        <a class="nav-link" href="create-event.html">
+                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            Create Event
+                        </a>
+                        <a class="nav-link" href="event-management.html">
+                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            Event Management
+                        </a>
+                        <a class="nav-link" href="seat-confirmation.html">
+                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            Seat Confirmation
+                        </a>
+                        <a class="nav-link" href="seat-management.html">
+                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            Seat Management
+                        </a>
+
+
+                    </div>
+                </div>
+                <div class="sb-sidenav-footer">
+                    <div class="small">Logged in as: Admin</div>
+
+                </div>
+            </nav>
+        </div>
+        <div id="layoutSidenav_content">
+            <main>
+                <div class="container-fluid px-4">
+                    <div class="card__wrapper">
+                        <div class="card__title-wrap mb-20">
+                            <h3 class="table__heading-title">Create Event</h3>
+                        </div>
+
+                        <form>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="eventdetails" class="form-label">Event Details</label>
+                                    <textarea class="form-control" id="eventdetails" name="eventdetails" rows="2"
+                                        required></textarea>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="eventType" class="form-label">Event Type</label>
+                                    <select class="form-control" id="eventType" name="eventType" required>
+                                        <option value="hall">Hall</option>
+                                        <option value="varsity">Varsit</option>
+                                    </select>
+                                </div>
+
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="startDate" class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="startDate" name="startDate" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="endDate" class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="endDate" name="endDate" required>
+                                </div>
+                            </div>
+
+                            <div class="text-center my-5">
+                                <h5 class="form-info-title">Priority List</h5>
+                            </div>
+
+                            <ul id="priorityList" class="list-group">
+                                <li class="list-group-item" data-value="zilla">Zilla</li>
+                                <li class="list-group-item" data-value="cgpa">CGPA or Merit List</li>
+                                <li class="list-group-item" data-value="income">Father's Monthly Income</li>
+                            </ul>
+
+                            <div class="text-center my-5">
+                                <h5 class="form-info-title">Seat Quota</h5>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="firstYearFirstSemester" class="form-label">First year First
+                                        Semester</label>
+                                    <input type="number" class="form-control" id="firstYearFirstSemester"
+                                        name="firstYearFirstSemester" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="firstYearSecondSemester" class="form-label">First year Second
+                                        Semester</label>
+                                    <input type="number" class="form-control" id="firstYearSecondSemester"
+                                        name="firstYearSecondSemester" required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="secondYearFirstSemester" class="form-label">Second year First
+                                        Semester</label>
+                                    <input type="number" class="form-control" id="secondYearFirstSemester"
+                                        name="secondYearFirstSemester" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="secondYearSecondSemester" class="form-label">Second year Second
+                                        Semester</label>
+                                    <input type="number" class="form-control" id="secondYearSecondSemester"
+                                        name="secondYearSecondSemester" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="thirdYearFirstSemester" class="form-label">Third year First
+                                        Semester</label>
+                                    <input type="number" class="form-control" id="thirdYearFirstSemester"
+                                        name="thirdYearFirstSemester" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="thirdYearSecondSemester" class="form-label">Third year Second
+                                        Semester</label>
+                                    <input type="number" class="form-control" id="thirdYearSecondSemester"
+                                        name="thirdYearSecondSemester" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="fourthYearFirstSemester" class="form-label">Fourth year First
+                                        Semester</label>
+                                    <input type="number" class="form-control" id="fourthYearFirstSemester"
+                                        name="fourthYearFirstSemester" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="fourthYearSecondSemester" class="form-label">Fourth year Second
+                                        Semester</label>
+                                    <input type="number" class="form-control" id="fourthYearSecondSemester"
+                                        name="fourthYearSecondSemester" required>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="submit" class="primary-button" style="cursor: pointer;">Submit</button>
+                            </div>
+                        </form>
+
+                    </div>
+            </main>
+            <footer class="py-4 dashboard-copyright-footer mt-auto">
+                <div class="container-fluid px-4">
+                    <div class="d-flex align-items-center justify-content-between small">
+                        <div class="text-muted">Copyright &copy; Just 2024</div>
+                        <div>
+                            <a href="#">Privacy Policy</a>
+                            &middot;
+                            <a href="#">Terms &amp; Conditions</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+    <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
+    <script src="assets/demo/chart-area-demo.js"></script>
+    <script src="assets/demo/chart-bar-demo.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+
+    <script>
+        $(function () {
+            $("#priorityList").sortable();
+            $("#priorityList").disableSelection();
+        });
+    </script>
+
+    <script>
+
+        $(document).ready(function () {
+            $('#userTable').DataTable(); // Initialize DataTables on #userTable
+        });
+
+        window.addEventListener('DOMContentLoaded', event => {
+
+            // Toggle the side navigation
+            const sidebarToggle = document.body.querySelector('#sidebarToggle');
+            if (sidebarToggle) {
+                // Uncomment Below to persist sidebar toggle between refreshes
+                // if (localStorage.getItem('sb|sidebar-toggle') === 'true') {
+                //     document.body.classList.toggle('sb-sidenav-toggled');
+                // }
+                sidebarToggle.addEventListener('click', event => {
+                    event.preventDefault();
+                    document.body.classList.toggle('sb-sidenav-toggled');
+                    localStorage.setItem('sb|sidebar-toggle', document.body.classList.contains('sb-sidenav-toggled'));
+                });
+            }
+
+        });
+
+    </script>
+
+</body>
+
+</html>
