@@ -373,7 +373,7 @@ class UserDetails
         return false;
     }
 
-    private function setProperties($row)
+    public function setProperties($row)
     {
         $this->details_id = $row['details_id'];
         $this->status = $row['status'];
@@ -406,6 +406,38 @@ class UserDetails
         $this->note_ids = $row['note_ids'];
         $this->created = $row['created'];
         $this->modified = $row['modified'];
+    }
+
+
+    /**
+     * Get user IDs from tbl_user with a given status that have a corresponding row in tbl_user_details with a given status.
+     *
+     * @param int $userStatus The status for tbl_user (e.g., 1 for active).
+     * @param int $detailsStatus The status for tbl_user_details (e.g., 0 for pending).
+     * @return array Returns an array of user IDs.
+     */
+    public function cutsomGetUsersByStatus($userStatus, $detailsStatus)
+    {
+        // Ensure that the database connection is active
+        $this->ensureConnection();
+
+        // Build the SQL query dynamically using the provided statuses
+        $sql = "SELECT d.* 
+            FROM tbl_user u
+            JOIN tbl_user_details d ON u.user_id = d.user_id
+            WHERE u.status = $userStatus
+              AND d.status = $detailsStatus";
+
+        $result = mysqli_query($this->conn, $sql);
+        $rows = [];
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $rows[] = $row;
+            }
+        }
+
+        return $rows;
     }
 }
 ?>
