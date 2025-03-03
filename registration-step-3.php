@@ -1,3 +1,88 @@
+<?php
+include_once 'class-file/UserDetails.php';
+
+$districtList = new UserDetails();
+$districtList = $districtList->district_array;
+
+if (isset($_POST['register'])) {
+    include_once 'class-file/User.php';
+    include_once 'class-file/FileManager.php';
+    include_once 'class-file/NoteManager.php';
+    include_once 'class-file/SessionManager.php';
+
+    $session = new SessionManager();
+    $user = new User();
+    $temp_user = $session->getObject('user');
+    $session->copyProperties($temp_user, $user);
+    $user->insert();
+
+    $userDetails = new UserDetails();
+    $userDetails->user_id = $user->user_id;
+
+    $userDetails->full_name = $_POST['fullName'];
+    $userDetails->student_id = $_POST['studentId'];
+    $userDetails->gender = $_POST['gender'];
+    $userDetails->contact_no = $_POST['contactNo'];
+    $userDetails->session = $_POST['session'];
+    $userDetails->year = $_POST['year'];
+    $userDetails->semester = $_POST['semester'];
+    $userDetails->last_semester_cgpa_or_merit = $_POST['university-merit'] ?: $_POST['cgpa']; // Prioritize merit if CGPA not provided
+    $userDetails->district = $_POST['district'];
+    $userDetails->permanent_address = $_POST['permanentAddress'];
+    $userDetails->present_address = $_POST['presentAddress'];
+    $userDetails->father_name = $_POST['fatherName'];
+    $userDetails->father_contact_no = $_POST['fatherContactNo'];
+    $userDetails->father_profession = $_POST['fatherProfession'];
+    $userDetails->father_monthly_income = $_POST['fatherMonthlyIncome'];
+    $userDetails->mother_name = $_POST['motherName'];
+    $userDetails->mother_contact_no = $_POST['motherContactNo'];
+    $userDetails->mother_profession = $_POST['motherProfession'];
+    $userDetails->mother_monthly_income = $_POST['motherMonthlyIncome'];
+    $userDetails->guardian_name = $_POST['guardianName'];
+    $userDetails->guardian_contact_no = $_POST['guardianContactNo'];
+    $userDetails->guardian_address = $_POST['guardianAddress'];
+
+    $userDetails->insert();
+
+    $file1 = new FileManager();
+    $file1->file_owner_id = $user->user_id;
+    $file1->file_id = $file1->insert();
+    $ans = $file1->doOp($_FILES['profilePhoto']);
+    if ($ans == 1) {
+        // echo 'Profile photo uploaded <br>';
+        $file1->update();
+    } else {
+        // echo 'Profile photo upload failed <br>';
+    }
+
+    $file2 = new FileManager();
+    $file2->file_owner_id = $user->user_id;
+    $file2->file_id = $file2->insert();
+    $ans = $file2->doOp($_FILES['formFile']);
+    if ($ans == 1) {
+        // echo 'Document uploaded <br>';
+        $file2->update();
+    } else {
+        // echo 'Document upload failed <br>';
+    }
+
+    $userDetails->profile_picture_id = $file1->file_id;
+    $userDetails->document_id = $file2->file_id;
+    $userDetails->update();
+
+    // echo 'All done <br>';
+    $session->delete('user');
+    $session->set('msg1', 'Registration successful. Please login to continue.'); // Set success message
+    $session->set('msg1_ttl', 1);
+    // $session->destroy();
+    echo "<script>window.location = 'index.php';</script>";
+    exit();
+}
+?>
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -140,21 +225,12 @@
                             <h4>Provide Each Input Valid Information</h4>
                         </div>
                         <div class="form-block">
-                            <form>
+                            <form method="post" action="" enctype="multipart/form-data">
 
                                 <div class="text-center mb-5">
                                     <h5 class="form-info-title">Personal Information</h5>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="email" class="form-label">Email</label>
-                                        <input type="email" class="form-control" id="email" name="email" required>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="password" class="form-label">Password</label>
-                                        <input type="password" class="form-control" id="password" name="password"
-                                            required>
-                                    </div>
                                     <!-- Profile Photo Upload Section -->
                                     <div class="col-md-6 mb-5">
                                         <label for="profilePhoto" class="form-label">Profile Photo</label>
@@ -166,8 +242,6 @@
                                     </div>
                                 </div>
 
-
-
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="fullName" class="form-label">Full Name</label>
@@ -175,7 +249,7 @@
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="studentId" class="form-label">Student ID</label>
-                                        <input type="text" class="form-control" id="studentId" name="studentId"
+                                        <input type="number" class="form-control" id="studentId" name="studentId"
                                             required>
                                     </div>
                                 </div>
@@ -183,7 +257,6 @@
                                     <div class="col-md-6 mb-3">
                                         <label for="gender" class="form-label">Gender</label>
                                         <select class="form-control" id="gender" name="gender" required>
-                                            <option value="">Select</option>
                                             <option value="male">Male</option>
                                             <option value="female">Female</option>
                                             <option value="other">Other</option>
@@ -191,7 +264,7 @@
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="contactNo" class="form-label">Contact No</label>
-                                        <input type="text" class="form-control" id="contactNo" name="contactNo"
+                                        <input type="number" maxlength="11" class="form-control" id="contactNo" name="contactNo"
                                             required>
                                     </div>
                                 </div>
@@ -207,12 +280,12 @@
                                     <div class="col-md-4 mb-3">
                                         <label for="year" class="form-label">Year</label>
                                         <select class="form-control" id="year" name="year" required>
-                                            <option value="1_bsc">B.Sc 1 year</option>
-                                            <option value="2_bsc">B.Sc 2 year</option>
-                                            <option value="3_bsc">B.Sc 3 year</option>
-                                            <option value="4_bsc">B.Sc 4 year</option>
-                                            <option value="1_msc">M.Sc 1 year</option>
-                                            <option value="2_msc">M.Sc 2 year</option>
+                                            <option value="1">B.Sc 1 year</option>
+                                            <option value="2">B.Sc 2 year</option>
+                                            <option value="3">B.Sc 3 year</option>
+                                            <option value="4">B.Sc 4 year</option>
+                                            <option value="5">M.Sc 1 year</option>
+                                            <option value="6">M.Sc 2 year</option>
                                         </select>
                                     </div>
 
@@ -230,7 +303,7 @@
                                 <div class="row" id="university-merit-field">
                                     <div class="col-md-12 mb-3">
                                         <label for="university-merit" class="form-label">University Merit</label>
-                                        <input type="text" class="form-control" id="university-merit"
+                                        <input type="number" class="form-control" id="university-merit"
                                             name="university-merit">
                                     </div>
                                 </div>
@@ -239,10 +312,21 @@
                                 <div class="row" id="cgpa-field" style="display: none;">
                                     <div class="col-md-12 mb-3">
                                         <label for="cgpa" class="form-label">Last Semester CGPA</label>
-                                        <input type="text" class="form-control" id="cgpa" name="cgpa">
+                                        <input type="number" class="form-control" id="cgpa" name="cgpa">
                                     </div>
                                 </div>
 
+                                <div class="mb-3">
+                                    <label for="district" class="form-label">District</label>
+                                    <select class="form-control" id="district" name="district" required>
+                                        <option value="">Select District</option>
+                                        <?php foreach ($districtList as $districtName => $value): ?>
+                                            <option value="<?= htmlspecialchars($districtName) ?>">
+                                                <?= htmlspecialchars($districtName) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
 
 
                                 <div class="mb-3">
@@ -256,8 +340,8 @@
                                         required></textarea>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="formFile" class="form-label">Upload your file</label>
-                                    <input class="form-control" type="file" id="formFile" required>
+                                    <label for="formFile" class="form-label">Upload your file (Document scanned copy)</label>
+                                    <input class="form-control" type="file" id="formFile" name="formFile" required>
                                 </div>
                                 <div class="text-center my-5">
                                     <h5 class="form-info-title">Father's Information</h5>
@@ -335,7 +419,7 @@
 
                                 <div class="text-center">
                                     <button type="submit" class="primary-button"
-                                        style="cursor: pointer;">Submit</button>
+                                        style="cursor: pointer;" name="register">Create account</button>
                                 </div>
                             </form>
                         </div>
@@ -401,7 +485,9 @@
                         <p class="footer-copyright-text">
                             <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
                             Copyright &copy;
-                            <script>document.write(new Date().getFullYear());</script> JUST Credit <i class="icon-heart"
+                            <script>
+                                document.write(new Date().getFullYear());
+                            </script> JUST Credit <i class="icon-heart"
                                 aria-hidden="true"></i> by <a href="#" target="_blank">Arafat &
                                 Shakil</a>
                         </p>
@@ -433,7 +519,7 @@
 
     <!-- JavaScript to Handle Visibility -->
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             const yearDropdown = document.getElementById("year");
             const semesterDropdown = document.getElementById("semester");
             const universityMeritField = document.getElementById("university-merit-field");

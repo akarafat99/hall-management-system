@@ -1,0 +1,2 @@
+-- new col - user_type in User class
+
