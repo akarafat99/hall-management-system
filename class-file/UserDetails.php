@@ -84,89 +84,76 @@ class UserDetails
     }
 
     /**
-     * Alter table tbl_user_details to add additional columns.
-     *
-     * This function adds the following columns and prints the column name and table name:
-     * - status INT DEFAULT 0
-     * - user_id INT
-     * - profile_picture_id INT DEFAULT 0
-     * - full_name TEXT
-     * - student_id INT
-     * - gender TEXT
-     * - contact_no TEXT
-     * - session TEXT
-     * - year INT DEFAULT 0
-     * - semester INT DEFAULT 0
-     * - last_semester_cgpa_or_merit DOUBLE DEFAULT 0.0
-     * - district TEXT
-     * - division TEXT
-     * - permanent_address TEXT
-     * - present_address TEXT
-     * - father_name TEXT
-     * - father_contact_no TEXT
-     * - father_profession TEXT
-     * - father_monthly_income DOUBLE DEFAULT 0.0
-     * - mother_name TEXT
-     * - mother_contact_no TEXT
-     * - mother_profession TEXT
-     * - mother_monthly_income DOUBLE DEFAULT 0.0
-     * - guardian_name TEXT
-     * - guardian_contact_no TEXT
-     * - guardian_address TEXT
-     * - document_id INT DEFAULT 0
-     * - note_ids TEXT
-     * - created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-     * - modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-     *
-     * @return void
-     */
-    public function alterTableAddColumns()
-    {
-        $this->ensureConnection();
+ * Alter table tbl_user_details to add additional columns.
+ *
+ * Each query is defined as a map entry where the key is a number and the value is an array:
+ * [column name, SQL query].
+ *
+ * @param array|null $selectedNums Optional array of numbers. If provided, only the queries with these keys will run.
+ * @return void
+ */
+public function alterTableAddColumns($selectedNums = null)
+{
+    $this->ensureConnection();
 
-        $table = 'tbl_user_details';
-        $alterQueries = [
-            'status'                   => "ALTER TABLE $table ADD COLUMN status INT DEFAULT 0",
-            'user_id'                  => "ALTER TABLE $table ADD COLUMN user_id INT",
-            'profile_picture_id'       => "ALTER TABLE $table ADD COLUMN profile_picture_id INT DEFAULT 0",
-            'full_name'                => "ALTER TABLE $table ADD COLUMN full_name TEXT",
-            'student_id'               => "ALTER TABLE $table ADD COLUMN student_id INT",
-            'gender'                   => "ALTER TABLE $table ADD COLUMN gender TEXT",
-            'contact_no'               => "ALTER TABLE $table ADD COLUMN contact_no TEXT",
-            'session'                  => "ALTER TABLE $table ADD COLUMN session TEXT",
-            'year'                     => "ALTER TABLE $table ADD COLUMN year INT DEFAULT 0",
-            'semester'                 => "ALTER TABLE $table ADD COLUMN semester INT DEFAULT 0",
-            'last_semester_cgpa_or_merit' => "ALTER TABLE $table ADD COLUMN last_semester_cgpa_or_merit DOUBLE DEFAULT 0.0",
-            'district'                 => "ALTER TABLE $table ADD COLUMN district TEXT",
-            'division'                 => "ALTER TABLE $table ADD COLUMN division TEXT",
-            'permanent_address'        => "ALTER TABLE $table ADD COLUMN permanent_address TEXT",
-            'present_address'          => "ALTER TABLE $table ADD COLUMN present_address TEXT",
-            'father_name'              => "ALTER TABLE $table ADD COLUMN father_name TEXT",
-            'father_contact_no'        => "ALTER TABLE $table ADD COLUMN father_contact_no TEXT",
-            'father_profession'        => "ALTER TABLE $table ADD COLUMN father_profession TEXT",
-            'father_monthly_income'    => "ALTER TABLE $table ADD COLUMN father_monthly_income DOUBLE DEFAULT 0.0",
-            'mother_name'              => "ALTER TABLE $table ADD COLUMN mother_name TEXT",
-            'mother_contact_no'        => "ALTER TABLE $table ADD COLUMN mother_contact_no TEXT",
-            'mother_profession'        => "ALTER TABLE $table ADD COLUMN mother_profession TEXT",
-            'mother_monthly_income'    => "ALTER TABLE $table ADD COLUMN mother_monthly_income DOUBLE DEFAULT 0.0",
-            'guardian_name'            => "ALTER TABLE $table ADD COLUMN guardian_name TEXT",
-            'guardian_contact_no'      => "ALTER TABLE $table ADD COLUMN guardian_contact_no TEXT",
-            'guardian_address'         => "ALTER TABLE $table ADD COLUMN guardian_address TEXT",
-            'document_id'              => "ALTER TABLE $table ADD COLUMN document_id INT DEFAULT 0",
-            'note_ids'                 => "ALTER TABLE $table ADD COLUMN note_ids TEXT",
-            'created'                  => "ALTER TABLE $table ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-            'modified'                 => "ALTER TABLE $table ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
-        ];
+    $table = 'tbl_user_details';
+    // Define queries as a map: key => [column name, SQL query]
+    $alterQueries = [
+        1  => ['status',                   "ALTER TABLE $table ADD COLUMN status INT DEFAULT 0"],
+        2  => ['user_id',                  "ALTER TABLE $table ADD COLUMN user_id INT"],
+        3  => ['profile_picture_id',       "ALTER TABLE $table ADD COLUMN profile_picture_id INT DEFAULT 0"],
+        4  => ['full_name',                "ALTER TABLE $table ADD COLUMN full_name TEXT"],
+        5  => ['student_id',               "ALTER TABLE $table ADD COLUMN student_id INT"],
+        6  => ['gender',                   "ALTER TABLE $table ADD COLUMN gender TEXT"],
+        7  => ['contact_no',               "ALTER TABLE $table ADD COLUMN contact_no TEXT"],
+        8  => ['session',                  "ALTER TABLE $table ADD COLUMN session TEXT"],
+        9  => ['year',                     "ALTER TABLE $table ADD COLUMN year INT DEFAULT 0"],
+        10 => ['semester',                 "ALTER TABLE $table ADD COLUMN semester INT DEFAULT 0"],
+        11 => ['last_semester_cgpa_or_merit',"ALTER TABLE $table ADD COLUMN last_semester_cgpa_or_merit DOUBLE DEFAULT 0.0"],
+        12 => ['district',                 "ALTER TABLE $table ADD COLUMN district TEXT"],
+        13 => ['division',                 "ALTER TABLE $table ADD COLUMN division TEXT"],
+        14 => ['permanent_address',        "ALTER TABLE $table ADD COLUMN permanent_address TEXT"],
+        15 => ['present_address',          "ALTER TABLE $table ADD COLUMN present_address TEXT"],
+        16 => ['father_name',              "ALTER TABLE $table ADD COLUMN father_name TEXT"],
+        17 => ['father_contact_no',        "ALTER TABLE $table ADD COLUMN father_contact_no TEXT"],
+        18 => ['father_profession',        "ALTER TABLE $table ADD COLUMN father_profession TEXT"],
+        19 => ['father_monthly_income',    "ALTER TABLE $table ADD COLUMN father_monthly_income DOUBLE DEFAULT 0.0"],
+        20 => ['mother_name',              "ALTER TABLE $table ADD COLUMN mother_name TEXT"],
+        21 => ['mother_contact_no',        "ALTER TABLE $table ADD COLUMN mother_contact_no TEXT"],
+        22 => ['mother_profession',        "ALTER TABLE $table ADD COLUMN mother_profession TEXT"],
+        23 => ['mother_monthly_income',    "ALTER TABLE $table ADD COLUMN mother_monthly_income DOUBLE DEFAULT 0.0"],
+        24 => ['guardian_name',            "ALTER TABLE $table ADD COLUMN guardian_name TEXT"],
+        25 => ['guardian_contact_no',      "ALTER TABLE $table ADD COLUMN guardian_contact_no TEXT"],
+        26 => ['guardian_address',         "ALTER TABLE $table ADD COLUMN guardian_address TEXT"],
+        27 => ['document_id',              "ALTER TABLE $table ADD COLUMN document_id INT DEFAULT 0"],
+        28 => ['note_ids',                 "ALTER TABLE $table ADD COLUMN note_ids TEXT"],
+        29 => ['created',                  "ALTER TABLE $table ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
+        30 => ['modified',                 "ALTER TABLE $table ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
+    ];
 
-        foreach ($alterQueries as $colName => $sql) {
-            $result = mysqli_query($this->conn, $sql);
-            if ($result) {
-                echo "Column '{$colName}' added successfully to table '{$table}'.<br>";
-            } else {
-                echo "Error adding column '{$colName}' to table '{$table}': " . mysqli_error($this->conn) . "<br>";
+    // If a subset of queries is provided, filter the map.
+    if ($selectedNums !== null && is_array($selectedNums)) {
+        $filteredQueries = [];
+        foreach ($selectedNums as $num) {
+            if (isset($alterQueries[$num])) {
+                $filteredQueries[$num] = $alterQueries[$num];
             }
         }
+        $alterQueries = $filteredQueries;
     }
+
+    // Execute each query in the map.
+    foreach ($alterQueries as $num => $queryInfo) {
+        list($colName, $sql) = $queryInfo;
+        $result = mysqli_query($this->conn, $sql);
+        if ($result) {
+            echo "Column '{$colName}' added successfully to table '{$table}' (Key: {$num}).<br>";
+        } else {
+            echo "Error adding column '{$colName}' to table '{$table}' (Key: {$num}): " . mysqli_error($this->conn) . "<br>";
+        }
+    }
+}
+
 
 
     /**
@@ -414,9 +401,10 @@ class UserDetails
      *
      * @param int $userStatus The status for tbl_user (e.g., 1 for active).
      * @param int $detailsStatus The status for tbl_user_details (e.g., 0 for pending).
+     * @param string $userType The user type to filter by (e.g., 'user', 'moderator', 'admin'). Default is 'user'.
      * @return array Returns an array of user IDs.
      */
-    public function cutsomGetUsersByStatus($userStatus, $detailsStatus)
+    public function cutsomGetUsersByStatus($userStatus, $detailsStatus, $userType = 'user')
     {
         // Ensure that the database connection is active
         $this->ensureConnection();
@@ -426,7 +414,8 @@ class UserDetails
             FROM tbl_user u
             JOIN tbl_user_details d ON u.user_id = d.user_id
             WHERE u.status = $userStatus
-              AND d.status = $detailsStatus";
+              AND d.status = $detailsStatus
+              AND u.user_type = '$userType'";
 
         $result = mysqli_query($this->conn, $sql);
         $rows = [];

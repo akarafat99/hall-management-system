@@ -2,16 +2,15 @@
 include_once 'class-file/SessionManager.php';
 $session = new SessionManager();
 
-if ($session->get('step2') !== null) {
-    $session->delete('step2');
-    $sUser = $session->getObject('user');
-    echo 'hello 1 <br>';
-    include_once 'class-file/User.php';
-    $user = new User();
-    $session->copyProperties($sUser, $user);
-    // Generate a new OTP.
-    $otp = rand(1000, 9999);
-    $session->set('otp', $otp);
+if($session->get('step') != 2) {
+    $session->set('msg1', 'Please complete the <b>step 1</b> first.');
+    echo $session->get('msg1');
+    // echo '<script> window.location.href = "registration-step-1.php";</script>';
+    exit();
+}
+
+if ($session->get('step') == 2) {
+    
 }
 
 if (isset($_POST['register_2'])) {
@@ -21,17 +20,18 @@ if (isset($_POST['register_2'])) {
     $otp = $session->get('otp');
 
     if ($_POST['otp'] != $otp) {
-        echo "Invalid OTP";
+        include_once 'popup-1.php';
+        showPopup('OTP does not match. Please try again');
     } else {
         echo "OTP Matched";
         $session->delete('otp');
-        $session->set('msg', 'OTP Matched');
+        $session->set('msg1', 'OTP Matched');
         echo '<script> window.location.href = "registration-step-3.php";</script>';
         exit();
     }
 }
 
-if (isset($_POST['resendotp'])) {
+if (isset($_POST['resendotp']) && $session->get('step') == 2) {
     include_once 'class-file/User.php';
 
     // Retrieve the user object from session.

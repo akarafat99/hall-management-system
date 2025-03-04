@@ -58,36 +58,45 @@ class NoteManager
     /**
      * Alter table tbl_notes to add additional columns.
      *
-     * This function adds the following columns and prints the column name and table name:
-     * - status INT DEFAULT 1
-     * - owner_id INT
-     * - note TEXT
-     * - created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-     * - modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+     * Each query is defined as a map entry where the key is a number and the value is an array:
+     * [column name, SQL query].
      *
+     * @param array|null $selectedNums Optional array of numbers. If provided, only the queries with these keys will run.
      * @return void
      */
-    public function alterTableAddColumns()
+    public function alterTableAddColumns($selectedNums = null)
     {
         $this->ensureConnection();
         $table = "tbl_notes";
 
-        // Define an associative array mapping column names to ALTER TABLE queries.
+        // Define queries as a map: key => [column name, SQL query]
         $alterQueries = [
-            'status'   => "ALTER TABLE $table ADD COLUMN status INT DEFAULT 1",
-            'owner_id' => "ALTER TABLE $table ADD COLUMN owner_id INT",
-            'note'     => "ALTER TABLE $table ADD COLUMN note TEXT",
-            'created'  => "ALTER TABLE $table ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-            'modified' => "ALTER TABLE $table ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+            1 => ['status',   "ALTER TABLE $table ADD COLUMN status INT DEFAULT 1"],
+            2 => ['owner_id', "ALTER TABLE $table ADD COLUMN owner_id INT"],
+            3 => ['note',     "ALTER TABLE $table ADD COLUMN note TEXT"],
+            4 => ['created',  "ALTER TABLE $table ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
+            5 => ['modified', "ALTER TABLE $table ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
         ];
 
-        // Execute each ALTER query and print the column and table names.
-        foreach ($alterQueries as $colName => $sql) {
+        // If a subset of queries is provided, filter the map.
+        if ($selectedNums !== null && is_array($selectedNums)) {
+            $filteredQueries = [];
+            foreach ($selectedNums as $num) {
+                if (isset($alterQueries[$num])) {
+                    $filteredQueries[$num] = $alterQueries[$num];
+                }
+            }
+            $alterQueries = $filteredQueries;
+        }
+
+        // Execute each query in the map.
+        foreach ($alterQueries as $num => $queryInfo) {
+            list($colName, $sql) = $queryInfo;
             $result = mysqli_query($this->conn, $sql);
             if ($result) {
-                echo "Column '{$colName}' added successfully to table '{$table}'.<br>";
+                echo "Column '{$colName}' added successfully to table '{$table}' (Key: {$num}).<br>";
             } else {
-                echo "Error adding column '{$colName}' to table '{$table}': " . mysqli_error($this->conn) . "<br>";
+                echo "Error adding column '{$colName}' to table '{$table}' (Key: {$num}): " . mysqli_error($this->conn) . "<br>";
             }
         }
     }

@@ -2,6 +2,12 @@
 include_once 'class-file/SessionManager.php';
 $session = new SessionManager();
 
+include_once 'popup-1.php';
+if ($session->get('msg1') != null) {
+    showPopup($session->get('msg1'));
+    $session->delete('msg1');
+}
+
 if (isset($_POST['register_1'])) {
     include_once 'class-file/User.php';
 
@@ -20,6 +26,8 @@ if (isset($_POST['register_1'])) {
     } else {
         $session->storeObject('user', $user);
         $session->set('step', 2);
+        $otp = rand(1000, 9999);
+        $session->set('otp', $otp);
         echo "<script>window.location.href='registration-step-2.php';</script>";
     }
 }

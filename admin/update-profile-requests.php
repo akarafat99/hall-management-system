@@ -4,21 +4,33 @@ include_once '../class-file/UserDetails.php';
 include_once '../class-file/FileManager.php';
 include_once '../popup-1.php';
 
-if (isset($_POST['active']) || isset($_POST['deactive'])) {
-    $user2 = new User();
+if (isset($_POST['approve']) || isset($_POST['decline'])) {
+    $userDetails1 = new UserDetails();
+    $userDetails2 = new UserDetails();
 
-    $status = 0;
-    if (isset($_POST['active'])) {
-        $user2->user_id = $_POST['active'];
-        $status = 1;
+    if (isset($_POST['approve'])) {
+        $userDetails1->user_id = $_POST['approve'];
+        $userDetails2->user_id = $_POST['approve'];
+        $userDetails1->loadByUserId($userDetails1->user_id, 1);
+        $userDetails2->loadByUserId($userDetails2->user_id, 0);
+
+        $userDetails1->status = -3;
+        $userDetails2->status = 1;
+
+        $userDetails1->update();
+        $userDetails2->update();
+
+        showPopup("The request has been approved successfully. User ID = " . $_POST['approve']);
     } else {
-        $user2->user_id = $_POST['deactive'];
-        $status = 2;
-    }
+        $userDetails2->user_id = $_POST['decline'];
+        $userDetails2->loadByUserId($userDetails2->user_id, 0);
 
-    $user2->load();
-    $user2->status = $status;
-    $user2->update();
+        $userDetails2->status = -1;
+
+        $userDetails2->update();
+
+        showPopup("The request has been declined successfully. User ID = " . $_POST['decline']);
+    }
 }
 
 
@@ -27,23 +39,23 @@ $allNewList = array();
 $allCurrentList = array();
 
 // Requested
-$detailsList = $userDetails->cutsomGetUsersByStatus(1, 0);  // Now returns an array of associative arrays (full rows)
+$detailsList = $userDetails->cutsomGetUsersByStatus(1, 0, 'user');  // Now returns an array of associative arrays (full rows)
 if (is_array($detailsList)) {
     for ($i = 0; $i < count($detailsList); $i++) {
         $ud = new UserDetails();
         $ud->setProperties($detailsList[$i]);
-        echo $ud->student_id . "<br>";
+        // echo $ud->student_id . "<br>";
         $allNewList[] = $ud;
     }
 }
 
 // Current
-$detailsList = $userDetails->cutsomGetUsersByStatus(1, 1);  // Now returns an array of associative arrays (full rows)
+$detailsList = $userDetails->cutsomGetUsersByStatus(1, 1, 'user');  // Now returns an array of associative arrays (full rows)
 if (is_array($detailsList)) {
     for ($i = 0; $i < count($detailsList); $i++) {
         $ud = new UserDetails();
         $ud->setProperties($detailsList[$i]);
-        echo $ud->student_id . "<br>";
+        // echo $ud->student_id . "<br>";
         $allCurrentList[] = $ud;
     }
 }
@@ -227,12 +239,15 @@ if (is_array($detailsList)) {
                             <div class="faq-heading">
                                 <div class="row">
                                     <div class="col-lg-2">
-                                        <p>Student ID (User ID)</p>
-                                    </div>
-                                    <div class="col-lg-8">
-                                        <p>Current and Requested</p>
+                                        <p>User ID</p>
                                     </div>
                                     <div class="col-lg-2">
+                                        <p>Student ID</p>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <p>Current and Requested</p>
+                                    </div>
+                                    <div class="col-lg-4">
                                         <p>Action</p>
                                     </div>
                                 </div>
@@ -268,20 +283,20 @@ if (is_array($detailsList)) {
                                     <div class="accordion-item faq-item">
                                         <div class="row">
                                             <div class="col-lg-2 d-flex align-items-center">
-                                                <p><?php echo htmlspecialchars($userDetailsCurrent->student_id) . " (" . htmlspecialchars($userDetailsCurrent->user_id) . ")"; ?></p>
+                                                <p><?php echo htmlspecialchars($userDetailsCurrent->user_id); ?></p>
                                             </div>
-                                            <div class="col-lg-8 d-flex align-items-center">
+                                            <div class="col-lg-2 d-flex align-items-center">
+                                                <p><?php echo htmlspecialchars($userDetailsCurrent->student_id); ?></p>
+                                            </div>
+                                            <div class="col-lg-4 d-flex align-items-center">
                                                 <button class="btn btn-primary" data-bs-toggle="collapse"
                                                     data-bs-target="#<?php echo $collapseId; ?>">Details</button>
                                             </div>
-                                            <div class="col-lg-2 d-flex align-items-center">
+                                            <div class="col-lg-4 d-flex align-items-center">
                                                 <div>
-                                                    <form action="" method="post">
-                                                        <?php if ($userObj1->status == 1) { ?>
-                                                            <button type="submit" name="deactive" value="<?php echo htmlspecialchars($userId); ?>" class="btn btn-success">Deactive</button>
-                                                        <?php } else { ?>
-                                                            <button type="submit" name="active" value="<?php echo htmlspecialchars($userId); ?>" class="btn btn-success">Active</button>
-                                                        <?php } ?>
+                                                <form action="" method="post">
+                                                        <button type="submit" name="approve" value="<?php echo htmlspecialchars($userDetailsCurrent->user_id); ?>" class="btn btn-success">Approved</button>
+                                                        <button type="submit" name="decline" value="<?php echo htmlspecialchars($userDetailsCurrent->user_id); ?>" class="btn btn-danger">Declined</button>
                                                     </form>
                                                 </div>
                                             </div>
@@ -295,6 +310,19 @@ if (is_array($detailsList)) {
                                                         <p><strong>Email:</strong> <?php echo htmlspecialchars($userObj1->email); ?></p>
                                                     </div>
                                                 </div>
+
+                                                <!-- Row: Profile Picture -->
+                                                <div class="row pt-4">
+                                                    <div class="col-lg-6">
+                                                        <p><strong>Profile Picture (Current):</strong>
+                                                            <img src="../uploads1/<?php echo htmlspecialchars($file1->file_new_name); ?>" alt="Profile Picture" style="width: 150px; height: 150px;">
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-lg-6">
+                                                        <p><strong>Profile Picture (Requested):</strong>
+                                                            <img src="../uploads1/<?php echo htmlspecialchars($file3->file_new_name); ?>" alt="Profile Picture" style="width: 150px; height: 150px;">
+                                                        </p>
+                                                    </div>
 
                                                 <!-- Row: Student ID -->
                                                 <div class="row pt-4">

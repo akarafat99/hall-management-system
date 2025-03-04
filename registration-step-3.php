@@ -1,18 +1,23 @@
 <?php
 include_once 'class-file/UserDetails.php';
+include_once 'class-file/SessionManager.php';
+$session = new SessionManager();
+
+$session->delete('step');
 
 $districtList = new UserDetails();
 $districtList = $districtList->district_array;
+
 
 if (isset($_POST['register'])) {
     include_once 'class-file/User.php';
     include_once 'class-file/FileManager.php';
     include_once 'class-file/NoteManager.php';
-    include_once 'class-file/SessionManager.php';
 
-    $session = new SessionManager();
+
     $user = new User();
     $temp_user = $session->getObject('user');
+    $user->user_type = "user";
     $session->copyProperties($temp_user, $user);
     $user->insert();
 
@@ -26,7 +31,7 @@ if (isset($_POST['register'])) {
     $userDetails->session = $_POST['session'];
     $userDetails->year = $_POST['year'];
     $userDetails->semester = $_POST['semester'];
-    $userDetails->last_semester_cgpa_or_merit = $_POST['university-merit'] ?: $_POST['cgpa']; // Prioritize merit if CGPA not provided
+    $userDetails->last_semester_cgpa_or_merit = $_POST['university-merit-or-cgpa'];
     $userDetails->district = $_POST['district'];
     $userDetails->permanent_address = $_POST['permanentAddress'];
     $userDetails->present_address = $_POST['presentAddress'];
@@ -41,6 +46,7 @@ if (isset($_POST['register'])) {
     $userDetails->guardian_name = $_POST['guardianName'];
     $userDetails->guardian_contact_no = $_POST['guardianContactNo'];
     $userDetails->guardian_address = $_POST['guardianAddress'];
+
 
     $userDetails->insert();
 
@@ -300,21 +306,15 @@ if (isset($_POST['register'])) {
                                 </div>
 
                                 <!-- University Merit Field -->
-                                <div class="row" id="university-merit-field">
+                                <!-- Last Semester CGPA Field -->
+                                <!-- Common Input Field -->
+                                <div class="row">
                                     <div class="col-md-12 mb-3">
-                                        <label for="university-merit" class="form-label">University Merit</label>
-                                        <input type="number" class="form-control" id="university-merit"
-                                            name="university-merit">
+                                        <label for="dynamic-input" class="form-label" id="dynamic-label">University Merit</label>
+                                        <input type="number" class="form-control" id="dynamic-input" name="university-merit-or-cgpa" required>
                                     </div>
                                 </div>
 
-                                <!-- Last Semester CGPA Field -->
-                                <div class="row" id="cgpa-field" style="display: none;">
-                                    <div class="col-md-12 mb-3">
-                                        <label for="cgpa" class="form-label">Last Semester CGPA</label>
-                                        <input type="number" class="form-control" id="cgpa" name="cgpa">
-                                    </div>
-                                </div>
 
                                 <div class="mb-3">
                                     <label for="district" class="form-label">District</label>
@@ -517,32 +517,39 @@ if (isset($_POST['register'])) {
     <script src="js/main.js"></script>
 
 
-    <!-- JavaScript to Handle Visibility -->
+    <!-- JavaScript to Handle Text & Attribute Change -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const yearDropdown = document.getElementById("year");
             const semesterDropdown = document.getElementById("semester");
-            const universityMeritField = document.getElementById("university-merit-field");
-            const cgpaField = document.getElementById("cgpa-field");
+            const inputField = document.getElementById("dynamic-input");
+            const labelField = document.getElementById("dynamic-label");
 
-            function updateVisibility() {
+            function updateField() {
                 const year = yearDropdown.value;
                 const semester = semesterDropdown.value;
 
-                // Show University Merit only if it's First Year & First Semester
-                if ((year === "1_bsc" || year === "1_msc") && semester === "1") {
-                    universityMeritField.style.display = "block";
-                    cgpaField.style.display = "none";
+                if ((year === "1" || year === "5") && semester === "1") {
+                    // First Year, First Semester: University Merit
+                    labelField.textContent = "University Merit";
+                    inputField.type = "number";
+                    inputField.removeAttribute("min");
+                    inputField.removeAttribute("max");
+                    inputField.removeAttribute("step");
                 } else {
-                    universityMeritField.style.display = "none";
-                    cgpaField.style.display = "block";
+                    // Other Cases: Last Semester CGPA
+                    labelField.textContent = "Last Semester CGPA";
+                    inputField.type = "number";
+                    inputField.setAttribute("min", "0");
+                    inputField.setAttribute("max", "4");
+                    inputField.setAttribute("step", "0.001");
                 }
             }
 
-            yearDropdown.addEventListener("change", updateVisibility);
-            semesterDropdown.addEventListener("change", updateVisibility);
+            yearDropdown.addEventListener("change", updateField);
+            semesterDropdown.addEventListener("change", updateField);
 
-            updateVisibility(); // Ensure correct display on page load
+            updateField(); // Ensure correct display on page load
         });
     </script>
 

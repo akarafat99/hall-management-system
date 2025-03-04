@@ -2,6 +2,7 @@
 include_once 'class-file/SessionManager.php';
 
 $session = new SessionManager();
+// $session->destroy();
 include_once 'popup-1.php';
 $session->get('msg1') ? showPopup($session->get('msg1')) : '';
 $session->delete('msg1');

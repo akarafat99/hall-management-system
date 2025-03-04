@@ -7,6 +7,7 @@ class Admin
     public $status = 1; // You can adjust this if needed (e.g., 1 for active)
     public $email = "admin@admin";
     public $password = "password";
+    public $user_type = "admin";
     public $created;
     public $modified;
     private $conn;
@@ -42,8 +43,8 @@ class Admin
         $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
 
         // Prepare the SQL query
-        $sql = "INSERT INTO tbl_user (status, email, password)
-                VALUES ($this->status, '$this->email', '$hashedPassword')";
+        $sql = "INSERT INTO tbl_user (status, email, password, user_type)
+                VALUES ($this->status, '$this->email', '$hashedPassword', '$this->user_type')";
 
         $result = mysqli_query($this->conn, $sql);
 

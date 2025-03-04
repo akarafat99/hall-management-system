@@ -1,2 +1,4 @@
--- new col - user_type in User class
+-- user profile view + update by user 
+-- logout working
+-- navbar php file (By 180143)
 

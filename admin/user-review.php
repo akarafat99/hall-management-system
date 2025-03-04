@@ -22,18 +22,18 @@ if (isset($_POST['approve']) || isset($_POST['decline'])) {
     $user2->update();
 
     $userDetails2->loadByUserId($user2->user_id, 0);
-    $userDetails2->status = 1;
+    $userDetails2->status = $status;
     $userDetails2->update();
 
     if ($status == 1) {
-        showPopup("User ID " . $user2->user_id . " (Student ID ". $userDetails2->student_id .") approved successfully.");
+        showPopup("User ID " . $user2->user_id . " (Student ID " . $userDetails2->student_id . ") approved successfully.");
     } else {
-        showPopup("User ID " . $user2->user_id . " (Student ID ". $userDetails2->student_id .") declined successfully.");
+        showPopup("User ID " . $user2->user_id . " (Student ID " . $userDetails2->student_id . ") declined successfully.");
     }
 }
 
 $user = new User();
-$userList = $user->getDistinctUsersByStatus(0); // Get all users with status 0 (pending)
+$userList = $user->getDistinctUsersByStatus(0, "user"); // Get all users with status 0 (pending)
 
 ?>
 
@@ -213,12 +213,15 @@ $userList = $user->getDistinctUsersByStatus(0); // Get all users with status 0 (
                             <div class="faq-heading">
                                 <div class="row">
                                     <div class="col-lg-2">
+                                        <p>User ID</p>
+                                    </div>
+                                    <div class="col-lg-2">
                                         <p>Student ID</p>
                                     </div>
-                                    <div class="col-lg-4">
+                                    <div class="col-lg-3">
                                         <p>Email</p>
                                     </div>
-                                    <div class="col-lg-3">
+                                    <div class="col-lg-2">
                                         <p>Status</p>
                                     </div>
                                     <div class="col-lg-3">
@@ -252,12 +255,15 @@ $userList = $user->getDistinctUsersByStatus(0); // Get all users with status 0 (
                                     <div class="accordion-item faq-item">
                                         <div class="row">
                                             <div class="col-lg-2 d-flex align-items-center">
-                                                <p><?php echo htmlspecialchars($userDetails->student_id); ?></p>
+                                                <p><?php echo $userDetails->user_id ; ?></p>
                                             </div>
-                                            <div class="col-lg-4 d-flex align-items-center">
-                                                <p><?php echo htmlspecialchars($userEmail); ?></p>
+                                            <div class="col-lg-2 d-flex align-items-center">
+                                                <p><?php echo $userDetails->student_id; ?></p>
                                             </div>
                                             <div class="col-lg-3 d-flex align-items-center">
+                                                <p><?php echo htmlspecialchars($userEmail); ?></p>
+                                            </div>
+                                            <div class="col-lg-2 d-flex align-items-center">
                                                 <button class="btn btn-primary" data-bs-toggle="collapse"
                                                     data-bs-target="#<?php echo $collapseId; ?>">Details</button>
                                             </div>

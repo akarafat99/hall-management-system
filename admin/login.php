@@ -15,7 +15,7 @@ if (isset($_POST['login'])) {
     $user = new User();
     $user->email = $email;
     $user->password = $password;
-    $userCheck = $user->checkUserEmailWithStatus($user->email, $user->password);
+    $userCheck = $user->checkUserEmailWithStatus($user->email, $user->password, "admin");
 
     if ($userCheck[0] == "1") {
         // echo 'all ok <br>';

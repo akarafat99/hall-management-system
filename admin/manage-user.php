@@ -24,8 +24,8 @@ if (isset($_POST['active']) || isset($_POST['deactive'])) {
 }
 
 $user = new User();
-$userListActive = $user->getDistinctUsersByStatus(1); // Get all users with status 1 (active)
-$userListDeactive = $user->getDistinctUsersByStatus(2); // Get all users with status 2 (deactive)
+$userListActive = $user->getDistinctUsersByStatus(1, "user"); // Get all users with status 1 (active)
+$userListDeactive = $user->getDistinctUsersByStatus(2, "user"); // Get all users with status 2 (deactive)
 
 // Merge the arrays (using an empty array fallback if one of the lists is false)
 $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
@@ -210,15 +210,18 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
                             <div class="faq-heading">
                                 <div class="row">
                                     <div class="col-lg-2">
+                                        <p>User ID</p>
+                                    </div>
+                                    <div class="col-lg-2">
                                         <p>Student ID</p>
                                     </div>
                                     <div class="col-lg-3">
                                         <p>Email</p>
                                     </div>
-                                    <div class="col-lg-2">
+                                    <div class="col-lg-1">
                                         <p>Status</p>
                                     </div>
-                                    <div class="col-lg-2">
+                                    <div class="col-lg-1">
                                         <p>Profile</p>
                                     </div>
                                     <div class="col-lg-3">
@@ -253,19 +256,22 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
                                     <div class="accordion-item faq-item">
                                         <div class="row">
                                             <div class="col-lg-2 d-flex align-items-center">
+                                                <p><?php echo htmlspecialchars($userDetails->user_id); ?></p>
+                                            </div>
+                                            <div class="col-lg-2 d-flex align-items-center">
                                                 <p><?php echo htmlspecialchars($userDetails->student_id); ?></p>
                                             </div>
                                             <div class="col-lg-3 d-flex align-items-center">
                                                 <p><?php echo htmlspecialchars($userObj1->email); ?></p>
                                             </div>
-                                            <div class="col-lg-2 d-flex align-items-center">
+                                            <div class="col-lg-1 d-flex align-items-center">
                                                 <?php if ($userObj1->status == 1) { ?>
                                                     <span class="bd-badge bg-success">Active</span>
                                                 <?php } else { ?>
                                                     <span class="bd-badge bg-warning">Deactive</span>
                                                 <?php } ?>
                                             </div>
-                                            <div class="col-lg-2 d-flex align-items-center">
+                                            <div class="col-lg-1 d-flex align-items-center">
                                                 <button class="btn btn-primary" data-bs-toggle="collapse"
                                                     data-bs-target="#<?php echo $collapseId; ?>">Details</button>
                                             </div>
