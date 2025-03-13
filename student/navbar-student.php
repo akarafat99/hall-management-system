@@ -1,8 +1,23 @@
 <?php
 // Calculate the URL path for the current file's directory.
 $navbarDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', dirname(__FILE__)) . '/';
-?>
 
+// if the logout button pressed
+if (isset($_GET['logout'])) {
+    // Include the SessionManager class from the correct directory
+    include_once $_SERVER['DOCUMENT_ROOT'] . '/class-file/SessionManager.php';
+    
+    // Create an instance of SessionManager and destroy the session.
+    $session = new SessionManager();
+    $session->destroy();
+    
+    // Redirect to the homepage using JavaScript.
+    echo '<script type="text/javascript">
+            window.location.href = "/index.php";
+          </script>';
+    exit;
+}
+?>
 
 <div class="site-mobile-menu site-navbar-target">
     <div class="site-mobile-menu-header">
@@ -32,9 +47,9 @@ $navbarDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', dirname(__FILE__)) . '/'
                         <li class="nav-item dropdown">
                             <a href="" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Apply</a>
                             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="<?= $navbarDir ?>noc.php">Hall NOC</a>
-                                <a class="dropdown-item" href="<?= $navbarDir ?>seat-in-hall.php">Seat in hall</a>
-                                <a class="dropdown-item" href="<?= $navbarDir ?>seat-change.php">Seat change in the hall</a>
+                                <!-- <a class="dropdown-item" href="<//?= $navbarDir ?>noc.php">Hall NOC</a> -->
+                                <a class="dropdown-item" href="<?= $navbarDir ?>apply-seat-in-hall.php">Seat in hall</a>
+                                <!-- <a class="dropdown-item" href="<//?= $navbarDir ?>seat-change.php">Seat change in the hall</a> -->
                             </div>
                         </li>
                         <li><a href="<?= $navbarDir ?>about.php" class="nav-link">About Us</a></li>
@@ -51,6 +66,7 @@ $navbarDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', dirname(__FILE__)) . '/'
                                 <a class="dropdown-item" href="<?= $navbarDir ?>profile.php">View Profile</a>
                                 <a class="dropdown-item" href="<?= $navbarDir ?>applications.php">My Applications</a>
                                 <a class="dropdown-item" href="<?= $navbarDir ?>wallet.php">JUST Wallet</a>
+                                <a class="dropdown-item" href="?logout=1">Logout</a>
                             </div>
                         </li>
                     </ul>

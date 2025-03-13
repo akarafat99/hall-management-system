@@ -8,26 +8,26 @@
 
 
     <link href="https://fonts.googleapis.com/css?family=Muli:300,400,700,900" rel="stylesheet">
-    <link rel="stylesheet" href="fonts/icomoon/style.css">
+    <link rel="stylesheet" href="../fonts/icomoon/style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/jquery-ui.css">
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/jquery-ui.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css">
-    <link rel="stylesheet" href="css/owl.carousel.min.css">
-    <link rel="stylesheet" href="css/owl.theme.default.min.css">
-    <link rel="stylesheet" href="css/owl.theme.default.min.css">
+    <link rel="stylesheet" href="../css/owl.carousel.min.css">
+    <link rel="stylesheet" href="../css/owl.theme.default.min.css">
+    <link rel="stylesheet" href="../css/owl.theme.default.min.css">
 
-    <link rel="stylesheet" href="css/jquery.fancybox.min.css">
+    <link rel="stylesheet" href="../css/jquery.fancybox.min.css">
 
-    <link rel="stylesheet" href="css/bootstrap-datepicker.css">
+    <link rel="stylesheet" href="../css/bootstrap-datepicker.css">
 
-    <link rel="stylesheet" href="fonts/flaticon/font/flaticon.css">
+    <link rel="stylesheet" href="../fonts/flaticon/font/flaticon.css">
 
-    <link rel="stylesheet" href="css/aos.css">
+    <link rel="stylesheet" href="../css/aos.css">
 
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
 
-    <title>NOC Appliaction | JUST Hall</title>
+    <title>Seat In Hall | JUST Hall</title>
 
 
     <style>
@@ -83,68 +83,8 @@
 </head>
 
 <body data-spy="scroll" data-target=".site-navbar-target" data-offset="300">
-
-    <div class="site-mobile-menu site-navbar-target">
-        <div class="site-mobile-menu-header">
-            <div class="site-mobile-menu-close mt-3">
-                <span class="icon-close2 js-menu-toggle"></span>
-            </div>
-        </div>
-        <div class="site-mobile-menu-body"></div>
-    </div>
-
-    <header class="site-navbar py-4 js-sticky-header site-navbar-target" role="banner">
-
-        <div class="container-fluid">
-            <div class="d-flex align-items-center">
-                <div class="site-logo mr-auto w-25"><a href="index.html">MM HALL</a></div>
-
-                <div class="mx-auto text-center">
-                    <nav class="site-navigation position-relative text-right" role="navigation">
-                        <ul class="site-menu main-menu js-clone-nav mx-auto d-none d-lg-block  m-0 p-0">
-                            <li><a href="index.html" class="nav-link">Home</a></li>
-                            <li><a href="notice.html" class="nav-link">Notices</a></li>
-                            <li class="nav-item dropdown"><a href="" class="nav-link dropdown-toggle"
-                                    id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
-                                    aria-expanded="false">Apply</a>
-
-                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="noc.html">Hall NOC</a>
-                                    <a class="dropdown-item" href="seat-in-hall.html">Seat in hall</a>
-                                    <a class="dropdown-item" href="#">Seat change in the hall</a>
-                                </div>
-                            </li>
-                            <li><a href="#" class="nav-link">About Us</a></li>
-                            <li><a href="#" class="nav-link">Contact Us</a></li>
-                        </ul>
-                    </nav>
-                </div>
-
-                <div class="ml-auto w-25">
-                    <nav class="site-navigation position-relative text-right" role="navigation">
-                        <ul class="site-menu main-menu site-menu-dark js-clone-nav mr-auto d-none d-lg-block m-0 p-0">
-                            <!-- <li class="cta"> <a href="#" class="primary-button py-2 px-4">Dashboard</a></li> -->
-                            <li class="nav-item dropdown"><a href="" class="nav-link primary-button dropdown-toggle"
-                                    id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
-                                    aria-expanded="false">Dashboard</a>
-
-                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="Admin Dashboard/Dashbaord.html">View Profile</a>
-                                    <a class="dropdown-item" href="#">My Applications</a>
-                                    <a class="dropdown-item" href="#">JUST Wallet</a>
-                                </div>
-                            </li>
-                        </ul>
-                    </nav>
-                    <a href="#"
-                        class="d-inline-block d-lg-none site-menu-toggle js-menu-toggle text-black float-right"><span
-                            class="icon-menu h3"></span></a>
-                </div>
-            </div>
-        </div>
-
-    </header>
-
+    <!-- Include the navbar from a separate file -->
+    <?php include_once 'navbar-student.php'; ?>
 
     <!-- notice Banner Section Start -->
     <section class="notice-hero">
@@ -152,8 +92,7 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="notice-hero-text text-center">
-                        <h1>NOC</h1>
-                        <p><a href="index.html">Home</a> <span class="mx-2">/</span> <strong>NOC</strong></p>
+                        <h1>Seat In Hall</h1>
                     </div>
                 </div>
             </div>
@@ -171,13 +110,13 @@
                 <div class="col-md-10">
                     <div class="contact-form-wrapper">
                         <div class="card-header text-center">
-                            <h4>Apply for NOC</h4>
+                            <h4>Apply for Seat In Hall</h4>
                         </div>
 
                         <div class="form-block">
                             <!-- Details button with text -->
                             <div class="noc-consideration-text-wrap myt-3 mb-5">
-                                <p>I am submitting my application for a No Objection Certificate (NOC) with my
+                                <p>I am submitting my application for a seat with my
                                     <span> <button type="submit" class="primary-button details-btn"
                                             data-bs-toggle="modal" data-bs-target="#exampleModal"
                                             style="cursor: pointer;">Details</button></span>
@@ -315,7 +254,8 @@
                             <!-- Details button with text -->
                             <form>
                                 <div class="mb-3">
-                                    <label for="nocOpinion" class="form-label">Why you I applying for NOC, please let us
+                                    <label for="nocOpinion" class="form-label">Why you I applying for seat in hall,
+                                        please let us
                                         know your opinion.</label>
                                     <textarea class="form-control" placeholder="Write Message" id="nocOpinion"
                                         name="nocOpinion" rows="2" required></textarea>
@@ -399,25 +339,25 @@
         </div>
     </footer>
 
-    <script src="js/jquery-3.3.1.min.js"></script>
-    <script src="js/jquery-migrate-3.0.1.min.js"></script>
+    <script src="../js/jquery-3.3.1.min.js"></script>
+    <script src="../js/jquery-migrate-3.0.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
-    <script src="js/jquery-ui.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/jquery-ui.js"></script>
+    <script src="../https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script src="js/popper.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/owl.carousel.min.js"></script>
-    <script src="js/jquery.stellar.min.js"></script>
-    <script src="js/jquery.countdown.min.js"></script>
-    <script src="js/bootstrap-datepicker.min.js"></script>
-    <script src="js/jquery.easing.1.3.js"></script>
-    <script src="js/aos.js"></script>
-    <script src="js/jquery.fancybox.min.js"></script>
-    <script src="js/jquery.sticky.js"></script>
+    <script src="../js/popper.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/owl.carousel.min.js"></script>
+    <script src="../js/jquery.stellar.min.js"></script>
+    <script src="../js/jquery.countdown.min.js"></script>
+    <script src="../js/bootstrap-datepicker.min.js"></script>
+    <script src="../js/jquery.easing.1.3.js"></script>
+    <script src="../js/aos.js"></script>
+    <script src="../js/jquery.fancybox.min.js"></script>
+    <script src="../js/jquery.sticky.js"></script>
 
 
-    <script src="js/main.js"></script>
+    <script src="../js/main.js"></script>
 
 
 
