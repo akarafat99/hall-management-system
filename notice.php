@@ -139,7 +139,7 @@
                             <div class="notice-item">
                                 <div class="notice-item-date">
                                     <img src="./images/calendar.png" alt="">
-                                    <p>12 Nov 2024 </p>
+                                    <p>03 March 2025 </p>
                                     <svg data-v-760b8109="" aria-hidden="true" focusable="false" data-prefix="fas"
                                         data-icon="thumbtack" role="img" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 384 512"
@@ -151,7 +151,7 @@
                                     </svg>
                                 </div>
                                 <div class="notice-item-summary-wrap">
-                                    <p class="notice-item-summary">কেন্দ্রীয় ক্যাফেটেরিয়া লিজ দরপত্র বিজ্ঞপ্তি</p>
+                                    <p class="notice-item-summary">Notice for seat application</p>
                                     <div class="notice-item-tag"><b>Tags:</b> Circular</div>
                                 </div>
                             </div>

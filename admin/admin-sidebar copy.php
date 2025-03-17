@@ -57,10 +57,25 @@ $sidebarDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', dirname(__FILE__)) . '/
                 <hr>
 
 
+
+
+                <!-- Pending Hall Seat Link -->
+                <a class="nav-link" href="<?= $sidebarDir ?>pending-hall-seat.html">
+                    <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                    Pending Hall Seat
+                </a>
+
+
+                <!-- Seat Confirmation Link -->
+                <a class="nav-link" href="<?= $sidebarDir ?>seat-confirmation.html">
+                    <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                    Seat Confirmation
+                </a>
+
                 <!-- Seat Management Link -->
                 <a class="nav-link" href="<?= $sidebarDir ?>seat-management.html">
                     <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                    Logout
+                    Seat Management
                 </a>
             </div>
         </div>

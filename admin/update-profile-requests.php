@@ -265,13 +265,8 @@ if (is_array($detailsList)) {
                                                 <!-- Row: Profile Picture -->
                                                 <div class="row pt-4">
                                                     <div class="col-lg-6">
-                                                        <p><strong>Profile Picture (Current):</strong>
+                                                        <p><strong>Profile Picture:</strong>
                                                             <img src="../uploads1/<?php echo htmlspecialchars($file1->file_new_name); ?>" alt="Profile Picture" style="width: 150px; height: 150px;">
-                                                        </p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Profile Picture (Requested):</strong>
-                                                            <img src="../uploads1/<?php echo htmlspecialchars($file3->file_new_name); ?>" alt="Profile Picture" style="width: 150px; height: 150px;">
                                                         </p>
                                                     </div>
 

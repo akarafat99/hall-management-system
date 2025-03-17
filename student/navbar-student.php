@@ -43,7 +43,7 @@ $navbarDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', dirname(__FILE__)) . '/'
                     <ul class="site-menu main-menu js-clone-nav mx-auto d-none d-lg-block m-0 p-0">
                         <li><a href="/index.php" class="nav-link">Home</a></li>
                         <!-- For pages within the same folder as the navbar, prepend $navbarDir -->
-                        <li><a href="<?= $navbarDir ?>notice.php" class="nav-link">Notices</a></li>
+                        <li><a href="<?= $navbarDir ?>../notice.php" class="nav-link">Notices</a></li>
                         <li class="nav-item dropdown">
                             <a href="" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Apply</a>
                             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -65,7 +65,6 @@ $navbarDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', dirname(__FILE__)) . '/'
                             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                                 <a class="dropdown-item" href="<?= $navbarDir ?>profile.php">View Profile</a>
                                 <a class="dropdown-item" href="<?= $navbarDir ?>applications.php">My Applications</a>
-                                <a class="dropdown-item" href="<?= $navbarDir ?>wallet.php">JUST Wallet</a>
                                 <a class="dropdown-item" href="?logout=1">Logout</a>
                             </div>
                         </li>
