@@ -1,45 +1,38 @@
 <?php
 include_once 'class-file/SessionManager.php';
-$session = new SessionManager();
+$session = SessionStatic::class;
 
-if($session->get('step') != 2) {
-    $session->set('msg1', 'Please complete the <b>step 1</b> first.');
-    echo $session->get('msg1');
-    // echo '<script> window.location.href = "registration-step-1.php";</script>';
+if ($session::get('step') !== 2) {
+    $session::set('msg1', 'Please complete the <b>step 1</b> first.');
+    echo $session::get('msg1');
+    echo '<script> window.location.href = "registration-step-1.php";</script>';
     exit();
 }
 
-if ($session->get('step') == 2) {
-    
+if ($session::get('step') == 2) {
 }
 
 if (isset($_POST['register_2'])) {
-    include_once 'class-file/User.php';
-
-    $user = $session->getObject('user');
-    $otp = $session->get('otp');
+    $otp = $session::get('otp');
 
     if ($_POST['otp'] != $otp) {
         include_once 'popup-1.php';
         showPopup('OTP does not match. Please try again');
     } else {
         echo "OTP Matched";
-        $session->delete('otp');
-        $session->set('msg1', 'OTP Matched');
+        $session::delete('otp');
+        $session::set('msg1', 'OTP Matched');
+        $session::set('step', 3);
+        // Redirect to the next step
         echo '<script> window.location.href = "registration-step-3.php";</script>';
         exit();
     }
 }
 
-if (isset($_POST['resendotp']) && $session->get('step') == 2) {
-    include_once 'class-file/User.php';
-
-    // Retrieve the user object from session.
-    $user = $session->getObject('user');
-
+if (isset($_POST['resendotp']) && $session::get('step') == 2) {
     // Generate a new OTP.
     $otp = rand(1000, 9999);
-    $session->set('otp', $otp);
+    $session::set('otp', $otp);
 }
 
 ?>
@@ -101,83 +94,9 @@ if (isset($_POST['resendotp']) && $session->get('step') == 2) {
 
 <body data-spy="scroll" data-target=".site-navbar-target" data-offset="300">
 
-    <div class="site-mobile-menu site-navbar-target">
-        <div class="site-mobile-menu-header">
-            <div class="site-mobile-menu-close mt-3">
-                <span class="icon-close2 js-menu-toggle"></span>
-            </div>
-        </div>
-        <div class="site-mobile-menu-body"></div>
-    </div>
-
-    <header class="site-navbar py-4 js-sticky-header site-navbar-target" role="banner">
-
-        <div class="container-fluid">
-            <div class="d-flex align-items-center">
-                <div class="site-logo mr-auto w-25"><a href="index.html">MM HALL</a></div>
-
-                <div class="mx-auto text-center">
-                    <nav class="site-navigation position-relative text-right" role="navigation">
-                        <ul class="site-menu main-menu js-clone-nav mx-auto d-none d-lg-block  m-0 p-0">
-                            <li><a href="index.html" class="nav-link">Home</a></li>
-                            <li><a href="notice.html" class="nav-link">Notices</a></li>
-                            <li class="nav-item dropdown"><a href="" class="nav-link dropdown-toggle"
-                                    id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
-                                    aria-expanded="false">Apply</a>
-
-                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="noc.html">Hall NOC</a>
-                                    <a class="dropdown-item" href="seat-in-hall.html">Seat in hall</a>
-                                    <a class="dropdown-item" href="#">Seat change in the hall</a>
-                                </div>
-                            </li>
-                            <li><a href="#" class="nav-link">About Us</a></li>
-                            <li><a href="#" class="nav-link">Contact Us</a></li>
-                        </ul>
-                    </nav>
-                </div>
-
-                <div class="ml-auto w-25">
-                    <nav class="site-navigation position-relative text-right" role="navigation">
-                        <ul class="site-menu main-menu site-menu-dark js-clone-nav mr-auto d-none d-lg-block m-0 p-0">
-                            <!-- <li class="cta"> <a href="#" class="primary-button py-2 px-4">Dashboard</a></li> -->
-                            <li class="nav-item dropdown"><a href="" class="nav-link primary-button dropdown-toggle"
-                                    id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
-                                    aria-expanded="false">Dashboard</a>
-
-                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="Admin Dashboard/Dashbaord.html">View Profile</a>
-                                    <a class="dropdown-item" href="#">My Applications</a>
-                                    <a class="dropdown-item" href="#">JUST Wallet</a>
-                                </div>
-                            </li>
-                        </ul>
-                    </nav>
-                    <a href="#"
-                        class="d-inline-block d-lg-none site-menu-toggle js-menu-toggle text-black float-right"><span
-                            class="icon-menu h3"></span></a>
-                </div>
-            </div>
-        </div>
-
-    </header>
-
-
-    <!-- notice Banner Section Start -->
-    <section class="notice-hero">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="notice-hero-text text-center">
-                        <h1>Sign Up</h1>
-                        <p><a href="index.html">Home</a> <span class="mx-2">/</span> <strong>registration</strong></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <span class="notice-hero-overlay"></span>
-    </section>
-    <!-- notice Banner Section End -->
+    <!-- navbar section start -->
+    <?php include_once 'student/navbar-student.php'; ?>
+    <!-- Navbar Section End -->
 
     <!-- Registration Section Start -->
     <section class="auth-section">
@@ -195,7 +114,7 @@ if (isset($_POST['resendotp']) && $session->get('step') == 2) {
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12 mb-3">
-                                        <label for="email" class="form-label">OTP <?php echo $session->get('otp'); ?></label>
+                                        <label for="email" class="form-label">OTP <?php echo $session::get('otp'); ?></label>
                                         <input type="text" class="form-control" id="email" name="otp" required>
                                     </div>
                                 </div>

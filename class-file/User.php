@@ -42,8 +42,6 @@ class User
      */
     public function createTableMinimal()
     {
-        $this->ensureConnection();
-
         $sql = "CREATE TABLE IF NOT EXISTS tbl_user (
                 user_id INT AUTO_INCREMENT PRIMARY KEY
             ) ENGINE=InnoDB";
@@ -67,8 +65,6 @@ class User
      */
     public function alterTableAddColumns($selectedNums = null)
     {
-        $this->ensureConnection();
-
         // Define queries as a map: key => [column name, SQL query]
         $alterQueries = [
             1 => ['status',    "ALTER TABLE tbl_user ADD COLUMN status INT NOT NULL"],
@@ -113,7 +109,6 @@ class User
      */
     public function insert()
     {
-        $this->ensureConnection();
         $this->password = password_hash($this->password, PASSWORD_DEFAULT); // Hash the password
 
         // echo "hello 1 <br>";
@@ -179,29 +174,48 @@ class User
     /**
      * Get distinct rows based on user_id and status.
      * 
-     * @param int|null $status (Optional) Status filter
+     * @param int|array|null $status (Optional) Status filter: a number or an array of numbers.
      * @param string $user_type (Optional) User type filter (Default is "user")
-     * @return array|false Returns an array of distinct rows based on user_id, false if no match
+     * @return array|User|false Returns an array of rows, a User instance if a single row is present, or false if no match.
      */
     public function getDistinctUsersByStatus($status = null, $user_type = "user")
     {
-        $sql = "SELECT * FROM tbl_user where user_type = '$user_type'";
+        $sql = "SELECT * FROM tbl_user WHERE user_type = '$user_type'";
 
         if (!is_null($status)) {
-            $sql .= " AND status = $status";
+            if (is_array($status)) {
+                // Convert all array elements to integers and build an IN clause
+                $statusArray = array_map('intval', $status);
+                $statusList = implode(',', $statusArray);
+                $sql .= " AND status IN ($statusList)";
+            } else {
+                // Ensure the single status value is an integer
+                $status = intval($status);
+                $sql .= " AND status = $status";
+            }
         }
 
         $result = mysqli_query($this->conn, $sql);
 
         if ($result && mysqli_num_rows($result) > 0) {
-            $users = [];
-            while ($row = mysqli_fetch_assoc($result)) {
-                $users[] = $row;
+            if (mysqli_num_rows($result) == 1) {
+                // If only one row is returned, set properties on the current instance.
+                $row = mysqli_fetch_assoc($result);
+                $this->setProperties($row);
+                return $this;
+            } else {
+                // If multiple rows are returned, collect them in an array.
+                $users = [];
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $users[] = $row;
+                }
+                return $users;
             }
-            return $users;
         }
         return false;
     }
+
+
 
     /**
      * Check if user email exists and validate status.
@@ -268,9 +282,6 @@ class User
                 // Check for declined status (-1)
                 if ($status == -1) {
                     $hasDeclined = true;
-                    $this->user_id = $row['user_id'];
-                    $this->status = -2;
-                    $this->update();
                     return ["-1", "Your account registration was declined by the admin. Please register again using <b>this email<b> or other email account."];
                 }
             }
@@ -284,38 +295,96 @@ class User
 
     /**
      * Check if an email is available for registration.
-     * It checks if the email exists in the database for statuses 0, 1, 2, or -1.
+     * It checks if a record exists in the database based on the given email,
+     * status filter, and user type filter.
      *
-     * @param string $email The email address to check.
-     * @param string|null $user_type (Optional) The user type to filter by (Default = "user").
-     * @return bool Returns true if the email is available, false if it is already registered.
+     * @param string|null $email The email address to check (default NULL).
+     * @param array|int|null $status (Optional) Status filter as an array of numbers or a single number (default NULL).
+     * @param string|array|null $user_type (Optional) User type filter as a string or array of strings (default NULL).
+     * @return int Returns 1 if any matching row exists, 0 otherwise.
      */
-    public function isEmailAvailable($email, $user_type = null)
+    public function isEmailAvailable($email = null, $status = null, $user_type = null)
     {
-        // Escape the email to prevent SQL injection
-        $email = mysqli_real_escape_string($this->conn, $email);
+        $sql = "SELECT user_id FROM tbl_user WHERE 1=1";
 
-        // Query to check if the email exists with status 0,1,2, or -1
-        $sql = "SELECT user_id FROM tbl_user 
-            WHERE email = '$email' AND status IN (0, 1, 2, -1)";
+        if ($email !== null) {
+            $email = mysqli_real_escape_string($this->conn, $email);
+            $sql .= " AND email = '$email'";
+        }
+
+        if ($status !== null) {
+            if (is_array($status)) {
+                $statusArray = array_map('intval', $status);
+                $statusList = implode(',', $statusArray);
+                $sql .= " AND status IN ($statusList)";
+            } else {
+                $status = intval($status);
+                $sql .= " AND status = $status";
+            }
+        }
 
         if ($user_type !== null) {
-            $sql .= " AND user_type = '$user_type'";
+            if (is_array($user_type)) {
+                $escapedTypes = array_map(function ($ut) {
+                    return "'" . mysqli_real_escape_string($this->conn, $ut) . "'";
+                }, $user_type);
+                $userTypeList = implode(',', $escapedTypes);
+                $sql .= " AND user_type IN ($userTypeList)";
+            } else {
+                $user_type = mysqli_real_escape_string($this->conn, $user_type);
+                $sql .= " AND user_type = '$user_type'";
+            }
         }
 
         $result = mysqli_query($this->conn, $sql);
 
-        // If a record exists, email is not available
-        if ($result && mysqli_num_rows($result) > 0) {
-            return 1;
-        }
+        return ($result && mysqli_num_rows($result) > 0) ? 1 : 0;
+    }
 
-        return 0;
+
+    /**
+     * Set class properties based on an associative array.
+     *
+     * @param array $row The row data to set.
+     */
+    public function setProperties($row)
+    {
+        $this->user_id    = $row['user_id'];
+        $this->status     = $row['status'];
+        $this->user_type  = $row['user_type'];
+        $this->email      = $row['email'];
+        $this->password   = $row['password'];
+        $this->created    = $row['created'];
+        $this->modified   = $row['modified'];
+    }
+
+    /**
+     * Check if an email exists with status = -1; if yes, update the status to -2 and return true.
+     * Otherwise, return false.
+     *
+     * @param string $email The email address to check.
+     * @return bool Returns true if the update is performed, false otherwise.
+     */
+    public function updateDeclinedToDeleted($email)
+    {
+        // Escape the email to prevent SQL injection
+        $email = mysqli_real_escape_string($this->conn, $email);
+
+        // Check if a row exists with the given email and status = -1
+        $checkSql = "SELECT user_id FROM tbl_user WHERE email = '$email' AND status = -1 LIMIT 1";
+        $result = mysqli_query($this->conn, $checkSql);
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            // If found, update the status to -2
+            $updateSql = "UPDATE tbl_user SET status = -2 WHERE email = '$email' AND status = -1";
+            if (mysqli_query($this->conn, $updateSql)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
-// $user = new User();
-// $user->alterTableAddColumns([1, 4]);
 ?>
 
 <!-- end -->

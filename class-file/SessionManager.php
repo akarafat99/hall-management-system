@@ -1,24 +1,21 @@
 <?php
 
 /**
- * SessionManager Class
- *
- * This class handles session operations including:
- * - Creating a session (if not already started)
- * - Setting session variables
- * - Retrieving session variables
- * - Deleting a specific session variable
- * - Destroying the session
+ * SessionStatic class (pure static version)
+ * 
+ * This class handles session operations entirely statically. You can call its methods directly
+ * without instantiating the class.
  */
-class SessionManager
+class SessionStatic
 {
-
     /**
-     * Constructor
+     * Ensure the session is started.
      *
-     * Starts the session if it hasn't been started already.
+     * Checks if a session is already running, and if not, starts a session.
+     *
+     * @return void
      */
-    public function __construct()
+    public static function ensureSessionStarted(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -30,9 +27,11 @@ class SessionManager
      *
      * @param string $key   The key to use for the session variable.
      * @param mixed  $value The value to store.
+     * @return void
      */
-    public function set($key, $value)
+    public static function set(string $key, $value): void
     {
+        self::ensureSessionStarted();
         $_SESSION[$key] = $value;
     }
 
@@ -42,8 +41,9 @@ class SessionManager
      * @param string $key The key for the session variable.
      * @return mixed|null Returns the session variable value if set, otherwise null.
      */
-    public function get($key)
+    public static function get(string $key)
     {
+        self::ensureSessionStarted();
         return isset($_SESSION[$key]) ? $_SESSION[$key] : null;
     }
 
@@ -51,9 +51,11 @@ class SessionManager
      * Delete a specific session variable.
      *
      * @param string $key The key for the session variable to be deleted.
+     * @return void
      */
-    public function delete($key)
+    public static function delete(string $key): void
     {
+        self::ensureSessionStarted();
         if (isset($_SESSION[$key])) {
             unset($_SESSION[$key]);
         }
@@ -62,12 +64,15 @@ class SessionManager
     /**
      * Destroy the current session.
      *
-     * This method clears all session variables, removes the session cookie,
+     * Clears all session variables, removes the session cookie,
      * and destroys the session.
+     *
+     * @return void
      */
-    public function destroy()
+    public static function destroy(): void
     {
-        // Unset all session variables.
+        self::ensureSessionStarted();
+        // Clear all session variables.
         $_SESSION = [];
 
         // Delete the session cookie if one exists.
@@ -83,19 +88,20 @@ class SessionManager
                 $params["httponly"]
             );
         }
-
         // Destroy the session.
         session_destroy();
     }
 
     /**
-     * Store an object in the session using `serialize()`.
+     * Store an object in the session using serialize().
      *
      * @param string $key    The key to use for the session variable.
-     * @param object $object The object to be stored.
+     * @param mixed  $object The object to store.
+     * @return void
      */
-    public function storeObject($key, $object)
+    public static function storeObject(string $key, $object): void
     {
+        self::ensureSessionStarted();
         $_SESSION[$key] = serialize($object);
     }
 
@@ -103,24 +109,29 @@ class SessionManager
      * Retrieve and deserialize an object from the session.
      *
      * @param string $key The key for the session variable.
-     * @return object|null The deserialized object if it exists, otherwise null.
+     * @return object|null Returns the deserialized object if it exists, otherwise null.
      */
-    public function getObject($key)
+    public static function getObject(string $key)
     {
+        self::ensureSessionStarted();
         return isset($_SESSION[$key]) ? unserialize($_SESSION[$key]) : null;
     }
 
     /**
-     * Copy matching properties from one object to another.
+     * Copy matching properties from a source object to a destination object.
      *
-     * @param object $sourceObj      The source object to copy properties from.
-     * @param object $destinationObj The destination object to copy properties into.
+     * @param object|null $sourceObj      The object to copy from (can be null).
+     * @param object      $destinationObj The object to copy to.
+     * @throws InvalidArgumentException if the source object is null.
+     * @return void
      */
-    public static function copyProperties(object $sourceObj, object $destinationObj)
+    public static function copyProperties(?object $sourceObj, object $destinationObj): void
     {
+        if ($sourceObj === null) {
+            throw new InvalidArgumentException("Source object is null.");
+        }
         foreach (get_object_vars($sourceObj) as $key => $value) {
             if (property_exists($destinationObj, $key) && $key !== 'conn') {
-                // Only copy if the property exists in the destination object
                 $destinationObj->$key = $value;
             }
         }
@@ -128,30 +139,178 @@ class SessionManager
 
     /**
      * Retrieve an object from the session by key, copy its properties into a new temporary instance,
-     * and return the new instance.
+     * and return the temporary instance.
      *
      * @param string $key The session key used to store the object.
-     * @return object|null The new object with copied properties, or null if the object doesn't exist.
+     * @return object|null The new object with copied properties if found, otherwise null.
      */
-    public function retrieveAndCopyObject($key)
+    public static function retrieveAndCopyObject(string $key)
     {
-        // Retrieve the object from the session using getObject()
-        $sourceObj = $this->getObject($key);
+        self::ensureSessionStarted();
+        $sourceObj = self::getObject($key);
         if ($sourceObj === null) {
-            return null; // No object found for the provided key
+            return null;
         }
-
-        // Create a new temporary object of the same class as the retrieved object
         $className = get_class($sourceObj);
         $tempObj = new $className();
-
-        // Copy properties from the source object to the temporary object
         self::copyProperties($sourceObj, $tempObj);
-
-        // Return the temporary object with all the properties copied over
         return $tempObj;
     }
 }
+
+/**
+ * Session class (object version)
+ * 
+ * This class handles session operations using instance methods.
+ * You need to create an object of this class to access its methods.
+ */
+class Session
+{
+    /**
+     * Ensure the session is started.
+     *
+     * Checks if a session is already running, and if not, starts a session.
+     *
+     * @return void
+     */
+    public function ensureSessionStarted(): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+    }
+
+    /**
+     * Set a session variable.
+     *
+     * @param string $key   The key to use for the session variable.
+     * @param mixed  $value The value to store.
+     * @return void
+     */
+    public function set(string $key, $value): void
+    {
+        $this->ensureSessionStarted();
+        $_SESSION[$key] = $value;
+    }
+
+    /**
+     * Get a session variable.
+     *
+     * @param string $key The key for the session variable.
+     * @return mixed|null Returns the session variable value if set, otherwise null.
+     */
+    public function get(string $key)
+    {
+        $this->ensureSessionStarted();
+        return isset($_SESSION[$key]) ? $_SESSION[$key] : null;
+    }
+
+    /**
+     * Delete a specific session variable.
+     *
+     * @param string $key The key for the session variable to be deleted.
+     * @return void
+     */
+    public function delete(string $key): void
+    {
+        $this->ensureSessionStarted();
+        if (isset($_SESSION[$key])) {
+            unset($_SESSION[$key]);
+        }
+    }
+
+    /**
+     * Destroy the current session.
+     *
+     * Clears all session variables, removes the session cookie, and destroys the session.
+     *
+     * @return void
+     */
+    public function destroy(): void
+    {
+        $this->ensureSessionStarted();
+        $_SESSION = [];
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params["path"],
+                $params["domain"],
+                $params["secure"],
+                $params["httponly"]
+            );
+        }
+        session_destroy();
+    }
+
+    /**
+     * Store an object in the session using serialize().
+     *
+     * @param string $key    The key to use for the session variable.
+     * @param mixed  $object The object to store.
+     * @return void
+     */
+    public function storeObject(string $key, $object): void
+    {
+        $this->ensureSessionStarted();
+        $_SESSION[$key] = serialize($object);
+    }
+
+    /**
+     * Retrieve and deserialize an object from the session.
+     *
+     * @param string $key The key for the session variable.
+     * @return object|null Returns the deserialized object if it exists, otherwise null.
+     */
+    public function getObject(string $key)
+    {
+        $this->ensureSessionStarted();
+        return isset($_SESSION[$key]) ? unserialize($_SESSION[$key]) : null;
+    }
+
+    /**
+     * Copy matching properties from a source object to a destination object.
+     *
+     * @param object|null $sourceObj      The object to copy from (can be null).
+     * @param object      $destinationObj The object to copy to.
+     * @throws InvalidArgumentException if the source object is null.
+     * @return void
+     */
+    public function copyProperties(?object $sourceObj, object $destinationObj): void
+    {
+        if ($sourceObj === null) {
+            throw new InvalidArgumentException("Source object is null.");
+        }
+        foreach (get_object_vars($sourceObj) as $key => $value) {
+            if (property_exists($destinationObj, $key) && $key !== 'conn') {
+                $destinationObj->$key = $value;
+            }
+        }
+    }
+
+    /**
+     * Retrieve an object from the session by key, copy its properties into a new temporary instance,
+     * and return the temporary instance.
+     *
+     * @param string $key The session key used to store the object.
+     * @return object|null The new object with copied properties if found, otherwise null.
+     */
+    public function retrieveAndCopyObject(string $key)
+    {
+        $this->ensureSessionStarted();
+        $sourceObj = $this->getObject($key);
+        if ($sourceObj === null) {
+            return null;
+        }
+        $className = get_class($sourceObj);
+        $tempObj = new $className();
+        $this->copyProperties($sourceObj, $tempObj);
+        return $tempObj;
+    }
+}
+
 ?>
 
 <!-- end -->

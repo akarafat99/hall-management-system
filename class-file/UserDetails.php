@@ -4,6 +4,7 @@ include_once 'DatabaseConnector.php'; // Ensure database connection is included
 class UserDetails
 {
     public $conn;
+    public $db; // Holds the DatabaseConnector instance
 
     // Class properties
     public $details_id = 0;
@@ -38,30 +39,35 @@ class UserDetails
     public $created = "";
     public $modified = "";
 
-    // Create a district map using ArrayObject
-    public array $district_array;
-
     /**
      * Constructor: Initializes the database connection.
      */
-    public function __construct()
-    {
-        $this->createDistrictMap(); //Mandatory to create district map
+    public function __construct() {
         $this->ensureConnection();
     }
 
     /**
      * Ensures that a database connection is established.
+     * Uses the DatabaseConnector class to connect and stores the instance in $db.
      */
     public function ensureConnection()
     {
-        if (!$this->conn) { // Check if connection is not set
-            $db = new DatabaseConnector(); // Create DB Connection
-            $db->connect();
-            $this->conn = $db->getConnection();
-        } else {
-            return 0;
+        if (!$this->conn) {
+            $this->db = new DatabaseConnector();
+            $this->db->connect();
+            $this->conn = $this->db->getConnection();
         }
+    }
+
+    /**
+     * Disconnects the current database connection using the DatabaseConnector's disconnect method.
+     */
+    public function disconnect()
+    {
+        if ($this->db) {
+            $this->db->disconnect();
+        }
+        $this->conn = null;
     }
 
     /**
@@ -71,7 +77,6 @@ class UserDetails
      */
     public function createTableMinimal()
     {
-        $this->ensureConnection();
         $sql = "CREATE TABLE IF NOT EXISTS tbl_user_details (
                 details_id INT AUTO_INCREMENT PRIMARY KEY
             ) ENGINE=InnoDB";
@@ -84,96 +89,74 @@ class UserDetails
     }
 
     /**
- * Alter table tbl_user_details to add additional columns.
- *
- * Each query is defined as a map entry where the key is a number and the value is an array:
- * [column name, SQL query].
- *
- * @param array|null $selectedNums Optional array of numbers. If provided, only the queries with these keys will run.
- * @return void
- */
-public function alterTableAddColumns($selectedNums = null)
-{
-    $this->ensureConnection();
-
-    $table = 'tbl_user_details';
-    // Define queries as a map: key => [column name, SQL query]
-    $alterQueries = [
-        1  => ['status',                   "ALTER TABLE $table ADD COLUMN status INT DEFAULT 0"],
-        2  => ['user_id',                  "ALTER TABLE $table ADD COLUMN user_id INT"],
-        3  => ['profile_picture_id',       "ALTER TABLE $table ADD COLUMN profile_picture_id INT DEFAULT 0"],
-        4  => ['full_name',                "ALTER TABLE $table ADD COLUMN full_name TEXT"],
-        5  => ['student_id',               "ALTER TABLE $table ADD COLUMN student_id INT"],
-        6  => ['gender',                   "ALTER TABLE $table ADD COLUMN gender TEXT"],
-        7  => ['contact_no',               "ALTER TABLE $table ADD COLUMN contact_no TEXT"],
-        8  => ['session',                  "ALTER TABLE $table ADD COLUMN session TEXT"],
-        9  => ['year',                     "ALTER TABLE $table ADD COLUMN year INT DEFAULT 0"],
-        10 => ['semester',                 "ALTER TABLE $table ADD COLUMN semester INT DEFAULT 0"],
-        11 => ['last_semester_cgpa_or_merit',"ALTER TABLE $table ADD COLUMN last_semester_cgpa_or_merit DOUBLE DEFAULT 0.0"],
-        12 => ['district',                 "ALTER TABLE $table ADD COLUMN district TEXT"],
-        13 => ['division',                 "ALTER TABLE $table ADD COLUMN division TEXT"],
-        14 => ['permanent_address',        "ALTER TABLE $table ADD COLUMN permanent_address TEXT"],
-        15 => ['present_address',          "ALTER TABLE $table ADD COLUMN present_address TEXT"],
-        16 => ['father_name',              "ALTER TABLE $table ADD COLUMN father_name TEXT"],
-        17 => ['father_contact_no',        "ALTER TABLE $table ADD COLUMN father_contact_no TEXT"],
-        18 => ['father_profession',        "ALTER TABLE $table ADD COLUMN father_profession TEXT"],
-        19 => ['father_monthly_income',    "ALTER TABLE $table ADD COLUMN father_monthly_income DOUBLE DEFAULT 0.0"],
-        20 => ['mother_name',              "ALTER TABLE $table ADD COLUMN mother_name TEXT"],
-        21 => ['mother_contact_no',        "ALTER TABLE $table ADD COLUMN mother_contact_no TEXT"],
-        22 => ['mother_profession',        "ALTER TABLE $table ADD COLUMN mother_profession TEXT"],
-        23 => ['mother_monthly_income',    "ALTER TABLE $table ADD COLUMN mother_monthly_income DOUBLE DEFAULT 0.0"],
-        24 => ['guardian_name',            "ALTER TABLE $table ADD COLUMN guardian_name TEXT"],
-        25 => ['guardian_contact_no',      "ALTER TABLE $table ADD COLUMN guardian_contact_no TEXT"],
-        26 => ['guardian_address',         "ALTER TABLE $table ADD COLUMN guardian_address TEXT"],
-        27 => ['document_id',              "ALTER TABLE $table ADD COLUMN document_id INT DEFAULT 0"],
-        28 => ['note_ids',                 "ALTER TABLE $table ADD COLUMN note_ids TEXT"],
-        29 => ['created',                  "ALTER TABLE $table ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
-        30 => ['modified',                 "ALTER TABLE $table ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
-    ];
-
-    // If a subset of queries is provided, filter the map.
-    if ($selectedNums !== null && is_array($selectedNums)) {
-        $filteredQueries = [];
-        foreach ($selectedNums as $num) {
-            if (isset($alterQueries[$num])) {
-                $filteredQueries[$num] = $alterQueries[$num];
-            }
-        }
-        $alterQueries = $filteredQueries;
-    }
-
-    // Execute each query in the map.
-    foreach ($alterQueries as $num => $queryInfo) {
-        list($colName, $sql) = $queryInfo;
-        $result = mysqli_query($this->conn, $sql);
-        if ($result) {
-            echo "Column '{$colName}' added successfully to table '{$table}' (Key: {$num}).<br>";
-        } else {
-            echo "Error adding column '{$colName}' to table '{$table}' (Key: {$num}): " . mysqli_error($this->conn) . "<br>";
-        }
-    }
-}
-
-
-
-    /**
-     * Create district map
+     * Alter table tbl_user_details to add additional columns.
+     *
+     * Each query is defined as a map entry where the key is a number and the value is an array:
+     * [column name, SQL query].
+     *
+     * @param array|null $selectedNums Optional array of numbers. If provided, only the queries with these keys will run.
      * @return void
      */
-    public function createDistrictMap()
+    public function alterTableAddColumns($selectedNums = null)
     {
-        $this->district_array = [
-            'Jashore' => 12,
-            'Dhaka' => 220,
-            'Faidpur' => 100,
-            'Coxs Bazar' => 350
+        $table = 'tbl_user_details';
+        $alterQueries = [
+            1  => ['status',                   "ALTER TABLE $table ADD COLUMN status INT DEFAULT 0"],
+            2  => ['user_id',                  "ALTER TABLE $table ADD COLUMN user_id INT"],
+            3  => ['profile_picture_id',       "ALTER TABLE $table ADD COLUMN profile_picture_id INT DEFAULT 0"],
+            4  => ['full_name',                "ALTER TABLE $table ADD COLUMN full_name TEXT"],
+            5  => ['student_id',               "ALTER TABLE $table ADD COLUMN student_id INT"],
+            6  => ['gender',                   "ALTER TABLE $table ADD COLUMN gender TEXT"],
+            7  => ['contact_no',               "ALTER TABLE $table ADD COLUMN contact_no TEXT"],
+            8  => ['session',                  "ALTER TABLE $table ADD COLUMN session TEXT"],
+            9  => ['year',                     "ALTER TABLE $table ADD COLUMN year INT DEFAULT 0"],
+            10 => ['semester',                 "ALTER TABLE $table ADD COLUMN semester INT DEFAULT 0"],
+            11 => ['last_semester_cgpa_or_merit', "ALTER TABLE $table ADD COLUMN last_semester_cgpa_or_merit DOUBLE DEFAULT 0.0"],
+            12 => ['district',                 "ALTER TABLE $table ADD COLUMN district TEXT"],
+            13 => ['division',                 "ALTER TABLE $table ADD COLUMN division TEXT"],
+            14 => ['permanent_address',        "ALTER TABLE $table ADD COLUMN permanent_address TEXT"],
+            15 => ['present_address',          "ALTER TABLE $table ADD COLUMN present_address TEXT"],
+            16 => ['father_name',              "ALTER TABLE $table ADD COLUMN father_name TEXT"],
+            17 => ['father_contact_no',        "ALTER TABLE $table ADD COLUMN father_contact_no TEXT"],
+            18 => ['father_profession',        "ALTER TABLE $table ADD COLUMN father_profession TEXT"],
+            19 => ['father_monthly_income',    "ALTER TABLE $table ADD COLUMN father_monthly_income DOUBLE DEFAULT 0.0"],
+            20 => ['mother_name',              "ALTER TABLE $table ADD COLUMN mother_name TEXT"],
+            21 => ['mother_contact_no',        "ALTER TABLE $table ADD COLUMN mother_contact_no TEXT"],
+            22 => ['mother_profession',        "ALTER TABLE $table ADD COLUMN mother_profession TEXT"],
+            23 => ['mother_monthly_income',    "ALTER TABLE $table ADD COLUMN mother_monthly_income DOUBLE DEFAULT 0.0"],
+            24 => ['guardian_name',            "ALTER TABLE $table ADD COLUMN guardian_name TEXT"],
+            25 => ['guardian_contact_no',      "ALTER TABLE $table ADD COLUMN guardian_contact_no TEXT"],
+            26 => ['guardian_address',         "ALTER TABLE $table ADD COLUMN guardian_address TEXT"],
+            27 => ['document_id',              "ALTER TABLE $table ADD COLUMN document_id INT DEFAULT 0"],
+            28 => ['note_ids',                 "ALTER TABLE $table ADD COLUMN note_ids TEXT"],
+            29 => ['created',                  "ALTER TABLE $table ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
+            30 => ['modified',                 "ALTER TABLE $table ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
         ];
+
+        if ($selectedNums !== null && is_array($selectedNums)) {
+            $filteredQueries = [];
+            foreach ($selectedNums as $num) {
+                if (isset($alterQueries[$num])) {
+                    $filteredQueries[$num] = $alterQueries[$num];
+                }
+            }
+            $alterQueries = $filteredQueries;
+        }
+
+        foreach ($alterQueries as $num => $queryInfo) {
+            list($colName, $sql) = $queryInfo;
+            $result = mysqli_query($this->conn, $sql);
+            if ($result) {
+                echo "Column '{$colName}' added successfully to table '{$table}' (Key: {$num}).<br>";
+            } else {
+                echo "Error adding column '{$colName}' to table '{$table}' (Key: {$num}): " . mysqli_error($this->conn) . "<br>";
+            }
+        }
     }
 
-
     /**
-     * Insert new user details
-     * @return int|false Returns inserted details_id or false on failure
+     * Insert new user details.
+     * @return int|false Returns inserted details_id or 0 on failure.
      */
     public function insert()
     {
@@ -186,16 +169,16 @@ public function alterTableAddColumns($selectedNums = null)
         ) VALUES (
             $this->status, $this->user_id, $this->profile_picture_id, '$this->full_name', $this->student_id, 
             '$this->gender', '$this->contact_no', '$this->session', $this->year, $this->semester, 
-            $this->last_semester_cgpa_or_merit, '$this->district', '$this->division' ,'$this->permanent_address', '$this->present_address', 
+            $this->last_semester_cgpa_or_merit, '$this->district', '$this->division', '$this->permanent_address', '$this->present_address', 
             '$this->father_name', '$this->father_contact_no', '$this->father_profession', 
             $this->father_monthly_income, '$this->mother_name', '$this->mother_contact_no', 
             '$this->mother_profession', $this->mother_monthly_income, '$this->guardian_name', 
             '$this->guardian_contact_no', '$this->guardian_address', $this->document_id, '$this->note_ids'
         )";
 
-        $connection = $this->conn;
-        if (mysqli_query($connection, $sql)) {
-            $this->details_id = mysqli_insert_id($connection);
+        $result = mysqli_query($this->conn, $sql);
+        if ($result) {
+            $this->details_id = mysqli_insert_id($this->conn);
             return $this->details_id;
         } else {
             return 0;
@@ -203,13 +186,15 @@ public function alterTableAddColumns($selectedNums = null)
     }
 
     /**
-     * Update user details based on details_id
-     * @return bool Returns true if update is successful, false otherwise
+     * Update user details based on details_id.
+     * @return bool Returns true if update is successful, false otherwise.
      */
     public function update()
     {
-        if ($this->details_id == 0) return 0; // Ensure details_id is set
-
+        if ($this->details_id == 0) {
+            $this->disconnect();
+            return 0;
+        }
         $sql = "UPDATE tbl_user_details SET 
             status = $this->status,
             user_id = $this->user_id,
@@ -241,96 +226,142 @@ public function alterTableAddColumns($selectedNums = null)
             note_ids = '$this->note_ids'
             WHERE details_id = $this->details_id";
 
-        return mysqli_query($this->conn, $sql);
+        $result = mysqli_query($this->conn, $sql);
+        return $result;
     }
 
     /**
-     * Load user details based on user_id and status.
-     * @param int|null $user_id (Optional) Specific user_id to load
-     * @param int|null $status (Optional) Status filter
-     * @return array|false Returns array of results, false if no match
+     * Load user details based on user_id, student_id, status, and user_type.
+     *
+     * @param int|array|null $user_id (Optional) Specific user_id(s) to load.
+     * @param int|array|null $student_id (Optional) Specific student_id(s) to load.
+     * @param int|array|null $status (Optional) Status filter (can be a number or an array of numbers).
+     * @param string|array|null $user_type (Optional) User type filter (default is "user").
+     * @param string $sort_col (Optional) Column to sort by (allowed: "created", "modified"). Default is "created".
+     * @param string $sort_type (Optional) Sort order ("ASC" or "DESC"). Default is "ASC".
+     * @throws Exception If an invalid sort column is provided.
+     * @return array|false Returns an array of results, or false if no match.
      */
-    public function loadByUserId($user_id = null, $status = null)
+    public function getUsers($user_id = null, $student_id = null, $status = null, $user_type = "user", $sort_col = "created", $sort_type = "ASC")
     {
         $sql = "SELECT * FROM tbl_user_details WHERE 1";
 
+        // Condition for user_id (number or array)
         if ($user_id !== null) {
+            if (is_array($user_id)) {
+                $user_ids = array_map('intval', $user_id);
+                $sql .= " AND user_id IN (" . implode(',', $user_ids) . ")";
+            } else {
+                $user_id = intval($user_id);
+                $sql .= " AND user_id = $user_id";
+            }
+        }
+
+        // Condition for student_id (number or array)
+        if ($student_id !== null) {
+            if (is_array($student_id)) {
+                $student_ids = array_map('intval', $student_id);
+                $sql .= " AND student_id IN (" . implode(',', $student_ids) . ")";
+            } else {
+                $student_id = intval($student_id);
+                $sql .= " AND student_id = $student_id";
+            }
+        }
+
+        // Condition for status (number or array)
+        if ($status !== null) {
+            if (is_array($status)) {
+                $statuses = array_map('intval', $status);
+                $sql .= " AND status IN (" . implode(',', $statuses) . ")";
+            } else {
+                $status = intval($status);
+                $sql .= " AND status = $status";
+            }
+        }
+
+        // Condition for user_type (string or array)
+        if ($user_type !== null) {
+            if (is_array($user_type)) {
+                $escapedTypes = array_map(function ($ut) {
+                    return "'" . mysqli_real_escape_string($this->conn, $ut) . "'";
+                }, $user_type);
+                $sql .= " AND user_type IN (" . implode(',', $escapedTypes) . ")";
+            } else {
+                $user_type = mysqli_real_escape_string($this->conn, $user_type);
+                $sql .= " AND user_type = '$user_type'";
+            }
+        }
+
+        // Append ORDER BY clause if sort_col is provided
+        if ($sort_col !== null) {
+            // Allowed sort columns
+            $allowed_cols = ["created", "modified"];
+            if (in_array($sort_col, $allowed_cols)) {
+                $sort_type = strtoupper($sort_type);
+                if ($sort_type !== "ASC" && $sort_type !== "DESC") {
+                    $sort_type = "ASC";
+                }
+                $sql .= " ORDER BY " . $sort_col . " " . $sort_type;
+            } else {
+                throw new Exception("Invalid sort column: $sort_col");
+            }
+        }
+
+        $result = mysqli_query($this->conn, $sql);
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            $data = [];
+            while ($row = mysqli_fetch_assoc($result)) {
+                $data[] = $row;
+            }
+
+            // If only one row is returned, update properties of the current instance.
+            if (count($data) === 1) {
+                $this->setProperties($data[0]);
+            }
+            return $data;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if any record exists based on user_id, student_id, and status.
+     *
+     * @param int|null $user_id (Optional) User ID to check. Defaults to null.
+     * @param int|null $student_id (Optional) Student ID to check. Defaults to null.
+     * @param int|null $status (Optional) Status filter. Defaults to null.
+     * @return int Returns 1 if a matching record exists, 0 otherwise.
+     */
+    public function isRecordAvailable($user_id = null, $student_id = null, $status = null)
+    {
+        $sql = "SELECT 1 FROM tbl_user_details WHERE 1=1";
+
+        if ($user_id !== null) {
+            $user_id = intval($user_id);
             $sql .= " AND user_id = $user_id";
         }
+
+        if ($student_id !== null) {
+            $student_id = intval($student_id);
+            $sql .= " AND student_id = $student_id";
+        }
+
         if ($status !== null) {
+            $status = intval($status);
             $sql .= " AND status = $status";
         }
 
-        $result = mysqli_query($this->conn, $sql);
+        $sql .= " LIMIT 1";
 
-        if ($result && mysqli_num_rows($result) > 0) {
-            $data = [];
-            while ($row = mysqli_fetch_assoc($result)) {
-                $data[] = $row;
-            }
-
-            if (count($data) === 1) {
-                $this->setProperties($data[0]); // Set properties if only one row found
-            }
-
-            return $data;
-        }
-
-        return false;
-    }
-
-
-
-    /**
-     * Load individual user details based on student_id and status.
-     * @param int $student_id Student ID to search for
-     * @param int|null $status (Optional) Status filter
-     * @return array|false Returns an array of results, false if no match
-     */
-    public function loadByStudentId($student_id, $status = null)
-    {
-        $sql = "SELECT * FROM tbl_user_details WHERE student_id = $student_id";
-
-        if ($status !== null) {
-            $sql .= " AND status = $status";
-        }
-
-        $result = mysqli_query($this->conn, $sql);
-
-        if ($result && mysqli_num_rows($result) > 0) {
-            $data = [];
-            while ($row = mysqli_fetch_assoc($result)) {
-                $data[] = $row;
-            }
-
-            if (count($data) === 1) {
-                $this->setProperties($data[0]); // Set properties if only one row found
-            }
-
-            return $data;
-        }
-
-        return false;
-    }
-
-
-    /**
-     * Check if any student_id exists with the given status.
-     * @param int $student_id Student ID to check
-     * @param int $status Status filter
-     * @return int Returns 1 if student exists, 0 otherwise
-     */
-    public function isUserBasedOnStatusAvailable($user_id, $status)
-    {
-        $sql = "SELECT * FROM tbl_user_details WHERE user_id = $user_id AND status = $status";
         $result = mysqli_query($this->conn, $sql);
         return ($result && mysqli_num_rows($result) > 0) ? 1 : 0;
     }
 
     /**
      * Get distinct rows based on user_id and status.
-     * @param int|null $status (Optional) Status filter
-     * @return array|false Returns an array of distinct rows based on user_id, false if no match
+     * @param int|null $status (Optional) Status filter.
+     * @return array|false Returns an array of distinct rows based on user_id, false if no match.
      */
     public function getDistinctUsersByStatus($status = null)
     {
@@ -349,17 +380,20 @@ public function alterTableAddColumns($selectedNums = null)
             while ($row = mysqli_fetch_assoc($result)) {
                 $users[] = $row;
             }
-
             if (count($users) === 1) {
                 $this->setProperties($users[0]); // Set properties if only one row found
             }
-
             return $users;
         }
 
         return false;
     }
 
+    /**
+     * Set class properties based on an associative array.
+     *
+     * @param array $row The row data to set.
+     */
     public function setProperties($row)
     {
         $this->details_id = $row['details_id'];
@@ -395,21 +429,16 @@ public function alterTableAddColumns($selectedNums = null)
         $this->modified = $row['modified'];
     }
 
-
     /**
-     * Get user IDs from tbl_user with a given status that have a corresponding row in tbl_user_details with a given status.
+     * Get user details by joining tbl_user and tbl_user_details for a given user status, details status, and user type.
      *
      * @param int $userStatus The status for tbl_user (e.g., 1 for active).
      * @param int $detailsStatus The status for tbl_user_details (e.g., 0 for pending).
      * @param string $userType The user type to filter by (e.g., 'user', 'moderator', 'admin'). Default is 'user'.
-     * @return array Returns an array of user IDs.
+     * @return array Returns an array of user details.
      */
-    public function cutsomGetUsersByStatus($userStatus, $detailsStatus, $userType = 'user')
+    public function cutsomGetUsersDetailByStatus($userStatus, $detailsStatus, $userType = 'user')
     {
-        // Ensure that the database connection is active
-        $this->ensureConnection();
-
-        // Build the SQL query dynamically using the provided statuses
         $sql = "SELECT d.* 
             FROM tbl_user u
             JOIN tbl_user_details d ON u.user_id = d.user_id
@@ -429,6 +458,8 @@ public function alterTableAddColumns($selectedNums = null)
         return $rows;
     }
 }
+
+
 ?>
 
-<!-- end -->
+<!-- end of file -->

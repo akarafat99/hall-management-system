@@ -200,8 +200,8 @@ $file2->loadById($file2->file_id);
         <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown"
           aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-          <li><a class="dropdown-item" href="#!">Profile</a></li>
-          <li><a class="dropdown-item" href="#!">Activity Log</a></li>
+          <li><a class="dropdown-item" href="#">Profile</a></li>
+          <li><a class="dropdown-item" href="#">Activity Log</a></li>
           <li>
             <hr class="dropdown-divider" />
           </li>
@@ -216,17 +216,21 @@ $file2->loadById($file2->file_id);
         <div class="sb-sidenav-menu">
           <div class="nav">
             <div class="sb-sidenav-menu-heading">Pages</div>
+            <a class="nav-link" href="../index.php">
+              <div class="sb-nav-link-icon"><i class="fa-solid fa-house"></i></div>
+              Goto Homepage
+            </a>
             <a class="nav-link" href="#">
               <div class="sb-nav-link-icon"><i class="fa-solid fa-house"></i></div>
               Dashboard
             </a>
-            <a class="nav-link" href="profile-page.html">
+            <a class="nav-link" href="#">
               <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
               My Profile
             </a>
             <a class="nav-link" href="pending-profile.html">
               <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-              Pending Profile
+              Update Profile
             </a>
             <a class="nav-link" href="h-residential-info.html">
               <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>

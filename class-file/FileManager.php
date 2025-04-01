@@ -149,9 +149,9 @@ class FileManager
      * @param int $status (Optional) Status filter, default is 1
      * @return bool Returns true if file found, false otherwise
      */
-    public function loadById($file_id, $status = 1)
+    public function loadByFileId($file_id, $status = 1)
     {
-        $sql = "SELECT * FROM tbl_file WHERE file_id = $file_id AND status = $status LIMIT 1";
+        $sql = "SELECT * FROM tbl_file WHERE file_id = $file_id AND status = $status";
         $result = mysqli_query($this->conn, $sql);
 
         if ($result && mysqli_num_rows($result) > 0) {

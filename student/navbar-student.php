@@ -6,11 +6,11 @@ $navbarDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', dirname(__FILE__)) . '/'
 if (isset($_GET['logout'])) {
     // Include the SessionManager class from the correct directory
     include_once $_SERVER['DOCUMENT_ROOT'] . '/class-file/SessionManager.php';
-    
+
     // Create an instance of SessionManager and destroy the session.
-    $session = new SessionManager();
+    $session = new Session();
     $session->destroy();
-    
+
     // Redirect to the homepage using JavaScript.
     echo '<script type="text/javascript">
             window.location.href = "/index.php";
@@ -33,7 +33,7 @@ if (isset($_GET['logout'])) {
 // Dynamically determine the directory of this navbar file.
 $navbarDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', dirname(__FILE__)) . '/';
 ?>
-<header class="site-navbar py-4 js-sticky-header site-navbar-target" role="banner">
+<header class="site-navbar py-4 js-sticky-header site-navbar-target text-dark" role="banner">
     <div class="container-fluid">
         <div class="d-flex align-items-center">
             <!-- For links to pages in the root folder, use absolute paths -->

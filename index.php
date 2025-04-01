@@ -1,11 +1,11 @@
 <?php
 include_once 'class-file/SessionManager.php';
 
-$session = new SessionManager();
-// $session->destroy();
+$session = SessionStatic::class;
+// $session::destroy();
 include_once 'popup-1.php';
-$session->get('msg1') ? showPopup($session->get('msg1')) : '';
-$session->delete('msg1');
+$session::get('msg1') ? showPopup($session::get('msg1')) : '';
+$session::delete('msg1');
 
 if (isset($_POST['login'])) {
     $email = $_POST['email'];
@@ -21,7 +21,7 @@ if (isset($_POST['login'])) {
         // echo 'all ok <br>';
         include_once 'popup-1.php';
         showPopup($userCheck[1]);
-        $session->storeObject('user', $user);
+        $session::storeObject('user', $user);
     } else {
         include_once 'popup-1.php';
         showPopup($userCheck[1]);
@@ -29,7 +29,7 @@ if (isset($_POST['login'])) {
 }
 
 $alreadyLoggedIn = false;
-if ($session->getObject('user') !== null) {
+if ($session::getObject('user') !== null) {
     $alreadyLoggedIn = true;
 }
 
@@ -86,10 +86,8 @@ if ($session->getObject('user') !== null) {
                             <div class="row align-items-center">
                                 <div class="col-lg-6 mb-4">
                                     <h1 class="hero-title" data-aos="fade-up" data-aos-delay="100">MM Hall</h1>
-                                    <p class="hero-sub-text mb-4" data-aos="fade-up" data-aos-delay="200">Lorem ipsum
-                                        dolor sit amet
-                                        consectetur adipisicing elit. Maxime ipsa nulla sed quis rerum amet natus quas
-                                        necessitatibus.</p>
+                                    <p class="hero-sub-text mb-4" data-aos="fade-up" data-aos-delay="200">
+                                    Munshi Mohhamad Meherulla Hall.</p>
 
                                     <div class="button-wrapper" data-aos="fade-up" data-aos-delay="300">
                                         <a href="#" class="primary-button  py-3 px-5 text-uppercase">Get
@@ -170,8 +168,8 @@ if ($session->getObject('user') !== null) {
                         </div>
                         <div class="notice-text-wrap">
                             <p class="notice-text mb-4">
-                                স্নাতক পর্যায়ের সেমিস্টার ফিস প্রদান সংক্রান্ত বিজ্ঞপ্তি (Notification regarding Payment
-                                of Undergraduate Semester Fees) (সংশোধিত)
+                                ফিস প্রদান সংক্রান্ত বিজ্ঞপ্তি 1 (Notification regarding Payment
+                                of Fees 1) (সংশোধিত)
                             </p>
                         </div>
                         <div class="button-wrapper">
@@ -196,8 +194,8 @@ if ($session->getObject('user') !== null) {
                         </div>
                         <div class="notice-text-wrap">
                             <p class="notice-text mb-4">
-                                স্নাতক পর্যায়ের সেমিস্টার ফিস প্রদান সংক্রান্ত বিজ্ঞপ্তি (Notification regarding Payment
-                                of Undergraduate Semester Fees) (সংশোধিত)
+                            ফিস প্রদান সংক্রান্ত বিজ্ঞপ্তি 1 (Notification regarding Payment
+                            of Fees 1)
                             </p>
                         </div>
                         <div class="button-wrapper">
@@ -268,7 +266,7 @@ if ($session->getObject('user') !== null) {
             <div class="section-heading-wrapper section-gallery-heading-wrapper" data-aos="fade-up" data-aos-delay="50">
                 <div class="section-title-wrapper gallery-heading-wrapper">
                     <h2 class="text-center">Our Hall Gallery</h2>
-                    <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Aperiam, quaerat?</p>
+                    <p>Munshi Mohhamad Meherulla Hall</p>
                 </div>
             </div>
 
@@ -681,38 +679,7 @@ if ($session->getObject('user') !== null) {
                 </div>
             </div> -->
             <!-- owl carousel -->
-            <div class="gallery" data-aos="fade-up" data-aos-delay="200">
-                <a href="https://images.pexels.com/photos/1954524/pexels-photo-1954524.jpeg?auto=compress&cs=tinysrgb&w=600"
-                    class="gallery-item">
-                    <img src="https://images.pexels.com/photos/1954524/pexels-photo-1954524.jpeg?auto=compress&cs=tinysrgb&w=600"
-                        alt="Gallery Image 1">
-                </a>
-                <a href="https://images.pexels.com/photos/1229356/pexels-photo-1229356.jpeg?auto=compress&cs=tinysrgb&w=600"
-                    class="gallery-item">
-                    <img src="https://images.pexels.com/photos/1229356/pexels-photo-1229356.jpeg?auto=compress&cs=tinysrgb&w=600"
-                        alt="Gallery Image 2">
-                </a>
-                <a href="https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg?auto=compress&cs=tinysrgb&w=600"
-                    class="gallery-item">
-                    <img src="https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg?auto=compress&cs=tinysrgb&w=600"
-                        alt="Gallery Image 3">
-                </a>
-                <a href="https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg?auto=compress&cs=tinysrgb&w=600"
-                    class="gallery-item">
-                    <img src="https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg?auto=compress&cs=tinysrgb&w=600"
-                        alt="Gallery Image 4">
-                </a>
-                <a href="https://images.pexels.com/photos/791763/pexels-photo-791763.jpeg?auto=compress&cs=tinysrgb&w=600"
-                    class="gallery-item">
-                    <img src="https://images.pexels.com/photos/791763/pexels-photo-791763.jpeg?auto=compress&cs=tinysrgb&w=600"
-                        alt="Gallery Image 5">
-                </a>
-                <a href="https://images.pexels.com/photos/1552106/pexels-photo-1552106.jpeg?auto=compress&cs=tinysrgb&w=600"
-                    class="gallery-item">
-                    <img src="https://images.pexels.com/photos/1552106/pexels-photo-1552106.jpeg?auto=compress&cs=tinysrgb&w=600"
-                        alt="Gallery Image 6">
-                </a>
-            </div>
+            
         </div>
     </section>
 
@@ -723,7 +690,7 @@ if ($session->getObject('user') !== null) {
                 <div class="col-md-3">
                     <div class="footer-logo-wrapper">
                         <h3>HMS</h3>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                        <p>Welcome to Munshi Mohammad Meherulla Hall</p>
                     </div>
                 </div>
 

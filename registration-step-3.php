@@ -1,24 +1,20 @@
 <?php
-include_once 'class-file/UserDetails.php';
 include_once 'class-file/SessionManager.php';
-$session = new SessionManager();
+include_once 'class-file/User.php';
+include_once 'class-file/UserDetails.php';
+include_once 'class-file/FileManager.php';
+include_once 'class-file/NoteManager.php';
+include_once 'class-file/Division.php';  // Include the Division class
 
-$session->delete('step');
-
-$districtList = new UserDetails();
-$districtList = $districtList->district_array;
-
+$session = SessionStatic::class;
+// Get divisions array from the Division class.
+$divisions = getDivisions();
 
 if (isset($_POST['register'])) {
-    include_once 'class-file/User.php';
-    include_once 'class-file/FileManager.php';
-    include_once 'class-file/NoteManager.php';
-
-
     $user = new User();
-    $temp_user = $session->getObject('user');
+    $temp_user = $session::getObject('signup_user');
     $user->user_type = "user";
-    $session->copyProperties($temp_user, $user);
+    $session::copyProperties($temp_user, $user);
     $user->insert();
 
     $userDetails = new UserDetails();
@@ -32,6 +28,7 @@ if (isset($_POST['register'])) {
     $userDetails->year = $_POST['year'];
     $userDetails->semester = $_POST['semester'];
     $userDetails->last_semester_cgpa_or_merit = $_POST['university-merit-or-cgpa'];
+    $userDetails->division = $_POST['division'];
     $userDetails->district = $_POST['district'];
     $userDetails->permanent_address = $_POST['permanentAddress'];
     $userDetails->present_address = $_POST['presentAddress'];
@@ -46,7 +43,6 @@ if (isset($_POST['register'])) {
     $userDetails->guardian_name = $_POST['guardianName'];
     $userDetails->guardian_contact_no = $_POST['guardianContactNo'];
     $userDetails->guardian_address = $_POST['guardianAddress'];
-
 
     $userDetails->insert();
 
@@ -77,30 +73,29 @@ if (isset($_POST['register'])) {
     $userDetails->update();
 
     // echo 'All done <br>';
-    $session->delete('user');
-    $session->set('msg1', 'Registration successful. Please login to continue.'); // Set success message
-    $session->set('msg1_ttl', 1);
-    // $session->destroy();
+    $session::delete('signup_user');
+    $session::set('msg1', 'Registration successful. Please login to continue.'); // Set success message
+    // $session::destroy();
     echo "<script>window.location = 'index.php';</script>";
     exit();
 }
 ?>
-
-
-
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
 
-    <meta charset="utf-8">
+<meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
 
     <link href="https://fonts.googleapis.com/css?family=Muli:300,400,700,900" rel="stylesheet">
     <link rel="stylesheet" href="fonts/icomoon/style.css">
     <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="css/jquery-ui.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css">
     <link rel="stylesheet" href="css/owl.carousel.min.css">
@@ -143,83 +138,9 @@ if (isset($_POST['register'])) {
 
 <body data-spy="scroll" data-target=".site-navbar-target" data-offset="300">
 
-    <div class="site-mobile-menu site-navbar-target">
-        <div class="site-mobile-menu-header">
-            <div class="site-mobile-menu-close mt-3">
-                <span class="icon-close2 js-menu-toggle"></span>
-            </div>
-        </div>
-        <div class="site-mobile-menu-body"></div>
-    </div>
-
-    <header class="site-navbar py-4 js-sticky-header site-navbar-target" role="banner">
-
-        <div class="container-fluid">
-            <div class="d-flex align-items-center">
-                <div class="site-logo mr-auto w-25"><a href="index.html">MM HALL</a></div>
-
-                <div class="mx-auto text-center">
-                    <nav class="site-navigation position-relative text-right" role="navigation">
-                        <ul class="site-menu main-menu js-clone-nav mx-auto d-none d-lg-block  m-0 p-0">
-                            <li><a href="index.html" class="nav-link">Home</a></li>
-                            <li><a href="notice.html" class="nav-link">Notices</a></li>
-                            <li class="nav-item dropdown"><a href="" class="nav-link dropdown-toggle"
-                                    id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
-                                    aria-expanded="false">Apply</a>
-
-                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="noc.html">Hall NOC</a>
-                                    <a class="dropdown-item" href="seat-in-hall.html">Seat in hall</a>
-                                    <a class="dropdown-item" href="#">Seat change in the hall</a>
-                                </div>
-                            </li>
-                            <li><a href="#" class="nav-link">About Us</a></li>
-                            <li><a href="#" class="nav-link">Contact Us</a></li>
-                        </ul>
-                    </nav>
-                </div>
-
-                <div class="ml-auto w-25">
-                    <nav class="site-navigation position-relative text-right" role="navigation">
-                        <ul class="site-menu main-menu site-menu-dark js-clone-nav mr-auto d-none d-lg-block m-0 p-0">
-                            <!-- <li class="cta"> <a href="#" class="primary-button py-2 px-4">Dashboard</a></li> -->
-                            <li class="nav-item dropdown"><a href="" class="nav-link primary-button dropdown-toggle"
-                                    id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
-                                    aria-expanded="false">Dashboard</a>
-
-                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="Admin Dashboard/Dashbaord.html">View Profile</a>
-                                    <a class="dropdown-item" href="#">My Applications</a>
-                                    <a class="dropdown-item" href="#">JUST Wallet</a>
-                                </div>
-                            </li>
-                        </ul>
-                    </nav>
-                    <a href="#"
-                        class="d-inline-block d-lg-none site-menu-toggle js-menu-toggle text-black float-right"><span
-                            class="icon-menu h3"></span></a>
-                </div>
-            </div>
-        </div>
-
-    </header>
-
-
-    <!-- notice Banner Section Start -->
-    <section class="notice-hero">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="notice-hero-text text-center">
-                        <h1>Sign Up</h1>
-                        <p><a href="index.html">Home</a> <span class="mx-2">/</span> <strong>registration</strong></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <span class="notice-hero-overlay"></span>
-    </section>
-    <!-- notice Banner Section End -->
+    <!-- navbar section start -->
+    <?php include_once 'student/navbar-student.php'; ?>
+    <!-- Navbar Section End -->
 
     <!-- Registration Section Start -->
     <section class="auth-section">
@@ -315,16 +236,22 @@ if (isset($_POST['register'])) {
                                     </div>
                                 </div>
 
-
+                                <!-- Division Dropdown -->
+                                <div class="mb-3">
+                                    <label for="division" class="form-label">Division</label>
+                                    <select class="form-control" id="division" name="division" required>
+                                        <?php foreach ($divisions as $divisionName => $districts): ?>
+                                            <option value="<?php echo htmlspecialchars($divisionName); ?>">
+                                                <?php echo htmlspecialchars($divisionName); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <!-- District Dropdown -->
                                 <div class="mb-3">
                                     <label for="district" class="form-label">District</label>
                                     <select class="form-control" id="district" name="district" required>
-                                        <option value="">Select District</option>
-                                        <?php foreach ($districtList as $districtName => $value): ?>
-                                            <option value="<?= htmlspecialchars($districtName) ?>">
-                                                <?= htmlspecialchars($districtName) ?>
-                                            </option>
-                                        <?php endforeach; ?>
+                                        <!-- District options will be populated dynamically -->
                                     </select>
                                 </div>
 
@@ -516,6 +443,37 @@ if (isset($_POST['register'])) {
 
     <script src="js/main.js"></script>
 
+    <!-- JavaScript to Handle Division and District Dropdowns -->
+    <script>
+        // Pass the PHP $divisions array to JavaScript as a JSON object.
+        var divisionData = <?php echo json_encode($divisions); ?>;
+
+        // Function to populate districts based on the selected division.
+        function populateDistricts(selectedDivision) {
+            var districtSelect = document.getElementById("district");
+            districtSelect.innerHTML = ""; // Clear existing options.
+            if (divisionData[selectedDivision]) {
+                for (var district in divisionData[selectedDivision]) {
+                    if (divisionData[selectedDivision].hasOwnProperty(district)) {
+                        var option = document.createElement("option");
+                        option.value = district;
+                        option.text = district;
+                        districtSelect.appendChild(option);
+                    }
+                }
+            }
+        }
+
+        // Initialize districts on page load based on the first division option.
+        document.addEventListener("DOMContentLoaded", function() {
+            var divisionSelect = document.getElementById("division");
+            populateDistricts(divisionSelect.value);
+            // Update districts when the division selection changes.
+            divisionSelect.addEventListener("change", function() {
+                populateDistricts(this.value);
+            });
+        });
+    </script>
 
     <!-- JavaScript to Handle Text & Attribute Change -->
     <script>
