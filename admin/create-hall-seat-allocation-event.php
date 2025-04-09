@@ -157,9 +157,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Event Details</label>
-                                    <textarea name="eventdetails" class="form-control" rows="3" required><?php
-                                                                                                            echo htmlspecialchars($hallSeatAllocationEvent->details);
-                                                                                                            ?></textarea>
+                                    <input name="eventdetails" class="form-control" rows="3"
+                                        value="<?php echo htmlspecialchars($hallSeatAllocationEvent->details); ?>" required>
                                 </div>
 
                                 <!-- Dates -->

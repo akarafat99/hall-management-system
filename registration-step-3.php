@@ -258,13 +258,13 @@ if (isset($_POST['register'])) {
 
                                 <div class="mb-3">
                                     <label for="permanentAddress" class="form-label">Permanent Address</label>
-                                    <textarea class="form-control" id="permanentAddress" name="permanentAddress"
-                                        rows="2" required></textarea>
+                                    <input class="form-control" id="permanentAddress" name="permanentAddress"
+                                        rows="2" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="presentAddress" class="form-label">Present Address</label>
-                                    <textarea class="form-control" id="presentAddress" name="presentAddress" rows="2"
-                                        required></textarea>
+                                    <input class="form-control" id="presentAddress" name="presentAddress" rows="2"
+                                        required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="formFile" class="form-label">Upload your file (Document scanned copy)</label>
@@ -340,8 +340,8 @@ if (isset($_POST['register'])) {
                                 </div>
                                 <div class="mb-3">
                                     <label for="guardianAddress" class="form-label">Guardian's Address</label>
-                                    <textarea class="form-control" id="guardianAddress" name="guardianAddress" rows="2"
-                                        required></textarea>
+                                    <input class="form-control" id="guardianAddress" name="guardianAddress" rows="2"
+                                        required>
                                 </div>
 
                                 <div class="text-center">
