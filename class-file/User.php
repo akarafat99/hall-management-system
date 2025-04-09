@@ -225,19 +225,15 @@ class User
         $result = mysqli_query($this->conn, $sql);
 
         if ($result && mysqli_num_rows($result) > 0) {
-            if (mysqli_num_rows($result) == 1) {
-                // If only one row is returned, set properties on the current instance.
-                $row = mysqli_fetch_assoc($result);
-                $this->setProperties($row);
-                return $this;
-            } else {
-                // If multiple rows are returned, collect them in an array.
-                $users = [];
-                while ($row = mysqli_fetch_assoc($result)) {
-                    $users[] = $row;
-                }
-                return $users;
+            $users = [];
+            while ($row = mysqli_fetch_assoc($result)) {
+                $users[] = $row;
             }
+
+            if (count($users) == 1) {
+                $this->setProperties($users[0]);
+            }
+            return $users;
         }
         return false;
     }
