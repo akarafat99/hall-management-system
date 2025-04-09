@@ -7,7 +7,7 @@ include_once '../popup-1.php';
 if (isset($_POST['active']) || isset($_POST['deactive'])) {
     $user2 = new User();
 
-    $status = 2; // Default to deactivated status
+    $status = 0;
     if (isset($_POST['active'])) {
         $user2->user_id = $_POST['active'];
         $status = 1;
@@ -16,8 +16,11 @@ if (isset($_POST['active']) || isset($_POST['deactive'])) {
         $status = 2;
     }
 
-    $user2->updateStatus($user2->user_id, $status);
-    showPopup("User ID: " . $user2->user_id . " has been successfully " . ($status == 1 ? "activated" : "deactivated"));
+    $user2->load();
+    $user2->status = $status;
+    $user2->update();
+
+    showPopup("User ID: " . $user2->user_id . " with email: {$user2->email} has been successfully " . ($status == 1 ? "activated" : "deactivated"));
 }
 
 $user = new User();
@@ -26,6 +29,8 @@ $userListDeactive = $user->getDistinctUsersByStatus(2, "user"); // Get all users
 
 // Merge the arrays (using an empty array fallback if one of the lists is false)
 $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
+
+
 
 ?>
 
@@ -36,25 +41,36 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>MM HALL - Dashboard</title>
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" /> -->
     <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet" />
     <link href="../css/Dashboard/dashboard.css" rel="stylesheet" />
     <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+
+    <title>MM HALL - Dashboard</title>
+
     <style>
-        /* Enhanced Search Field Styling */
-        #searchContainer {
-            margin: 20px 0;
+        .profile-info-flex .label {
+            font-weight: 500;
+            color: black;
         }
 
-        #searchContainer .form-control {
-            max-width: 250px;
+        .profile-info-flex .data {
+            color: black;
         }
 
-        /* Accordion and detail styling */
+
         .accordion-item {
             border: none;
+        }
+
+        .accordion-item P {
+            margin: 0;
         }
 
         .faq-heading {
@@ -77,6 +93,13 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
             padding: 10px;
         }
 
+        .profile-info-flex {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
         .profile-wrap {
             width: 100px;
             height: 100px;
@@ -88,11 +111,6 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
             padding-top: 24px !important;
             padding-bottom: 24px !important;
         }
-
-        /* Pagination styling using Bootstrap's pagination */
-        #paginationContainer {
-            margin-top: 20px;
-        }
     </style>
 </head>
 
@@ -101,10 +119,19 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
         <!-- Navbar Brand-->
         <a class="navbar-brand ps-3" href="../index.html">HMS</a>
         <!-- Sidebar Toggle-->
-        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle"><i
+        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i
                 class="fas fa-bars"></i></button>
+        <!-- Navbar Search-->
+        <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+            <!-- <div class="input-group">
+                <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..."
+                    aria-describedby="btnNavbarSearch" />
+                <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i
+                        class="fas fa-search"></i></button>
+            </div> -->
+        </form>
         <!-- Navbar-->
-        <ul class="navbar-nav ms-auto me-3 me-lg-4">
+        <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown"
                     aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
@@ -121,56 +148,33 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
     </nav>
     <div id="layoutSidenav">
         <?php include 'admin-sidebar.php'; ?>
+
+        
         <div id="layoutSidenav_content">
             <main>
                 <div class="container-fluid px-4">
                     <div class="card__wrapper">
                         <div class="card__title-wrap mb-20">
-                            <h3 class="table__heading-title">Manage User</h3>
+                            <h3 class="table__heading-title">Manage Users</h3>
                         </div>
 
-                        <!-- Enhanced Search Options -->
-                        <div id="searchContainer" class="container">
-                            <div class="row g-3 align-items-center">
-                                <div class="col-auto">
-                                    <label for="searchUserId" class="col-form-label">User ID</label>
-                                </div>
-                                <div class="col-auto">
-                                    <input type="text" id="searchUserId" class="form-control" placeholder="Enter User ID" />
-                                </div>
-                                <div class="col-auto">
-                                    <label for="searchStudentId" class="col-form-label">Student ID</label>
-                                </div>
-                                <div class="col-auto">
-                                    <input type="text" id="searchStudentId" class="form-control" placeholder="Enter Student ID" />
-                                </div>
-                                <div class="col-auto">
-                                    <label for="searchEmail" class="col-form-label">Email</label>
-                                </div>
-                                <div class="col-auto">
-                                    <input type="text" id="searchEmail" class="form-control" placeholder="Enter Email" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Accordion with User List -->
                         <div class="accordion" id="faqAccordion">
                             <div class="faq-heading">
                                 <div class="row">
                                     <div class="col-lg-2">
                                         <p>User ID</p>
                                     </div>
-                                    <div class="col-lg-1">
+                                    <div class="col-lg-2">
                                         <p>Student ID</p>
                                     </div>
                                     <div class="col-lg-3">
                                         <p>Email</p>
                                     </div>
-                                    <div class="col-lg-2">
-                                        <p>Details</p>
-                                    </div>
                                     <div class="col-lg-1">
                                         <p>Status</p>
+                                    </div>
+                                    <div class="col-lg-1">
+                                        <p>Profile</p>
                                     </div>
                                     <div class="col-lg-3">
                                         <p>Action</p>
@@ -178,72 +182,71 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
                                 </div>
                             </div>
 
+
+                            <!-- First Item -->
                             <?php
                             if ($userList && count($userList) > 0) {
                                 foreach ($userList as $userItem) {
                                     $userId = $userItem['user_id'];
-                                    $userEmail = $userItem['email'];
-                                    $status = $userItem['status'];
-                                    // Create a new instance of UserDetails and load details for this user.
+                                    $userObj1 = new User();
+                                    $userObj1->user_id = $userId;
+                                    $userObj1->load();
+
+                                    // Create a new instance of UserDetails and load details for this user
                                     $userDetails = new UserDetails();
-                                    $userDetails->getUsers($userId, null, 1);
+                                    $userDetails->loadByUserId($userId, 1);
 
                                     $file = new FileManager();
-                                    $file->loadByFileId($userDetails->profile_picture_id);
+                                    $file->loadById($userDetails->profile_picture_id);
 
                                     $file2 = new FileManager();
-                                    $file2->loadByFileId($userDetails->document_id);
+                                    $file2->loadById($userDetails->document_id);
 
                                     $collapseId = "collapse{$userId}";
+
                             ?>
-                                    <div class="accordion-item faq-item"
-                                        data-userid="<?php echo $userDetails->user_id; ?>"
-                                        data-studentid="<?php echo $userDetails->student_id; ?>"
-                                        data-email="<?php echo htmlspecialchars($userEmail); ?>">
+                                    <div class="accordion-item faq-item">
                                         <div class="row">
                                             <div class="col-lg-2 d-flex align-items-center">
-                                                <p><?php echo $userDetails->user_id; ?></p>
-                                            </div>
-                                            <div class="col-lg-1 d-flex align-items-center">
-                                                <p><?php echo $userDetails->student_id; ?></p>
-                                            </div>
-                                            <div class="col-lg-3 d-flex align-items-center">
-                                                <p><?php echo htmlspecialchars($userEmail); ?></p>
+                                                <p><?php echo htmlspecialchars($userDetails->user_id); ?></p>
                                             </div>
                                             <div class="col-lg-2 d-flex align-items-center">
-                                                <button class="btn btn-primary" data-bs-toggle="collapse"
-                                                    data-bs-target="#<?php echo $collapseId; ?>">Details</button>
+                                                <p><?php echo htmlspecialchars($userDetails->student_id); ?></p>
+                                            </div>
+                                            <div class="col-lg-3 d-flex align-items-center">
+                                                <p><?php echo htmlspecialchars($userObj1->email); ?></p>
                                             </div>
                                             <div class="col-lg-1 d-flex align-items-center">
-                                                <div>
-                                                    <?php if ($status == 1) { ?>
-                                                        <p class="text-success">Active</p>
-                                                    <?php } else { ?>
-                                                        <p class="text-danger">Deactive</p>
-                                                    <?php } ?>
-                                                </div>
+                                                <?php if ($userObj1->status == 1) { ?>
+                                                    <span class="bd-badge bg-success">Active</span>
+                                                <?php } else { ?>
+                                                    <span class="bd-badge bg-warning">Deactive</span>
+                                                <?php } ?>
+                                            </div>
+                                            <div class="col-lg-1 d-flex align-items-center">
+                                                <button class="btn btn-primary" data-bs-toggle="collapse"
+                                                    data-bs-target="#<?php echo $collapseId; ?>">Details</button>
                                             </div>
                                             <div class="col-lg-3 d-flex align-items-center">
                                                 <div>
                                                     <form action="" method="post">
-                                                        <?php if ($status == 1) { ?>
-                                                            <button type="submit" name="deactive" value="<?php echo htmlspecialchars($userId); ?>" class="btn btn-danger">Deactive</button>
+                                                        <?php if ($userObj1->status == 1) { ?>
+                                                            <button type="submit" name="deactive" value="<?php echo htmlspecialchars($userId); ?>" class="btn btn-success">Deactive</button>
                                                         <?php } else { ?>
                                                             <button type="submit" name="active" value="<?php echo htmlspecialchars($userId); ?>" class="btn btn-success">Active</button>
                                                         <?php } ?>
                                                     </form>
                                                 </div>
                                             </div>
+
                                         </div>
-                                        <div id="<?php echo $collapseId; ?>" class="accordion-collapse collapse"
-                                            data-bs-parent="#faqAccordion">
+                                        <div id="<?php echo $collapseId; ?>" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                             <div class="accordion-body">
                                                 <div class="profile-info-flex">
                                                     <div class="profile-wrap">
                                                         <img src="../uploads1/<?php echo $file->file_new_name; ?>" alt="User Image" class="img-fluid">
                                                     </div>
                                                 </div>
-
                                                 <div class="row">
                                                     <div class="col-lg-4">
                                                         <p><strong>Name:</strong> <?php echo htmlspecialchars($userDetails->full_name); ?></p>
@@ -352,7 +355,8 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
                                                         </p>
                                                     </div>
                                                     <!-- <div class="col-lg-4">
-                                                        <p><strong>Note IDs:</strong> <?php echo isset($userDetails->note_ids) ? htmlspecialchars($userDetails->note_ids) : 'N/A'; ?></p>
+                                                        <p><strong>Note IDs:</strong> <?php //echo isset($userDetails->note_ids) ? htmlspecialchars($userDetails->note_ids) : 'N/A'; 
+                                                                                        ?></p>
                                                     </div> -->
                                                     <div class="col-lg-4">
                                                         <p><strong>Created:</strong> <?php echo isset($userDetails->created) ? htmlspecialchars($userDetails->created) : 'N/A'; ?></p>
@@ -360,8 +364,8 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
                                                     </div>
                                                 </div>
 
+                                                <!-- You can add more rows here similar to the above structure -->
 
-                                                <!-- Additional details can be added here -->
                                                 <div class="col-lg-12 d-flex align-items-center justify-content-center mt-4">
                                                     <button class="btn btn-danger" data-bs-toggle="collapse"
                                                         data-bs-target="#<?php echo $collapseId; ?>">Close</button>
@@ -376,11 +380,6 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
                             }
                             ?>
                         </div>
-
-                        <!-- Pagination Controls (placed after the user list) -->
-                        <nav aria-label="User list pagination">
-                            <ul class="pagination justify-content-center" id="paginationContainer"></ul>
-                        </nav>
                     </div>
                 </div>
             </main>
@@ -399,106 +398,40 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
         </div>
     </div>
 
-    <!-- JS Libraries -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
         crossorigin="anonymous"></script>
     <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
+    <script src="assets/demo/chart-area-demo.js"></script>
+    <script src="assets/demo/chart-bar-demo.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
-    <!-- JavaScript for Search Filtering and Pagination -->
+
+
     <script>
-        let currentPage = 1;
-        const itemsPerPage = 5;
+        $(document).ready(function() {
+            $('#userTable').DataTable(); // Initialize DataTables on #userTable
+        });
 
-        function filterItems() {
-            const searchUserId = document.getElementById('searchUserId').value.trim();
-            const searchStudentId = document.getElementById('searchStudentId').value.trim();
-            const searchEmail = document.getElementById('searchEmail').value.trim().toLowerCase();
+        window.addEventListener('DOMContentLoaded', event => {
 
-            const items = document.querySelectorAll('.accordion-item.faq-item');
+            // Toggle the side navigation
+            const sidebarToggle = document.body.querySelector('#sidebarToggle');
+            if (sidebarToggle) {
+                // Uncomment Below to persist sidebar toggle between refreshes
+                // if (localStorage.getItem('sb|sidebar-toggle') === 'true') {
+                //     document.body.classList.toggle('sb-sidenav-toggled');
+                // }
+                sidebarToggle.addEventListener('click', event => {
+                    event.preventDefault();
+                    document.body.classList.toggle('sb-sidenav-toggled');
+                    localStorage.setItem('sb|sidebar-toggle', document.body.classList.contains('sb-sidenav-toggled'));
+                });
+            }
 
-            items.forEach(function(item) {
-                const itemUserId = item.getAttribute('data-userid');
-                const itemStudentId = item.getAttribute('data-studentid');
-                const itemEmail = item.getAttribute('data-email').toLowerCase();
-
-                let match = true;
-                if (searchUserId !== '' && itemUserId.indexOf(searchUserId) === -1) {
-                    match = false;
-                }
-                if (searchStudentId !== '' && itemStudentId.indexOf(searchStudentId) === -1) {
-                    match = false;
-                }
-                if (searchEmail !== '' && itemEmail.indexOf(searchEmail) === -1) {
-                    match = false;
-                }
-                item.setAttribute('data-match', match ? 'true' : 'false');
-            });
-            currentPage = 1;
-            paginateItems();
-        }
-
-        function paginateItems() {
-    // Get all accordion items.
-    const items = Array.from(document.querySelectorAll('.accordion-item.faq-item'));
-    
-    // Hide all items initially.
-    items.forEach(item => item.style.display = 'none');
-
-    // Filter items that match the search criteria.
-    const visibleItems = items.filter(item => item.getAttribute('data-match') === 'true');
-    const totalPages = Math.ceil(visibleItems.length / itemsPerPage);
-
-    // Calculate start and end index for the current page.
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-
-    // Show only items for the current page.
-    visibleItems.slice(startIndex, endIndex).forEach(item => item.style.display = '');
-
-    // Build Bootstrap pagination controls.
-    const paginationContainer = document.getElementById('paginationContainer');
-    paginationContainer.innerHTML = '';
-
-    if (totalPages > 1) {
-        let paginationHTML = '';
-
-        // Previous button.
-        paginationHTML += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-            <a class="page-link" href="#" aria-label="Previous" onclick="changePage(${currentPage - 1}); return false;">
-                <span aria-hidden="true">&laquo;</span>
-            </a>
-        </li>`;
-
-        // Page number buttons.
-        for (let i = 1; i <= totalPages; i++) {
-            paginationHTML += `<li class="page-item ${i === currentPage ? 'active' : ''}">
-                <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
-            </li>`;
-        }
-
-        // Next button.
-        paginationHTML += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-            <a class="page-link" href="#" aria-label="Next" onclick="changePage(${currentPage + 1}); return false;">
-                <span aria-hidden="true">&raquo;</span>
-            </a>
-        </li>`;
-
-        paginationContainer.innerHTML = paginationHTML;
-    }
-}
-
-
-        function changePage(page) {
-            currentPage = page;
-            paginateItems();
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('searchUserId').addEventListener('input', filterItems);
-            document.getElementById('searchStudentId').addEventListener('input', filterItems);
-            document.getElementById('searchEmail').addEventListener('input', filterItems);
-            filterItems(); // Initialize on page load.
         });
     </script>
 </body>

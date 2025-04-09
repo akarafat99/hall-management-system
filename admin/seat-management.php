@@ -1,10 +1,10 @@
 <?php
 include_once '../class-file/SessionManager.php';
-$session = new SessionManager();
-if ($session->get('msg1')) {
+$session = SessionStatic::class;
+if ($session::get('msg1')) {
     include_once '../popup-1.php';
-    showPopup($session->get('msg1'));
-    $session->delete('msg1');
+    showPopup($session::get('msg1'));
+    $session::delete('msg1');
 }
 
 include_once '../class-file/HallSeatDetails.php';

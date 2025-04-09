@@ -42,7 +42,8 @@ class UserDetails
     /**
      * Constructor: Initializes the database connection.
      */
-    public function __construct() {
+    public function __construct()
+    {
         $this->ensureConnection();
     }
 
@@ -231,18 +232,55 @@ class UserDetails
     }
 
     /**
-     * Load user details based on user_id, student_id, status, and user_type.
+     * Update the status for a given user in tbl_user_details only if the current status matches.
+     *
+     * @param int $user_id The ID of the user to update.
+     * @param int $currentStatus The expected current status.
+     * @param int $newStatus The new status value to set.
+     * @return bool|string Returns true if the update is successful, otherwise returns an error message.
+     */
+    public function updateStatus($user_id, $currentStatus, $newStatus)
+    {
+        // Ensure a valid database connection is available.
+        $this->ensureConnection();
+
+        // Sanitize the inputs.
+        $user_id = intval($user_id);
+        $currentStatus = intval($currentStatus);
+        $newStatus = intval($newStatus);
+
+        // Prepare the SQL update query to only update if the current status matches.
+        $sql = "UPDATE tbl_user_details 
+            SET status = $newStatus 
+            WHERE user_id = $user_id AND status = $currentStatus";
+
+        // Execute the query.
+        if (mysqli_query($this->conn, $sql)) {
+            if (mysqli_affected_rows($this->conn) > 0) {
+                return true;
+            } else {
+                return false;
+                // return "No record updated. Check if the current status matches.";
+            }
+        } else {
+            return false;
+            return "Error updating status: " . mysqli_error($this->conn);
+        }
+    }
+
+
+    /**
+     * Load user details based on user_id, student_id, status
      *
      * @param int|array|null $user_id (Optional) Specific user_id(s) to load.
      * @param int|array|null $student_id (Optional) Specific student_id(s) to load.
      * @param int|array|null $status (Optional) Status filter (can be a number or an array of numbers).
-     * @param string|array|null $user_type (Optional) User type filter (default is "user").
      * @param string $sort_col (Optional) Column to sort by (allowed: "created", "modified"). Default is "created".
      * @param string $sort_type (Optional) Sort order ("ASC" or "DESC"). Default is "ASC".
      * @throws Exception If an invalid sort column is provided.
      * @return array|false Returns an array of results, or false if no match.
      */
-    public function getUsers($user_id = null, $student_id = null, $status = null, $user_type = "user", $sort_col = "created", $sort_type = "ASC")
+    public function getUsers($user_id = null, $student_id = null, $status = null, $sort_col = "created", $sort_type = "ASC")
     {
         $sql = "SELECT * FROM tbl_user_details WHERE 1";
 
@@ -276,19 +314,6 @@ class UserDetails
             } else {
                 $status = intval($status);
                 $sql .= " AND status = $status";
-            }
-        }
-
-        // Condition for user_type (string or array)
-        if ($user_type !== null) {
-            if (is_array($user_type)) {
-                $escapedTypes = array_map(function ($ut) {
-                    return "'" . mysqli_real_escape_string($this->conn, $ut) . "'";
-                }, $user_type);
-                $sql .= " AND user_type IN (" . implode(',', $escapedTypes) . ")";
-            } else {
-                $user_type = mysqli_real_escape_string($this->conn, $user_type);
-                $sql .= " AND user_type = '$user_type'";
             }
         }
 

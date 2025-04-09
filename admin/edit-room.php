@@ -1,23 +1,58 @@
 <?php
+include_once '../class-file/SessionManager.php';
+$session = SessionStatic::class;
+if ($session::get('msg1')) {
+    include_once '../popup-1.php';
+    showPopup($session::get('msg1'));
+    $session::delete('msg1');
+}
+
+
 include_once '../class-file/HallSeatDetails.php';
 $seatDetails = new HallSeatDetails();
 
-include_once '../class-file/SessionManager.php';
-$session = new SessionManager();
-if ($session->get('msg1')) {
-    include_once '../popup-1.php';
-    showPopup($session->get('msg1'));
-    $session->delete('msg1');
-}
-
-// Handle seat deletion if requested
-if (isset($_POST['deleteSeat'])) {
+if (isset($_POST['releaseSeat'])) {
     $seatId = $_POST['seatId'];
-    $seatDetails->loadBySeatId($seatId);
-    // $seatDetails->delete(); // Uncomment or implement deletion logic as needed.
-    echo "<script>window.location.reload();</script>";
+    $seatDetails = new HallSeatDetails();
+    $seatDetails->updateStatus($seatId, 0); // 0 means available
+
+    include_once '../popup-1.php';
+    showPopup("Seat released successfully! Seat ID: $seatId", 7000);
+    // echo "<script> window.location.href.reload(); </script>";
+    echo "<script>
+        window.location.href = '?floorNo=$floorNo&roomNo=$roomNo';
+    </script>";
     exit();
 }
+
+if (isset($_POST['unavailableSeat'])) {
+    $seatId = $_POST['seatId'];
+    $seatDetails = new HallSeatDetails();
+    $seatDetails->updateStatus($seatId, 3); // 3 means unavailable temporarily
+
+    include_once '../popup-1.php';
+    showPopup("Seat made unavailable successfully! Seat ID: $seatId", 7000);
+    // echo "<script> window.location.href.reload(); </script>";
+    echo "<script>
+        window.location.href = '?floorNo=$floorNo&roomNo=$roomNo';
+    </script>";
+    exit();
+}
+
+if (isset($_POST['availableSeat'])) {
+    $seatId = $_POST['seatId'];
+    $seatDetails = new HallSeatDetails();
+    $seatDetails->updateStatus($seatId, 0); // 0 means available
+
+    include_once '../popup-1.php';
+    showPopup("Seat made available successfully! Seat ID: $seatId", 7000);
+    // echo "<script> window.location.href.reload(); </script>";
+    echo "<script>
+        window.location.href = '?floorNo=$floorNo&roomNo=$roomNo';
+    </script>";
+    exit();
+}
+
 
 // Handle add seats operation
 if (isset($_POST['addSeats'])) {
@@ -25,7 +60,7 @@ if (isset($_POST['addSeats'])) {
     $roomNo = intval($_POST['roomNo']);
     $seatCount = intval($_POST['seatCount']);
     $seatDetails->addSeatsToRoom($floorNo, $roomNo, $seatCount);
-    $session->set('msg1', 'New ' . $seatCount . ' seats added to Floor ' . $floorNo . ', Room ' . $roomNo . ' successfully!');
+    $session::set('msg1', 'New ' . $seatCount . ' seats added to Floor ' . $floorNo . ', Room ' . $roomNo . ' successfully!');
     echo "<script>
         window.location.href = '?floorNo=$floorNo&roomNo=$roomNo';
     </script>";
@@ -39,7 +74,7 @@ $seats = false;
 
 // If both floorNo and roomNo are provided, fetch seats for that room.
 if ($floorNo !== null && $roomNo !== null) {
-    $seats = $seatDetails->getRowsByFloorRoomStatus($floorNo, $roomNo, null);
+    $seats = $seatDetails->getRowsByFloorRoomStatus($floorNo, $roomNo, [0, 1, 2, 3]);
 }
 ?>
 <!DOCTYPE html>
@@ -57,6 +92,10 @@ if ($floorNo !== null && $roomNo !== null) {
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
     <link href="../css/Dashboard/dashboard.css" rel="stylesheet" />
+
+    <!-- for no seat found part -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
     <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
 
     <title>MM HALL - Dashboard</title>
@@ -97,24 +136,13 @@ if ($floorNo !== null && $roomNo !== null) {
         <div id="layoutSidenav_content">
             <main>
                 <div class="container-fluid px-4">
-                    <!-- If floor number is not set, prompt for it; if set, prompt for room number -->
-                    <?php if ($floorNo === null): ?>
-                        <form method="POST" action="">
-                            <div class="form-group">
-                                <label for="floorNo">Enter Floor Number:</label>
-                                <input type="number" name="floorNo" id="floorNo" class="form-control" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary mt-2">Next</button>
-                        </form>
-                    <?php elseif ($roomNo === null): ?>
-                        <form method="POST" action="">
-                            <input type="hidden" name="floorNo" value="<?php echo $floorNo; ?>">
-                            <div class="form-group">
-                                <label for="roomNo">Enter Room Number:</label>
-                                <input type="number" name="roomNo" id="roomNo" class="form-control" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary mt-2">Get Seats</button>
-                        </form>
+                    <!-- Navigation button to floorwise view -->
+                    <?php if ($floorNo !== null): ?>
+                        <div class="mb-3">
+                            <a href="floorwise.php?floorNo=<?php echo $floorNo; ?>" class="btn btn-secondary btn-view">
+                                <i class="fas fa-dashboard"></i> Goto Floorwise Details Page
+                            </a>
+                        </div>
                     <?php endif; ?>
 
                     <!-- Display the seats table if available -->
@@ -126,32 +154,65 @@ if ($floorNo !== null && $roomNo !== null) {
                                     <thead>
                                         <tr>
                                             <th>Seat ID</th>
-                                            <th>Seat No</th>
                                             <th>User ID</th>
                                             <th>Status</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($seats as $seat): ?>
+                                        <?php foreach ($seats as $seat):
+                                            $status = '';
+                                            // Determine the status based on the value of 'status' field
+                                            if ($seat['status'] == 0) {
+                                                $status = 'Available';
+                                            } elseif ($seat['status'] == 1) {
+                                                $status = 'Occupied';
+                                            } elseif ($seat['status'] == 2) {
+                                                $status = 'Reserved';
+                                            } elseif ($seat['status'] == 3) {
+                                                $status = 'Unavailable temporarily';
+                                            } else {
+                                                $status = 'Unknown status';
+                                            }
+
+                                        ?>
+
                                             <tr>
                                                 <td><?php echo $seat['seat_id']; ?></td>
-                                                <td><?php echo $seat['seat_no']; ?></td>
                                                 <td><?php echo $seat['user_id']; ?></td>
-                                                <td><?php echo ($seat['status'] == 0) ? 'Available' : 'Occupied'; ?></td>
+                                                <td><?php echo $status ?></td>
                                                 <td>
-                                                    <?php if ($seat['status'] == 0): ?>
-                                                        <!-- Delete form for available seat -->
-                                                        <form method="POST" action="delete-seat.php"
-                                                            onsubmit="return confirm('Are you sure you want to delete this seat?');">
+                                                    <!-- Button designs for each status -->
+                                                    <?php if ($seat['status'] == 0) { ?>
+                                                        <div class="btn-group" role="group">
+                                                            <form method="POST" action="" class="d-inline me-1">
+                                                                <input type="hidden" name="seatId" value="<?php echo $seat['seat_id']; ?>">
+                                                                <button type="submit" name="unavailableSeat" value="<?php echo $seat['seat_id']; ?>" class="btn btn-warning btn-sm">
+                                                                    <i class="fas fa-ban"></i> Make Unavailable
+                                                                </button>
+                                                            </form>
+                                                            <form method="POST" action="" class="d-inline">
+                                                                <input type="hidden" name="seatId" value="<?php echo $seat['seat_id']; ?>">
+                                                                <button type="submit" name="deleteSeat" value="<?php echo $seat['seat_id']; ?>" class="btn btn-danger btn-sm">
+                                                                    <i class="fas fa-trash"></i> Delete
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    <?php } elseif ($seat['status'] == 1) { ?>
+                                                        <form method="POST" action="" class="d-inline">
                                                             <input type="hidden" name="seatId" value="<?php echo $seat['seat_id']; ?>">
-                                                            <button type="submit" name="deleteSeat" class="btn btn-danger btn-sm">
-                                                                <i class="fas fa-trash-alt"></i> Delete
+                                                            <button type="submit" name="releaseSeat" value="<?php echo $seat['seat_id']; ?>" class="btn btn-info btn-sm">
+                                                                <i class="fas fa-undo"></i> Release
                                                             </button>
                                                         </form>
-                                                    <?php else: ?>
-                                                        <span class="text-muted">N/A</span>
-                                                    <?php endif; ?>
+                                                    <?php } elseif ($seat['status'] == 3) { ?>
+                                                        <form method="POST" action="" class="d-inline">
+                                                            <input type="hidden" name="seatId" value="<?php echo $seat['seat_id']; ?>">
+                                                            <button type="submit" name="availableSeat" value="<?php echo $seat['seat_id']; ?>" class="btn btn-success btn-sm">
+                                                                <i class="fas fa-check"></i> Make Available
+                                                            </button>
+                                                        </form>
+                                                    <?php } ?>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -159,12 +220,8 @@ if ($floorNo !== null && $roomNo !== null) {
                                 </table>
                             </div>
                         </div>
-                    <?php elseif ($floorNo !== null && $roomNo !== null): ?>
-                        <p class="mt-4">No seats found for Floor <?php echo $floorNo; ?>, Room <?php echo $roomNo; ?>.</p>
-                    <?php endif; ?>
 
-                    <!-- Add More Seats Section -->
-                    <?php if ($floorNo !== null && $roomNo !== null): ?>
+                        <!-- Add More Seats Section -->
                         <div class="card shadow mt-4">
                             <div class="card-header">
                                 <h5 class="mb-0">Add More Seats</h5>
@@ -183,9 +240,27 @@ if ($floorNo !== null && $roomNo !== null) {
                                 </form>
                             </div>
                         </div>
+                    <?php elseif ($floorNo !== null && $roomNo !== null): ?>
+                        <div class="card shadow my-4 animate__animated animate__fadeInDown">
+                            <div class="card-body text-center">
+                                <!-- Animated motion icon -->
+                                <i class="fas fa-exclamation-triangle animate__animated animate__bounce animate__infinite text-warning" style="font-size: 4rem;"></i>
+                                <h2 class="display-4 text-danger mt-3">Room Not Found</h2>
+                                <p class="lead">
+                                    We couldn't locate Room <?php echo $roomNo; ?> on Floor <?php echo $floorNo; ?>.
+                                    Please verify your input or return to the floor overview page.
+                                </p>
+                                <a href="floorwise.php?floorNo=<?php echo $floorNo; ?>" class="btn btn-primary btn-lg mt-3">
+                                    <i class="fas fa-arrow-left"></i> Back to Floor Overview
+                                </a>
+                            </div>
+                        </div>
                     <?php endif; ?>
+
+
                 </div>
             </main>
+
             <footer class="py-4 dashboard-copyright-footer mt-auto">
                 <div class="container-fluid px-4">
                     <div class="d-flex align-items-center justify-content-between small">

@@ -7,11 +7,10 @@ class HallSeatDetails
 
     // Class properties
     public $seat_id = 0;
-    public $status = 1;
+    public $status = 0;
     public $user_id = 0;
     public $floor_no = 0;
     public $room_no = 0;
-    public $seat_no = 0;
     public $created = "";
     public $modified = "";
 
@@ -76,9 +75,8 @@ class HallSeatDetails
             2  => ['user_id',     "ALTER TABLE $table ADD COLUMN user_id INT DEFAULT 0"],
             3  => ['floor_no',    "ALTER TABLE $table ADD COLUMN floor_no INT"],
             4  => ['room_no',     "ALTER TABLE $table ADD COLUMN room_no INT"],
-            5  => ['seat_no',     "ALTER TABLE $table ADD COLUMN seat_no INT"],
-            6  => ['created',     "ALTER TABLE $table ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
-            7  => ['modified',    "ALTER TABLE $table ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
+            5  => ['created',     "ALTER TABLE $table ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
+            6  => ['modified',    "ALTER TABLE $table ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
         ];
 
         // If a subset of queries is provided, filter the map.
@@ -111,9 +109,9 @@ class HallSeatDetails
     public function insert()
     {
         $sql = "INSERT INTO tbl_hall_seat_details (
-            status, user_id, floor_no, room_no, seat_no
+            status, user_id, floor_no, room_no
         ) VALUES (
-            $this->status, $this->user_id, $this->floor_no, $this->room_no, $this->seat_no
+            $this->status, $this->user_id, $this->floor_no, $this->room_no
         )";
 
         $connection = $this->conn;
@@ -138,11 +136,38 @@ class HallSeatDetails
             user_id = $this->user_id,
             floor_no = $this->floor_no,
             room_no = $this->room_no,
-            seat_no = $this->seat_no
             WHERE seat_id = $this->seat_id";
 
         return mysqli_query($this->conn, $sql);
     }
+
+    /**
+     * Update the status of a seat based on its seat_id.
+     *
+     * @param int $seat_id The ID of the seat to update.
+     * @param int $new_status The new status value.
+     * @return bool Returns true if the update is successful, false otherwise.
+     */
+    public function updateStatus($seat_id, $new_status)
+    {
+        // Ensure the database connection is established
+        $this->ensureConnection();
+
+        // Validate the seat_id
+        if ($seat_id <= 0) {
+            return false;
+        }
+
+        // Prepare and execute the update query
+        $sql = "UPDATE tbl_hall_seat_details SET status = $new_status WHERE seat_id = $seat_id";
+        if (mysqli_query($this->conn, $sql)) {
+            return true;
+        } else {
+            // Optionally, log the error: mysqli_error($this->conn)
+            return false;
+        }
+    }
+
 
     /**
      * Load hall seat details based on user_id and status.
@@ -241,7 +266,6 @@ class HallSeatDetails
         $this->user_id = $row['user_id'];
         $this->floor_no = $row['floor_no'];
         $this->room_no = $row['room_no'];
-        $this->seat_no = $row['seat_no'];
         $this->created = $row['created'];
         $this->modified = $row['modified'];
     }
@@ -384,9 +408,7 @@ class HallSeatDetails
         foreach ($per_room_seat as $num_seats) {
             // For each room, prepare the values for batch insert
             for ($i = 1; $i <= $num_seats; $i++) {
-                $seat_no = $i;
-                // Add the seat's values to the insert array
-                $insert_values[] = "($floor_no, $starting_room_no, $seat_no)";
+                $insert_values[] = "($floor_no, $starting_room_no)";
             }
 
             // Increment room number for the next room
@@ -396,54 +418,73 @@ class HallSeatDetails
         // Step 1: Check if there are any values to insert
         if (!empty($insert_values)) {
             // Step 2: Create a single insert query with all the values
-            $sql = "INSERT INTO tbl_hall_seat_details (floor_no, room_no, seat_no) VALUES " . implode(',', $insert_values);
+            $sql = "INSERT INTO tbl_hall_seat_details (floor_no, room_no) VALUES " . implode(',', $insert_values);
 
             // Step 3: Execute the batch insert
             $result = mysqli_query($this->conn, $sql);
 
             if ($result) {
-                echo "Seats successfully created.<br>";
+                return true;
+                // echo "Seats successfully created.<br>";
             } else {
-                echo "Error inserting seats: " . mysqli_error($this->conn) . "<br>";
+                return false;
+                // echo "Error inserting seats: " . mysqli_error($this->conn) . "<br>";
             }
         } else {
-            echo "No seats to insert.<br>";
+            return false;
+            // echo "No seats to insert.<br>";
         }
     }
 
 
 
     /**
-     * Get all rows for a given floor number with status filter (default value 1).
-     * @param int $floor_no The floor number to get rows for.
-     * @param int $status The status to filter rows by (default is null).
-     * @return array|false Returns an array of rows for the given floor, or false if no rows are found.
+     * Get all rows with optional floor number and status filters.
+     *
+     * @param int|array|null $floor_no The floor number (or array of floor numbers) to filter by. Default is null.
+     * @param int|array|null $status The status (or array of statuses) to filter by. Default is null.
+     * @return array|false Returns an array of rows matching the filters, or false if no rows are found.
      */
-    public function getRowsByFloorNo($floor_no, $status = null)
+    public function getRowsByFloorNo($floor_no = null, $status = null)
     {
         // Ensure the database connection is established
         $this->ensureConnection();
 
+        // Base query that always evaluates to true
+        $sql = "SELECT * FROM tbl_hall_seat_details WHERE 1";
 
-        // Query to get all rows for the specified floor_no with the given status (default 1)
-        $sql = "SELECT * FROM tbl_hall_seat_details WHERE floor_no = $floor_no";
-        if ($status != null) {
-            $sql .= " AND status = $status";
+        // Apply floor number filter if provided
+        if ($floor_no !== null) {
+            if (is_array($floor_no)) {
+                $floorNoList = implode(',', array_map('intval', $floor_no));
+                $sql .= " AND floor_no IN ($floorNoList)";
+            } else {
+                $sql .= " AND floor_no = " . intval($floor_no);
+            }
         }
 
+        // Apply status filter if provided
+        if ($status !== null) {
+            if (is_array($status)) {
+                $statusList = implode(',', array_map('intval', $status));
+                $sql .= " AND status IN ($statusList)";
+            } else {
+                $sql .= " AND status = " . intval($status);
+            }
+        }
 
         $result = mysqli_query($this->conn, $sql);
-
         if ($result && mysqli_num_rows($result) > 0) {
             $data = [];
             while ($row = mysqli_fetch_assoc($result)) {
                 $data[] = $row;
             }
-            return $data;  // Return an array of rows for the specified floor and status
+            return $data;
         }
 
-        return false;  // Return false if no rows are found
+        return false;
     }
+
 
 
     /**
@@ -515,28 +556,16 @@ class HallSeatDetails
         // Ensure the database connection is established
         $this->ensureConnection();
 
-        // Get the current maximum seat number for the specified floor and room
-        $sqlMaxSeat = "SELECT MAX(seat_no) AS max_seat_no FROM tbl_hall_seat_details WHERE floor_no = $floor_no AND room_no = $room_no";
-        $resultMaxSeat = mysqli_query($this->conn, $sqlMaxSeat);
-        $maxSeatNo = 0;
-        if ($resultMaxSeat && mysqli_num_rows($resultMaxSeat) > 0) {
-            $row = mysqli_fetch_assoc($resultMaxSeat);
-            if ($row['max_seat_no'] !== null) {
-                $maxSeatNo = intval($row['max_seat_no']);
-            }
-        }
-
         // Generate the insert values for new seats
         $insertValues = [];
         for ($i = 1; $i <= $seat_count; $i++) {
-            $newSeatNo = $maxSeatNo + $i;
-            // Only floor_no, room_no, seat_no are inserted. Other columns (status, user_id, etc.) use their default values.
-            $insertValues[] = "($floor_no, $room_no, $newSeatNo)";
+            // Only floor_no, room_no inserted. Other columns (status, user_id, etc.) use their default values.
+            $insertValues[] = "($floor_no, $room_no)";
         }
 
         if (!empty($insertValues)) {
             // Create the single INSERT query for batch insertion.
-            $sqlInsert = "INSERT INTO tbl_hall_seat_details (floor_no, room_no, seat_no) VALUES " . implode(',', $insertValues);
+            $sqlInsert = "INSERT INTO tbl_hall_seat_details (floor_no, room_no) VALUES " . implode(',', $insertValues);
             $resultInsert = mysqli_query($this->conn, $sqlInsert);
             if ($resultInsert) {
                 // Return the number of inserted rows
@@ -549,6 +578,27 @@ class HallSeatDetails
     }
 
     /**
+     * Check if a given floor number exists in the tbl_hall_seat_details table.
+     *
+     * @param int $floor_no The floor number to check.
+     * @return bool Returns true if the floor exists, false otherwise.
+     */
+    public function isFloorExist($floor_no)
+    {
+        // Ensure the database connection is established
+        $this->ensureConnection();
+
+        // SQL query to check if the floor exists
+        $sql = "SELECT 1 FROM tbl_hall_seat_details WHERE floor_no = $floor_no LIMIT 1";
+
+        $result = mysqli_query($this->conn, $sql);
+
+        // Check if any rows are returned
+        return (mysqli_num_rows($result) ? true : false);
+    }
+
+
+    /**
      * Count the number of seats (records) that have a given status.
      *
      * @param int $status The status value to filter by.
@@ -559,7 +609,7 @@ class HallSeatDetails
         $this->ensureConnection();
         $sql = "SELECT COUNT(*) AS seat_count FROM tbl_hall_seat_details WHERE status = $status";
         $result = mysqli_query($this->conn, $sql);
-        
+
         if ($result && mysqli_num_rows($result) > 0) {
             $row = mysqli_fetch_assoc($result);
             return (int)$row['seat_count'];

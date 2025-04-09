@@ -172,6 +172,33 @@ class User
     }
 
     /**
+     * Update the status for a given user_id.
+     *
+     * @param int $user_id The ID of the user to update.
+     * @param int $status The new status value to set.
+     * @return bool|string Returns true if the update is successful, otherwise returns an error message.
+     */
+    public function updateStatus($user_id, $status)
+    {
+        // Ensure a valid database connection is available.
+        $this->ensureConnection();
+
+        // Sanitize the inputs.
+        $user_id = intval($user_id);
+        $status = intval($status);
+
+        // Prepare the SQL update query.
+        $sql = "UPDATE tbl_user SET status = $status WHERE user_id = $user_id";
+
+        // Execute the query and return the result.
+        if (mysqli_query($this->conn, $sql)) {
+            return true;
+        } else {
+            return "Error updating user status: " . mysqli_error($this->conn);
+        }
+    }
+
+    /**
      * Get distinct rows based on user_id and status.
      * 
      * @param int|array|null $status (Optional) Status filter: a number or an array of numbers.

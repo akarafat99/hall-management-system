@@ -1,4 +1,7 @@
 <?php
+include_once '../class-file/SessionManager.php';
+$session = SessionStatic::class;
+
 include_once '../class-file/HallSeatDetails.php';
 $seatDetails = new HallSeatDetails();
 
@@ -20,9 +23,7 @@ if (isset($_POST['createFloor'])) {
     $startingRoomNo = $seatDetails->getHighestRoomNoByFloor($floorNo) + 1;
     $seatDetails->createMultipleSeatsOptimized($floorNo, $startingRoomNo, $roomWiseSeats);
 
-    include_once '../class-file/SessionManager.php';
-    $session = new SessionManager();
-    $session->set(
+    $session::set(
         'msg1',
         'Floor no ' . $floorNo . ' with ' . $numRooms . ' room(s) and ' . array_sum($roomWiseSeats) . ' seat(s) created successfully!'
     );
@@ -34,8 +35,8 @@ if (isset($_POST['createFloor'])) {
 if (isset($_POST['addRoom'])) {
     // Retrieve floor number from GET or hidden field
     $floorNo = isset($_GET['floorNo']) ? $_GET['floorNo'] : $_POST['floorNo'];
-    $roomWiseSeats = [];
     $numRooms = $_POST['numRooms'];
+    $roomWiseSeats = [];
 
     // Collect new room seat counts
     for ($i = 1; $i <= $numRooms; $i++) {
@@ -49,9 +50,7 @@ if (isset($_POST['addRoom'])) {
     // echo $startingRoomNo . ' START room <br>';
     $seatDetails->createMultipleSeatsOptimized($floorNo, $startingRoomNo, $roomWiseSeats);
 
-    include_once '../class-file/SessionManager.php';
-    $session = new SessionManager();
-    $session->set(
+    $session::set(
         'msg1',
         'Added ' . $numRooms . ' new room(s) to floor ' . $floorNo . ' with a total of ' . array_sum($roomWiseSeats) . ' seat(s) successfully!'
     );
@@ -68,9 +67,11 @@ if ($isCreateFloor) {
     // For a new floor, floor number is the current max plus 1.
     $totalFloors = $seatDetails->getMaxFloorNo();
     $newFloorNo = $totalFloors + 1;
+    $newRoomNoStart = 1;
 } else {
     // For adding a room, use the provided floor number.
     $existingFloorNo = $_GET['floorNo'];
+    $newRoomNoStart = $seatDetails->getHighestRoomNoByFloor($existingFloorNo) + 1;
 }
 ?>
 <!DOCTYPE html>
@@ -147,7 +148,7 @@ if ($isCreateFloor) {
                         <?php else: ?>
                             <!-- Add Room Form -->
                             <div class="card__title-wrap mb-20">
-                                <h3>Add Room(s) to Floor <?php echo $existingFloorNo; ?></h3>
+                                <h3>Add Room(s) to Floor No <?php echo $existingFloorNo; ?></h3>
                             </div>
                             <form id="addRoomForm" action="" method="POST">
                                 <input type="hidden" name="floorNo" value="<?php echo $existingFloorNo; ?>" />
@@ -186,53 +187,60 @@ if ($isCreateFloor) {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    
     <script>
-        // For "Create Floor" dynamic inputs
-        $('#numRooms').on('input', function() {
-            const numRooms = $(this).val();
-            const container = $('#roomInputContainer');
-            container.empty();
-            if (numRooms > 0) {
-                for (let i = 1; i <= numRooms; i++) {
-                    container.append(`
-                        <div class="row input-group mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Room no:</label>
-                                <p class="form-control-plaintext">Room ${i}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="seats${i}" class="form-label">Total Seats:</label>
-                                <input type="number" class="form-control" id="seats${i}" name="seats${i}" min="1" value="4" required />
-                            </div>
+    // Set the starting room number from PHP
+    const newRoomNoStart = <?php echo $newRoomNoStart; ?>;
+    
+    // For "Create Floor" dynamic inputs
+    $('#numRooms').on('input', function() {
+        const numRooms = $(this).val();
+        const container = $('#roomInputContainer');
+        container.empty();
+        if (numRooms > 0) {
+            for (let i = 1; i <= numRooms; i++) {
+                let roomNo = newRoomNoStart + i - 1;
+                container.append(`
+                    <div class="row input-group mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Room no:</label>
+                            <p class="form-control-plaintext">Room ${roomNo}</p>
                         </div>
-                    `);
-                }
+                        <div class="col-md-6">
+                            <label for="seats${roomNo}" class="form-label">Total Seats:</label>
+                            <input type="number" class="form-control" id="seats${roomNo}" name="seats${i}" min="1" value="4" required />
+                        </div>
+                    </div>
+                `);
             }
-        });
+        }
+    });
 
-        // For "Add Room" dynamic inputs
-        $('#numRoomsAdd').on('input', function() {
-            const numRooms = $(this).val();
-            const container = $('#addRoomInputContainer');
-            container.empty();
-            if (numRooms > 0) {
-                for (let i = 1; i <= numRooms; i++) {
-                    container.append(`
-                        <div class="row input-group mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Room no:</label>
-                                <p class="form-control-plaintext">Room ${i}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="seats${i}" class="form-label">Total Seats:</label>
-                                <input type="number" class="form-control" id="seats${i}" name="seats${i}" min="1" value="4" required />
-                            </div>
+    // For "Add Room" dynamic inputs
+    $('#numRoomsAdd').on('input', function() {
+        const numRooms = $(this).val();
+        const container = $('#addRoomInputContainer');
+        container.empty();
+        if (numRooms > 0) {
+            for (let i = 1; i <= numRooms; i++) {
+                let roomNo = newRoomNoStart + i - 1;
+                container.append(`
+                    <div class="row input-group mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Room no:</label>
+                            <p class="form-control-plaintext">Room ${roomNo}</p>
                         </div>
-                    `);
-                }
+                        <div class="col-md-6">
+                            <label for="seats${roomNo}" class="form-label">Total Seats:</label>
+                            <input type="number" class="form-control" id="seats${roomNo}" name="seats${i}" min="1" value="4" required />
+                        </div>
+                    </div>
+                `);
             }
-        });
-    </script>
+        }
+    });
+</script>
+
 </body>
 
 </html>

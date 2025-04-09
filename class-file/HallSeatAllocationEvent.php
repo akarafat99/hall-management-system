@@ -10,7 +10,8 @@ class HallSeatAllocationEvent
     public $application_start_date = "";
     public $application_end_date = "";
     public $viva_notice_date = "";
-    public $seat_allotted_notice_date = "";
+    public $seat_allotment_result_notice_date = "";
+    public $seat_allotment_result_notice_text = "";
     public $seat_confirm_deadline_date = "";
     public $priority_list = "";
     public $seat_distribution_quota = "";
@@ -74,12 +75,13 @@ class HallSeatAllocationEvent
             4  => ['application_start_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN application_start_date DATE"],
             5  => ['application_end_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN application_end_date DATE"],
             6  => ['viva_notice_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN viva_notice_date DATE"],
-            7  => ['seat_allotted_notice_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_allotted_notice_date DATE"],
-            8  => ['seat_confirm_deadline_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_confirm_deadline_date DATE"],
-            9  => ['priority_list', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN priority_list TEXT"],
-            10 => ['seat_distribution_quota', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_distribution_quota TEXT"],
-            11 => ['created', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
-            12 => ['modified', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
+            7  => ['seat_allotment_result_notice_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_allotment_result_notice_date DATE"],
+            8  => ['seat_allotment_result_notice_text', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_allotment_result_notice_text TEXT"],
+            9  => ['seat_confirm_deadline_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_confirm_deadline_date DATE"],
+            10  => ['priority_list', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN priority_list TEXT"],
+            11 => ['seat_distribution_quota', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_distribution_quota TEXT"],
+            12 => ['created', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
+            13 => ['modified', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
         ];
 
         // If a subset of queries is provided, filter the map.
@@ -113,8 +115,8 @@ class HallSeatAllocationEvent
     {
         $this->ensureConnection();
         $sql = "INSERT INTO tbl_hall_seat_allocation_event 
-                (status, title, details, application_start_date, application_end_date, viva_notice_date, seat_allotted_notice_date, seat_confirm_deadline_date, priority_list, seat_distribution_quota)
-                VALUES ($this->status, '$this->title', '$this->details', '$this->application_start_date', '$this->application_end_date', '$this->viva_notice_date', '$this->seat_allotted_notice_date', '$this->seat_confirm_deadline_date', '$this->priority_list', '$this->seat_distribution_quota')";
+                (status, title, details, application_start_date, application_end_date, viva_notice_date, priority_list, seat_distribution_quota)
+                VALUES ($this->status, '$this->title', '$this->details', '$this->application_start_date', '$this->application_end_date', '$this->viva_notice_date', '$this->priority_list', '$this->seat_distribution_quota')";
         if (mysqli_query($this->conn, $sql)) {
             $this->event_id = mysqli_insert_id($this->conn);
             return 1;
@@ -138,7 +140,8 @@ class HallSeatAllocationEvent
             $this->application_start_date = $row['application_start_date'];
             $this->application_end_date = $row['application_end_date'];
             $this->viva_notice_date = $row['viva_notice_date'];
-            $this->seat_allotted_notice_date = $row['seat_allotted_notice_date'];
+            $this->seat_allotment_result_notice_date = $row['seat_allotment_result_notice_date'];
+            $this->seat_allotment_result_notice_text = $row['seat_allotment_result_notice_text'];
             $this->seat_confirm_deadline_date = $row['seat_confirm_deadline_date'];
             $this->priority_list = $row['priority_list'];
             $this->seat_distribution_quota = $row['seat_distribution_quota'];
@@ -165,40 +168,89 @@ class HallSeatAllocationEvent
                     application_start_date = '$this->application_start_date',
                     application_end_date = '$this->application_end_date',
                     viva_notice_date = '$this->viva_notice_date',
-                    seat_allotted_notice_date = '$this->seat_allotted_notice_date',
+                    seat_allotment_result_notice_date = '$this->seat_allotment_result_notice_date',
+                    seat_allotment_result_notice_text = '$this->seat_allotment_result_notice_text',
                     seat_confirm_deadline_date = '$this->seat_confirm_deadline_date',
                     priority_list = '$this->priority_list',
                     seat_distribution_quota = '$this->seat_distribution_quota'
                 WHERE event_id = $this->event_id";
-        return mysqli_query($this->conn, $sql) ? true : "Error updating record: " . mysqli_error($this->conn);
+        // return mysqli_query($this->conn, $sql) ? true : "Error updating record: " . mysqli_error($this->conn);
+        if (mysqli_query($this->conn, $sql)) {
+            return true;
+        } else {
+            return false;
+            return "Error updating record: " . mysqli_error($this->conn);
+        }
+    }
+
+    /**
+     * Update the status of an event.
+     *
+     * @param int $event_id The ID of the event to update.
+     * @param int $new_status The new status value.
+     * @return bool Returns true if the update is successful, false otherwise.
+     */
+    public function updateStatus($event_id, $new_status)
+    {
+        // Ensure the database connection is established
+        $this->ensureConnection();
+
+        // Validate the seat_id
+        if ($event_id <= 0) {
+            return false;
+        }
+
+        // Prepare and execute the update query
+        $sql = "UPDATE tbl_hall_seat_allocation_event SET status = $new_status WHERE event_id = $event_id";
+        if (mysqli_query($this->conn, $sql)) {
+            return true;
+        } else {
+            // Optionally, log the error: mysqli_error($this->conn)
+            return false;
+        }
     }
 
     /**
      * Load rows from tbl_hall_seat_allocation_event filtered by event_id and status.
      *
-     * @param int|null $event_id The event ID to filter by.
-     * @param int|array|null $status (Optional) The status value(s) to filter by. Defaults to null.
+     * @param int|array|null $event_id The event ID(s) to filter by.
+     * @param int|array|null $status The status value(s) to filter by.
+     * @param string|null $sort_col The column name to sort the results by.
+     * @param string|null $sort_type The sort direction (ASC or DESC). Defaults to ASC.
      * @return array|false Returns an array of rows (as associative arrays) if found, or false otherwise.
      */
-    public function getByEventAndStatus($event_id = null, $status = null)
+    public function getByEventAndStatus($event_id = null, $status = null, $sort_col = null, $sort_type = null)
     {
         $this->ensureConnection();
 
         // Build the base query.
         $sql = "SELECT * FROM tbl_hall_seat_allocation_event WHERE 1";
 
+        // Process event_id filter: supports int or array of ints.
         if ($event_id !== null) {
-            $sql .= " AND event_id = " . intval($event_id);
+            if (is_array($event_id)) {
+                $eventIdList = implode(',', array_map('intval', $event_id));
+                $sql .= " AND event_id IN ($eventIdList)";
+            } else {
+                $sql .= " AND event_id = " . intval($event_id);
+            }
         }
 
+        // Process status filter: supports int or array of ints.
         if ($status !== null) {
             if (is_array($status)) {
-                // Convert array values to integers and implode them with commas.
                 $statusList = implode(',', array_map('intval', $status));
                 $sql .= " AND status IN ($statusList)";
             } else {
                 $sql .= " AND status = " . intval($status);
             }
+        }
+
+        // Process sorting options if provided.
+        if ($sort_col !== null) {
+            // Validate sort_type; default to ASC if not explicitly set to DESC.
+            $sort_type = (strtoupper($sort_type) === 'DESC') ? 'DESC' : 'ASC';
+            $sql .= " ORDER BY " . $sort_col . " " . $sort_type;
         }
 
         $result = mysqli_query($this->conn, $sql);
@@ -212,3 +264,8 @@ class HallSeatAllocationEvent
         return false;
     }
 }
+
+
+?>
+
+<!-- end of file -->

@@ -52,11 +52,11 @@ include_once 'HallSeatAllocationEvent.php';
 
 
 // // session 3
-$hallSeatAllocationEvent = new HallSeatAllocationEvent();
-$hallSeatAllocationEvent->createTableMinimal();
-$hallSeatAllocationEvent->alterTableAddColumns();
-echo "Hall Seat Allocation Event table created successfully";
-echo "<br><br><br>";
+// $hallSeatAllocationEvent = new HallSeatAllocationEvent();
+// $hallSeatAllocationEvent->createTableMinimal();
+// $hallSeatAllocationEvent->alterTableAddColumns();
+// echo "Hall Seat Allocation Event table created successfully";
+// echo "<br><br><br>";
 
 
 ?>
