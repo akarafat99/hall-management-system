@@ -290,8 +290,8 @@ class FileManager
             // Set the destination path in the "../uploads1" directory
             // $destination = 'uploads1/' . $newFileName;
             $destination = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']) . '/uploads1/' . $newFileName;
-            echo $_SERVER['DOCUMENT_ROOT'] . "<br>";
-            echo $destination . "<br>";
+            // echo $_SERVER['DOCUMENT_ROOT'] . "<br>";
+            // echo $destination . "<br>";
 
 
             // Move the uploaded file to the destination directory
