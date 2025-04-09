@@ -293,7 +293,7 @@ if (isset($_POST['register'])) {
                                 <div class="mb-3">
                                     <label for="fatherMonthlyIncome" class="form-label">Father's Monthly
                                         Income</label>
-                                    <input type="text" class="form-control" id="fatherMonthlyIncome"
+                                    <input type="number" class="form-control" id="fatherMonthlyIncome"
                                         name="fatherMonthlyIncome" required>
                                 </div>
                                 <div class="text-center my-5">
@@ -319,7 +319,7 @@ if (isset($_POST['register'])) {
                                 <div class="mb-3">
                                     <label for="motherMonthlyIncome" class="form-label">Mother's Monthly
                                         Income</label>
-                                    <input type="text" class="form-control" id="motherMonthlyIncome"
+                                    <input type="number" class="form-control" id="motherMonthlyIncome"
                                         name="motherMonthlyIncome" required>
                                 </div>
                                 <div class="text-center my-5">

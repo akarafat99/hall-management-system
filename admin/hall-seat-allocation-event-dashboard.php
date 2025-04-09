@@ -221,7 +221,7 @@ $phase3Expanded = ($event->status == 3) ? "show" : "";
               <div class="card-body">
                 <?php if ($event->status == 1): ?>
                   <!-- For status 1: Generate viva date and publish result date/notice -->
-                  <a href="viva-generation.php?eventId=<?php echo $event->event_id; ?>" class="btn btn-primary mb-2">
+                  <a href="viva-generation-result-date.php?eventId=<?php echo $event->event_id; ?>" class="btn btn-primary mb-2">
                     Generate Viva Date &amp; Publish Result Date/Notice
                   </a>
                 <?php elseif ($event->status == 2): ?>
