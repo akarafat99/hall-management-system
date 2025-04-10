@@ -77,7 +77,7 @@ class HallSeatAllocationEventDetails
             6  => ['viva_date',        "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN viva_date DATE"],
             7  => ['viva_time_slot',   "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN viva_time_slot VARCHAR(50)"],
             8  => ['allotted_seat_id', "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN allotted_seat_id INT NOT NULL"],
-            9  => ['seat_confirm_date',"ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN seat_confirm_date DATE"],
+            9  => ['seat_confirm_date', "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN seat_confirm_date DATE"],
             10 => ['created',          "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
             11 => ['modified',         "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
         ];
@@ -115,7 +115,7 @@ class HallSeatAllocationEventDetails
         $sql = "INSERT INTO tbl_hall_seat_allocation_event_details 
                 (status, event_id, user_id, user_details_id, serial_no, viva_date, viva_time_slot, allotted_seat_id, seat_confirm_date)
                 VALUES ($this->status, $this->event_id, $this->user_id, $this->user_details_id, $this->serial_no, '$this->viva_date', '$this->viva_time_slot', $this->allotted_seat_id, '$this->seat_confirm_date')";
-                
+
         if (mysqli_query($this->conn, $sql)) {
             $this->application_id = mysqli_insert_id($this->conn);
             return true;
@@ -190,6 +190,103 @@ class HallSeatAllocationEventDetails
     }
 
     /**
+     * Update viva_date and viva_time_slot (as integer values) for a set of application records in one SQL query.
+     * 
+     * The function processes the input list of application IDs and a list of dates.
+     * For each date in the date_list, it assigns up to $per_time_slot application IDs
+     * for time slot 1 (viva_time_slot = 1) and then up to $per_time_slot IDs for time slot 2 (viva_time_slot = 2).
+     * 
+     * For example, if there are 32 application IDs, 4 dates, and 5 applications per time slot,
+     * then:
+     *   - Date 1, Time Slot 1 (value 1): IDs 1 to 5,
+     *   - Date 1, Time Slot 2 (value 2): IDs 6 to 10,
+     *   - Date 2, Time Slot 1 (value 1): IDs 11 to 15,
+     *   - Date 2, Time Slot 2 (value 2): IDs 16 to 20,
+     *   - Date 3, Time Slot 1 (value 1): IDs 21 to 25,
+     *   - Date 3, Time Slot 2 (value 2): IDs 26 to 30,
+     *   - Date 4, Time Slot 1 (value 1): IDs 31 to 32 (if fewer than 5 are available),
+     *   - Date 4, Time Slot 2 (value 2): (no IDs if none remain).
+     * 
+     * @param array $application_ids An array of application IDs in the order to be updated.
+     * @param array $date_list       An array of dates.
+     * @param int   $per_time_slot   The number of application IDs per time slot.
+     *
+     * @return bool|string Returns true if the update is successful, or an error message.
+     */
+    public function updateVivaDetailsByTimeSlot($application_ids, $date_list, $per_time_slot)
+    {
+        // Ensure the database connection is available.
+        $this->ensureConnection();
+
+        // Validate that $application_ids and $date_list are arrays.
+        if (!is_array($application_ids) || !is_array($date_list)) {
+            return "Both application_ids and date_list must be arrays.";
+        }
+
+        // Initialize the CASE expression strings and an array to collect all processed IDs.
+        $caseVivaDate = "CASE application_id ";
+        $caseVivaTimeSlot = "CASE application_id ";
+        $idList = [];
+
+        // This index will traverse the application_ids array.
+        $appIndex = 0;
+        $totalApps = count($application_ids);
+
+        // Iterate over each date in the date list.
+        foreach ($date_list as $date) {
+            // Escape the date value for SQL safety.
+            $escapedDate = mysqli_real_escape_string($this->conn, $date);
+
+            // Process the current date for Time Slot 1 (value 1).
+            for ($i = 0; $i < $per_time_slot; $i++) {
+                if ($appIndex >= $totalApps) {
+                    break 2; // Exit both loops if no more application IDs are left.
+                }
+                $app_id = intval($application_ids[$appIndex]);
+                $idList[] = $app_id;
+                // For Time Slot 1, assign the date and set viva_time_slot to 1.
+                $caseVivaDate .= "WHEN $app_id THEN '$escapedDate' ";
+                $caseVivaTimeSlot .= "WHEN $app_id THEN 1 ";
+                $appIndex++;
+            }
+
+            // Process the current date for Time Slot 2 (value 2).
+            for ($i = 0; $i < $per_time_slot; $i++) {
+                if ($appIndex >= $totalApps) {
+                    break 2; // Exit both loops if no more IDs remain.
+                }
+                $app_id = intval($application_ids[$appIndex]);
+                $idList[] = $app_id;
+                // For Time Slot 2, assign the same date and set viva_time_slot to 2.
+                $caseVivaDate .= "WHEN $app_id THEN '$escapedDate' ";
+                $caseVivaTimeSlot .= "WHEN $app_id THEN 2 ";
+                $appIndex++;
+            }
+        }
+
+        // Complete the CASE expressions with a fallback.
+        $caseVivaDate .= "ELSE viva_date END";
+        $caseVivaTimeSlot .= "ELSE viva_time_slot END";
+
+        // Build the WHERE clause using the processed application IDs.
+        $idListStr = implode(',', $idList);
+
+        // Combine everything into a single UPDATE SQL statement.
+        $sql = "UPDATE tbl_hall_seat_allocation_event_details 
+            SET viva_date = $caseVivaDate, 
+                viva_time_slot = $caseVivaTimeSlot 
+            WHERE application_id IN ($idListStr)";
+
+        // Execute the query.
+        if (mysqli_query($this->conn, $sql)) {
+            return true;
+        } else {
+            return "Error updating records: " . mysqli_error($this->conn);
+        }
+    }
+
+
+    /**
      * Set class properties based on an associative array.
      *
      * @param array $row The row data.
@@ -208,6 +305,91 @@ class HallSeatAllocationEventDetails
         $this->seat_confirm_date = $row['seat_confirm_date'];
         $this->created           = $row['created'];
         $this->modified          = $row['modified'];
+    }
+
+    /**
+     * Retrieve application records based on application_id, status, and user_id filters,
+     * with optional sorting.
+     *
+     * @param int|array|null  $application_id Filter by application_id (int or array of ints)
+     * @param int|array|null  $status         Filter by status (int or array of ints)
+     * @param int|array|null  $user_id        Filter by user_id (int or array of ints)
+     * @param string          $sortCol        Column to sort by (default is 'application_id')
+     * @param string          $sortType       Sort order, either 'ASC' or 'DESC' (default is 'ASC')
+     *
+     * @return array|false Returns an array of matching records or false if none found.
+     */
+    public function getApplication($application_id = null, $status = null, $user_id = null, $sortCol = 'application_id', $sortType = 'ASC')
+    {
+        // Ensure the database connection is available.
+        $this->ensureConnection();
+
+        // Start building the SQL query.
+        $sql = "SELECT * FROM tbl_hall_seat_allocation_event_details WHERE 1=1";
+
+        // Filter by application_id.
+        if (!is_null($application_id)) {
+            if (is_array($application_id)) {
+                $application_ids = array_map('intval', $application_id);
+                $appList = implode(',', $application_ids);
+                $sql .= " AND application_id IN ($appList)";
+            } else {
+                $appId = intval($application_id);
+                $sql .= " AND application_id = $appId";
+            }
+        }
+
+        // Filter by status.
+        if (!is_null($status)) {
+            if (is_array($status)) {
+                $statusArray = array_map('intval', $status);
+                $statusList = implode(',', $statusArray);
+                $sql .= " AND status IN ($statusList)";
+            } else {
+                $statusInt = intval($status);
+                $sql .= " AND status = $statusInt";
+            }
+        }
+
+        // Filter by user_id.
+        if (!is_null($user_id)) {
+            if (is_array($user_id)) {
+                $userIds = array_map('intval', $user_id);
+                $userList = implode(',', $userIds);
+                $sql .= " AND user_id IN ($userList)";
+            } else {
+                $uid = intval($user_id);
+                $sql .= " AND user_id = $uid";
+            }
+        }
+
+        // Define allowed columns to prevent SQL injection in ORDER BY clause.
+        $allowedSortCols = ['application_id', 'status', 'event_id', 'user_id', 'user_details_id', 'serial_no', 'viva_date', 'viva_time_slot', 'allotted_seat_id', 'seat_confirm_date', 'created', 'modified'];
+        if (!in_array($sortCol, $allowedSortCols)) {
+            $sortCol = 'application_id';
+        }
+
+        // Ensure sort type is valid.
+        $sortType = strtoupper($sortType);
+        if ($sortType !== 'ASC' && $sortType !== 'DESC') {
+            $sortType = 'ASC';
+        }
+
+        // Append sorting to the query.
+        $sql .= " ORDER BY $sortCol $sortType";
+
+        // Execute the query.
+        $result = mysqli_query($this->conn, $sql);
+
+        // Fetch and return results if found.
+        if ($result && mysqli_num_rows($result) > 0) {
+            $applications = [];
+            while ($row = mysqli_fetch_assoc($result)) {
+                $applications[] = $row;
+            }
+            return $applications;
+        }
+        return false;
     }
 }
 ?>
