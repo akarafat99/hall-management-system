@@ -1,8 +1,8 @@
 <?php
 include_once '../class-file/HallSeatAllocationEvent.php';
 $hallSeatAllocationEvent = new HallSeatAllocationEvent();
-// Get events with status 0 (Ongoing) or 1 (Completed)
-$eventList = $hallSeatAllocationEvent->getByEventAndStatus(null, [0, 1]);
+// Get events for the desired statuses (update if additional statuses are needed)
+$eventList = $hallSeatAllocationEvent->getByEventAndStatus(null, [1, 2, 3, 4]);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -59,6 +59,11 @@ $eventList = $hallSeatAllocationEvent->getByEventAndStatus(null, [0, 1]);
       color: #555;
     }
 
+    /* Single column and justified details in the accordion */
+    .accordion-details {
+      text-align: justify;
+    }
+
     /* Priority badges */
     .priority-badge {
       margin-right: 5px;
@@ -96,8 +101,8 @@ $eventList = $hallSeatAllocationEvent->getByEventAndStatus(null, [0, 1]);
               <div class="col-md-4">
                 <select id="statusFilter" class="form-control">
                   <option value="">All Status</option>
-                  <option value="0">Ongoing</option>
-                  <option value="1">Completed</option>
+                  <option value="Ongoing">Ongoing</option>
+                  <option value="Completed">Completed</option>
                 </select>
               </div>
             </div>
@@ -107,10 +112,12 @@ $eventList = $hallSeatAllocationEvent->getByEventAndStatus(null, [0, 1]);
             <?php if ($eventList && is_array($eventList)): ?>
               <?php foreach ($eventList as $index => $event): ?>
                 <?php
-                $statusText = ($event['status'] == 0) ? 'Ongoing' : 'Completed';
-                $statusBadgeClass = ($event['status'] == 0) ? 'bg-warning text-dark' : 'bg-success';
+                // Use computed status text: if event['status'] is not 4 -> "Ongoing", else "Completed".
+                $statusText = ($event['status'] != 4) ? 'Ongoing' : 'Completed';
+                $statusBadgeClass = ($event['status'] != 4) ? 'bg-warning text-dark' : 'bg-success';
                 ?>
-                <div class="card event-card" data-status="<?php echo htmlspecialchars($event['status']); ?>">
+                <!-- Update data-status to hold the computed status text -->
+                <div class="card event-card" data-status="<?php echo $statusText; ?>">
                   <div class="card-header" id="heading<?php echo $index; ?>">
                     <div class="row align-items-center">
                       <div class="col-md-2">
@@ -136,105 +143,19 @@ $eventList = $hallSeatAllocationEvent->getByEventAndStatus(null, [0, 1]);
                     </div>
                   </div>
                   <div id="collapse<?php echo $index; ?>" class="collapse" aria-labelledby="heading<?php echo $index; ?>" data-bs-parent="#eventAccordion">
-                    <div class="card-body">
-                      <div class="row mb-3">
-                        <div class="col-md-6">
-                          <p><span class="event-details-label">Title:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['title']); ?></span></p>
-                          <p><span class="event-details-label">Details:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['details']); ?></span></p>
-                          <p><span class="event-details-label">Application Start Date:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['application_start_date']); ?></span></p>
-                          <p><span class="event-details-label">Application End Date:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['application_end_date']); ?></span></p>
-                        </div>
-                        <div class="col-md-6">
-                          <p><span class="event-details-label">Viva Notice Date:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['viva_notice_date']); ?></span></p>
-                          <p><span class="event-details-label">Seat Allotted Notice Date:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['seat_allotment_result_notice_date']); ?></span></p>
-                          <p><span class="event-details-label">Seat Confirm Deadline Date:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['seat_confirm_deadline_date']); ?></span></p>
-                          <p><span class="event-details-label">Modified:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['modified']); ?></span></p>
-                        </div>
+                    <!-- Single column for details with justified text -->
+                    <div class="card-body accordion-details">
+                      <div class="col-md-12">
+                        <p><span class="event-details-label">Title:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['title']); ?></span></p>
+                        <p><span class="event-details-label">Details:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['details']); ?></span></p>
+                        <p><span class="event-details-label">Application Start Date:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['application_start_date']); ?></span></p>
+                        <p><span class="event-details-label">Application End Date:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['application_end_date']); ?></span></p>
+                        <p><span class="event-details-label">Viva Notice Date:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['viva_notice_date']); ?></span></p>
+                        <p><span class="event-details-label">Seat Allotted Notice Date:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['seat_allotment_result_notice_date']); ?></span></p>
+                        <p><span class="event-details-label">Seat Confirm Deadline Date:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['seat_confirm_deadline_date']); ?></span></p>
+                        <p><span class="event-details-label">Modified:</span> <span class="event-details-value"><?php echo htmlspecialchars($event['modified']); ?></span></p>
                       </div>
-
-                      <?php include_once '../class-file/PriorityList.php'; ?>
-<div class="mb-3">
-  <div class="card shadow-sm">
-    <div class="card-header bg-primary text-white">
-      <h5 class="card-title mb-0">
-        Priority List <small class="text-light">(Lower level means higher priority)</small>
-      </h5>
-    </div>
-    <div class="card-body">
-      <div class="row mb-3 fw-bold">
-        <div class="col-6">Priority Level</div>
-        <div class="col-6">Priority Name</div>
-      </div>
-      <?php
-        $priorityString = $event['priority_list'];
-        $priorityArray = array_map('trim', explode(",", $priorityString));
-        $priorityMapping = getPriorityList();
-      ?>
-      <?php foreach ($priorityArray as $index => $priority): 
-        $displayText = isset($priorityMapping[$priority]) ? $priorityMapping[$priority] : ucfirst($priority);
-      ?>
-        <div class="row align-items-center mb-2">
-          <div class="col-6">
-            <div class="p-2 bg-light rounded text-center">
-              <?php echo ($index + 1); ?>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="p-2 bg-light rounded text-center">
-              <?php echo htmlspecialchars($displayText); ?>
-            </div>
-          </div>
-        </div>
-      <?php endforeach; ?>
-    </div>
-  </div>
-</div>
-
-
-
-                      <!-- Seat Distribution Quota -->
-                      <div class="mb-3">
-                        <p class="event-details-label mb-1">Seat Distribution Quota:</p>
-                        <?php
-                        $quotaArray = explode(",", $event['seat_distribution_quota']);
-                        $quotaLabels = array(
-                          "B.Sc. First Year First Semester",
-                          "B.Sc. First Year Second Semester",
-                          "B.Sc. Second Year First Semester",
-                          "B.Sc. Second Year Second Semester",
-                          "B.Sc. Third Year First Semester",
-                          "B.Sc. Third Year Second Semester",
-                          "B.Sc. Fourth Year First Semester",
-                          "B.Sc. Fourth Year Second Semester",
-                          "M.Sc. First Year First Semester",
-                          "M.Sc. First Year Second Semester",
-                          "M.Sc. Second Year First Semester",
-                          "M.Sc. Second Year Second Semester"
-                        );
-                        ?>
-                        <div class="table-responsive">
-                          <table class="table table-bordered table-striped">
-                            <thead class="table-light">
-                              <tr>
-                                <th>Program & Semester</th>
-                                <th>Quota</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <?php foreach ($quotaArray as $index => $quota): ?>
-                                <tr>
-                                  <td><?php echo $quotaLabels[$index]; ?></td>
-                                  <td>
-                                    <span class="badge bg-success"><?php echo htmlspecialchars(trim($quota)); ?></span>
-                                  </td>
-                                </tr>
-                              <?php endforeach; ?>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-
+                      <!-- Additional content (e.g., Priority List or Quota Table) can be placed below -->
                     </div>
                   </div>
                 </div>

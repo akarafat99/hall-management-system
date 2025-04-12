@@ -25,6 +25,8 @@ if (isset($_GET['editEvent']) && !empty($_GET['editEvent'])) {
     // Load the event details for editing
     if ($hallSeatAllocationEvent->load() !== false) {
         $quotaValues = explode(",", $hallSeatAllocationEvent->seat_distribution_quota);
+        $totalReservedSeats = array_sum($quotaValues);
+        $totalAvailableSeats += $totalReservedSeats;
         $isEditMode = true;
     } else {
         $message = "Could not load event with ID: " . $editEventId;
@@ -67,11 +69,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // If editing, update the event; otherwise, insert a new record.
     if (isset($_POST['editEventId']) && !empty($_POST['editEventId'])) {
+        //Update the previous and new total seat quota in the hall seat details table.
+        $previousTotalSeatQuota = $hallSeatDetails->countRowsByEventId($hallSeatAllocationEvent->event_id);
+        $newTotalSeatQuota = array_sum($quotaValues);
+        $hallSeatDetails->updateReservedSeatsBasedOnDelta($previousTotalSeatQuota, $newTotalSeatQuota, $hallSeatAllocationEvent->event_id);
+
         $result = $hallSeatAllocationEvent->update();
     } else {
         $result = $hallSeatAllocationEvent->insert();
+        // Calculate the total seat quota from the submitted quota values.
+        $totalSeatQuota = array_sum($quotaValues);
+
+        // Update hall seat details: update rows with status 0 to status 2,
+        // and assign the reserved_by_event_id using the event id,
+        // but limit the number of affected rows to the total seat quota.
+        $result = $hallSeatDetails->updateRowsByStatusAndEventIdAndLimit(0, 2, $hallSeatAllocationEvent->event_id, null, $totalSeatQuota);
     }
-    if ($result === 1 || $result === true) {
+    if ($result === 1 || $result === true || $result >= 0) {
         $message = "Event saved successfully with ID: " . $hallSeatAllocationEvent->event_id;
     } else {
         $message = "Error saving event.";
@@ -187,11 +201,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <h5 class="form-info-title">Priority List</h5>
                                 </div>
                                 <ul id="priorityList" class="list-group mb-3">
-                                    <?php foreach ($priorityMapping as $idx => $txt): ?>
-                                        <li class="list-group-item" data-value="<?php echo $idx; ?>">
-                                            <?php echo htmlspecialchars($txt); ?>
-                                        </li>
-                                    <?php endforeach; ?>
+                                    <?php
+                                    // If in edit mode and a stored priority order exists, use it:
+                                    if ($isEditMode && !empty($hallSeatAllocationEvent->priority_list)) {
+                                        // The stored priority_list is assumed to be a comma-separated string (e.g., "3,1,2")
+                                        $priorityOrder = explode(",", $hallSeatAllocationEvent->priority_list);
+                                        foreach ($priorityOrder as $key) {
+                                            // Only show the item if it exists in the mapping.
+                                            if (isset($priorityMapping[$key])) {
+                                                echo '<li class="list-group-item" data-value="' . htmlspecialchars($key) . '">' . htmlspecialchars($priorityMapping[$key]) . '</li>';
+                                            }
+                                        }
+                                    } else {
+                                        // New event: Show the default order based on getPriorityList() output.
+                                        foreach ($priorityMapping as $idx => $txt) {
+                                            echo '<li class="list-group-item" data-value="' . htmlspecialchars($idx) . '">' . htmlspecialchars($txt) . '</li>';
+                                        }
+                                    }
+                                    ?>
                                 </ul>
                                 <input type="hidden" id="priorityListInput" name="priorityList" value="">
 
@@ -275,76 +302,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
     <script>
-        (function($, document) {
-            // 1) Set minimum date for date inputs.
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const yyyy = today.getFullYear();
-            const minD = `${yyyy}-${mm}-${dd}`;
-            document.querySelectorAll('input[type="date"]').forEach(el => el.min = minD);
+(function($, document) {
+    // Get current time in Asia/Dhaka as a locale string and then create a Date object from it.
+    const dhakaTimeString = new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" });
+    const dhakaDate = new Date(dhakaTimeString);
 
-            // 2) Initialize priority list sortable and update the hidden input.
-            function updatePriorityList() {
-                const vals = $('#priorityList').children()
-                    .map((_, li) => $(li).data('value'))
-                    .get()
-                    .join(',');
-                $('#priorityListInput').val(vals);
-            }
-            $('#priorityList')
-                .sortable({
-                    update: updatePriorityList
-                })
-                .disableSelection();
-            updatePriorityList();
+    const dd = String(dhakaDate.getDate()).padStart(2, '0');
+    const mm = String(dhakaDate.getMonth() + 1).padStart(2, '0');
+    const yyyy = dhakaDate.getFullYear();
+    const minD = `${yyyy}-${mm}-${dd}`;
 
-            // 3) Seat quota logic
-            const totalAvailable = parseInt($('#totalAvailable').text(), 10) || 0;
-            const inputs = $('.seat-quota').toArray();
-            const submitBtn = $('#submitBtn');
-            const submitWarning = $('#submitWarning');
+    // Set today's date as the minimum for all date fields.
+    document.querySelectorAll('input[type="date"]').forEach(el => el.min = minD);
 
-            function recalc() {
-                const sum = inputs.reduce((s, el) => s + (parseInt(el.value, 10) || 0), 0);
-                $('#totalSelected').text(sum);
+    // If in edit mode, override the min attribute for Application Start, End, and Viva Notice Dates.
+    <?php if ($isEditMode): ?>
+        const minStartDate = '<?php echo $hallSeatAllocationEvent->application_start_date; ?>';
+        document.querySelector('input[name="startDate"]').min = minStartDate;
+        document.querySelector('input[name="endDate"]').min = minStartDate;
+        document.querySelector('input[name="vivaNoticeDate"]').min = minStartDate;
+    <?php endif; ?>
 
-                if (sum > totalAvailable) {
-                    $('#quotaWarning').removeClass('d-none');
-                    $('#exceedInfo').text(`Exceeded by ${sum - totalAvailable} seat(s).`);
-                    submitBtn.prop('disabled', true);
-                    submitWarning.removeClass('d-none');
-                } else {
-                    $('#quotaWarning').addClass('d-none');
-                    $('#exceedInfo').text('');
-                    submitBtn.prop('disabled', false);
-                    submitWarning.addClass('d-none');
-                }
-            }
+    // Priority list initialization.
+    function updatePriorityList() {
+        const vals = $('#priorityList').children()
+            .map((_, li) => $(li).data('value'))
+            .get()
+            .join(',');
+        $('#priorityListInput').val(vals);
+    }
+    $('#priorityList')
+        .sortable({
+            update: updatePriorityList
+        })
+        .disableSelection();
+    updatePriorityList();
 
-            // Redistribution function triggered by button click
-            $('#redistributeBtn').on('click', () => {
-                const n = inputs.length;
-                const base = Math.floor(totalAvailable / n);
-                let rem = totalAvailable - base * n;
-                // This assigns extra seats starting with the first field (e.g., 1st yr 1st sem)
-                inputs.forEach((el, i) => el.value = base + (i < rem ? 1 : 0));
-                recalc();
-            });
+    // Seat quota logic.
+    const totalAvailable = parseInt($('#totalAvailable').text(), 10) || 0;
+    const inputs = $('.seat-quota').toArray();
+    const submitBtn = $('#submitBtn');
+    const submitWarning = $('#submitWarning');
 
-            // Attach input event to recalc on seat quota fields.
-            $('.seat-quota').on('input', recalc);
+    function recalc() {
+        const sum = inputs.reduce((s, el) => s + (parseInt(el.value, 10) || 0), 0);
+        $('#totalSelected').text(sum);
 
-            // Initial run of recalc
-            recalc();
+        if (sum > totalAvailable) {
+            $('#quotaWarning').removeClass('d-none');
+            $('#exceedInfo').text(`Exceeded by ${sum - totalAvailable} seat(s).`);
+            submitBtn.prop('disabled', true);
+            submitWarning.removeClass('d-none');
+        } else {
+            $('#quotaWarning').addClass('d-none');
+            $('#exceedInfo').text('');
+            submitBtn.prop('disabled', false);
+            submitWarning.addClass('d-none');
+        }
+    }
 
-            // 4) New: Auto redistribute seats on page load if not in edit mode.
-            <?php if (!$isEditMode): ?>
-                $('#redistributeBtn').trigger('click');
-            <?php endif; ?>
+    $('#redistributeBtn').on('click', () => {
+        const n = inputs.length;
+        const base = Math.floor(totalAvailable / n);
+        let rem = totalAvailable - base * n;
+        inputs.forEach((el, i) => el.value = base + (i < rem ? 1 : 0));
+        recalc();
+    });
 
-        })(jQuery, document);
-    </script>
+    $('.seat-quota').on('input', recalc);
+    recalc();
+
+    <?php if (!$isEditMode): ?>
+        $('#redistributeBtn').trigger('click');
+    <?php endif; ?>
+
+})(jQuery, document);
+</script>
+
+
 
 
 </body>

@@ -8,6 +8,14 @@ if (isset($_GET['eventId'])) {
   $event->load();
 }
 
+// Define status meanings with instructions for the admin.
+$statusMeanings = [
+    1 => "Application collection completed. Instruction: Publish the viva schedule and result notice date.",
+    2 => "Viva sessions are underway. Instruction: Publish the viva results.",
+    3 => "Viva results have been reviewed and published. Instruction: Set the deadline for seat confirmations.",
+    4 => "All processes completed. Final lists—including viva results and confirmed seat allocations—are now available."
+];
+
 // Map the status value to corresponding text and badge classes.
 switch ($event->status) {
   case -1:
@@ -19,16 +27,19 @@ switch ($event->status) {
     $statusBadgeClass = "bg-warning text-dark";
     break;
   case 1:
-    $statusText = "Stage 1 Done (Application Collect + Viva Notice Date Set)";
-    $statusBadgeClass = "bg-info";
-    break;
   case 2:
-    $statusText = "Stage 2 Done (Viva Date Generated & Result Set)";
-    $statusBadgeClass = "bg-primary";
-    break;
   case 3:
-    $statusText = "Stage 3 Done (Completed Seat Allotment from Hall Auth Side)";
-    $statusBadgeClass = "bg-success";
+  case 4:
+    $statusText = $statusMeanings[$event->status];
+    if ($event->status == 1) {
+      $statusBadgeClass = "bg-info";
+    } elseif ($event->status == 2) {
+      $statusBadgeClass = "bg-primary";
+    } elseif ($event->status == 3) {
+      $statusBadgeClass = "bg-success";
+    } elseif ($event->status == 4) {
+      $statusBadgeClass = "bg-success";
+    }
     break;
   default:
     $statusText = "Unknown Status";
@@ -72,12 +83,18 @@ $phase3Expanded = ($event->status == 3) ? "show" : "";
     .card-body {
       background: #fff;
       padding: 20px;
+      text-align: justify;
     }
     
     /* Optional: rotate the chevron icon when shown */
     .collapse.show ~ .card-header .fa-chevron-down {
       transform: rotate(180deg);
     }
+
+    .regular-text,
+  .regular-text * {
+    font-size: 1rem !important;
+  }
   </style>
 </head>
 
@@ -104,7 +121,7 @@ $phase3Expanded = ($event->status == 3) ? "show" : "";
                 <p><strong>Title:</strong> <?php echo htmlspecialchars($event->title); ?></p>
                 <p><strong>Description:</strong> <?php echo htmlspecialchars($event->details); ?></p>
                 <!-- Display the status badge -->
-                <p><strong>Status:</strong> <span class="badge <?php echo $statusBadgeClass; ?>"><?php echo $statusText; ?></span></p>
+                <p class="regular-text"><strong>Status:</strong> <span class="badge <?php echo $statusBadgeClass; ?>"><?php echo $statusText; ?></span></p>
               </div>
             </div>
           </div>
@@ -220,22 +237,43 @@ $phase3Expanded = ($event->status == 3) ? "show" : "";
             <div id="phase2Collapse" class="collapse <?php echo $phase2Expanded; ?>">
               <div class="card-body">
                 <?php if ($event->status == 1): ?>
+                  <p><strong>Publish the viva date(s):</strong> <?php echo htmlspecialchars($event->viva_notice_date); ?></p>
                   <!-- For status 1: Generate viva date and publish result date/notice -->
                   <a href="viva-generation-result-date.php?eventId=<?php echo $event->event_id; ?>" class="btn btn-primary mb-2">
-                    Generate Viva Date &amp; Publish Result Date/Notice
+                    Generate Viva Date(s) &amp; Publish Result Date/Notice
                   </a>
                 <?php elseif ($event->status == 2): ?>
+                  <!-- Edit part -->
+                  <p><strong>Edit the viva date(s):</strong> </p>
+                  <a href="viva-generation-result-date.php?eventId=<?php echo $event->event_id; ?>" class="btn btn-primary mb-2">
+                    Update Viva Date(s) &amp; Result Date/Notice
+                  </a>
+                  <hr>
                   <!-- For status 2: Take viva and show extra details -->
                   <a href="take-viva.php?eventId=<?php echo $event->event_id; ?>" class="btn btn-primary mb-2">
                     Take the Viva of Students
                   </a>
                   <hr>
+                  <!-- Showing viva dates -->
+                  <p><strong>Viva Date(s):</strong></p>
+                  <?php
+                  if (!empty($event->viva_date_list)) {
+                    $vivaDates = explode(',', $event->viva_date_list);
+                    $vivaCounts = !empty($event->viva_student_count) ? explode(',', $event->viva_student_count) : array();
+                    echo '<ul>';
+                    foreach ($vivaDates as $i => $date) {
+                      $count = isset($vivaCounts[$i]) ? trim($vivaCounts[$i]) : 'Not specified';
+                      echo '<li>Date ' . ($i + 1) . ' (' . htmlspecialchars($date) . '): ' . htmlspecialchars($count) . ' student' . ((intval($count) === 1) ? '' : 's') . ' will take part in viva</li>';
+                    }
+                    echo '</ul>';
+                  } else {
+                    echo '<p>No viva dates published.</p>';
+                  }
+                  ?>
+                  
                   <p><strong>Seat Allotment Result Notice Date:</strong> <?php echo htmlspecialchars($event->seat_allotment_result_notice_date); ?></p>
                   <p><strong>Seat Allotment Result Notice Details:</strong> <?php echo htmlspecialchars($event->seat_allotment_result_notice_text); ?></p>
                   <div class="mt-3">
-                    <a href="viva-date-list.php?eventId=<?php echo $event->event_id; ?>" class="btn btn-info mr-2 mb-2">
-                      See the Viva Date List
-                    </a>
                     <a href="viva-result-edit.php?eventId=<?php echo $event->event_id; ?>" class="btn btn-danger mb-2">
                       Review &amp; Finalize &amp; Publish Viva Result
                     </a>

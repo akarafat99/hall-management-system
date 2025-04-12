@@ -1,369 +1,254 @@
+<?php
+include_once '../class-file/SessionManager.php';
+$session = SessionStatic::class;
+include_once '../class-file/HallSeatAllocationEvent.php';
+include_once '../popup-1.php';
+
+if ($session::get('msg1') !== null) {
+    showPopup($session::get('msg1'));
+    $session::delete('msg1');
+}
+
+$hallSeatAllocationEvent = new HallSeatAllocationEvent();
+
+// Using getByEventAndStatus() to fetch active events with status 1,2,3.
+$getActiveEvents = $hallSeatAllocationEvent->getByEventAndStatus(null, [1, 2, 3], "application_end_date", "DESC");
+
+// Define status meanings.
+$statusMeanings = [
+    1 => "Application collection completed. Upcoming: Publish the viva schedule and result notice date.",
+    2 => "Viva sessions are underway. Upcoming: Publish the viva results.",
+    3 => "Viva results have been reviewed and published. Upcoming: Set the deadline for seat confirmations.",
+    4 => "All processes completed. Final lists—including viva results and confirmed seat allocations—are now available."
+];
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap Accordion Sample</title>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-
-    <link href="https://fonts.googleapis.com/css?family=Muli:300,400,700,900" rel="stylesheet">
-    <link rel="stylesheet" href="../fonts/icomoon/style.css">
+    <!-- For navbar -->
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
-    <link rel="stylesheet" href="../css/jquery-ui.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css">
-    <link rel="stylesheet" href="../css/owl.carousel.min.css">
-    <link rel="stylesheet" href="../css/owl.theme.default.min.css">
-    <link rel="stylesheet" href="../css/owl.theme.default.min.css">
+    <!-- Google Fonts: Roboto for Material Design look -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="../css/jquery.fancybox.min.css">
 
-    <link rel="stylesheet" href="../css/bootstrap-datepicker.css">
-
-    <link rel="stylesheet" href="../fonts/flaticon/font/flaticon.css">
-
-    <link rel="stylesheet" href="../css/aos.css">
-
-    <link rel="stylesheet" href="../css/style.css">
-
-    <title>Seat In Hall | JUST Hall</title>
-
+    <!-- for accordion -->
+    <!-- Bootstrap CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Roboto for Material Design look -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>MM Hall</title>
 
     <style>
-        .card-header {
-            background-color: #f4e90a;
-            color: #201e1f;
-        }
-
-        .form-block {
-            padding: 2rem;
-            box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-            border: none;
-
-        }
-
-        .modal-title {
-            color: black;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .form-info-title {
-            color: #201e1f;
-            font-weight: 600;
-        }
-
-        .modal-dialog {
-            max-width: 700px;
-        }
-
-        .details-btn {
-            font-weight: 600;
-            padding: 8px 24px;
-            line-height: 1;
-            box-shadow: none !important;
-        }
-
-        .profile-info-flex {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-
-        .profile-wrap {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            overflow: hidden;
+        /* This rule justifies the text in the accordion body */
+        .accordion-body {
+            text-align: justify;
         }
     </style>
 
 </head>
 
-<body data-spy="scroll" data-target=".site-navbar-target" data-offset="300">
-    <!-- Include the navbar from a separate file -->
-    <?php include_once 'navbar-student.php'; ?>
+<body>
+    <!-- Parent container with flex and min-vh-100 -->
+    <div class="d-flex flex-column min-vh-100">
+        <!-- First parent div for all main content including the navbar -->
+        <div class="flex-grow-1">
+            <!-- navbar section start -->
+            <?php
+            if ($session::get('user') !== null) {
+                include_once 'navbar-student-1.php';
+            } else {
+                include_once 'navbar-student-2.php';
+            }
+            ?>
+            <!-- Navbar Section End -->
 
-    <!-- notice Banner Section Start -->
-    <section class="notice-hero">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="notice-hero-text text-center">
-                        <h1>Seat In Hall</h1>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <span class="notice-hero-overlay"></span>
-    </section>
-    <!-- notice Banner Section End -->
+            <div class="container my-5">
+                <!-- Accordion component -->
+                <div class="accordion" id="accordionExample">
+                    <?php if ($getActiveEvents && is_array($getActiveEvents) && count($getActiveEvents) > 0): ?>
+                        <?php foreach ($getActiveEvents as $e): ?>
+                            <?php
+                            $hallSeatAllocationEvent->setProperties($e); // sets the event properties
+                            $index = $hallSeatAllocationEvent->event_id; // unique identifier for each event
+                            $isApplicationClosed = $hallSeatAllocationEvent->isApplicationClosed($hallSeatAllocationEvent->application_end_date);
+                            ?>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading<?php echo $index; ?>">
+                                    <button class="accordion-button collapsed" type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#collapse<?php echo $index; ?>"
+                                        aria-expanded="false"
+                                        aria-controls="collapse<?php echo $index; ?>">
+                                        <?php
+                                        $eventId = isset($hallSeatAllocationEvent->event_id) ? $hallSeatAllocationEvent->event_id : "not yet published";
+                                        $title   = (!empty($hallSeatAllocationEvent->title)) ? $hallSeatAllocationEvent->title : "not yet published";
+                                        echo "Event #{$eventId} - " . htmlspecialchars($title);
 
+                                        ?>
+                                        <span class="badge bg-<?php echo $isApplicationClosed ? 'danger' : 'success'; ?> ms-2">
+                                            <?php echo $isApplicationClosed ? 'Application Closed' : 'Application Open'; ?>
+                                        </span>
+                                    </button>
+                                </h2>
+                                <!-- Note: data-bs-parent is omitted to allow the active panel to collapse on click -->
+                                <div id="collapse<?php echo $index; ?>" class="accordion-collapse collapse" aria-labelledby="heading<?php echo $index; ?>">
+                                    <div class="accordion-body">
+                                        <table class="table table-bordered">
+                                            <tbody>
+                                                <tr>
+                                                    <th>Details</th>
+                                                    <td><?php echo (!empty($hallSeatAllocationEvent->details)) ? htmlspecialchars($hallSeatAllocationEvent->details) : "not yet published"; ?></td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Status</th>
+                                                    <td>
+                                                        <?php
+                                                        $statusVal = isset($hallSeatAllocationEvent->status) && trim($hallSeatAllocationEvent->status) !== "" ? $hallSeatAllocationEvent->status : "not yet published";
+                                                        $statusMeaning = (isset($statusMeanings[$hallSeatAllocationEvent->status]) && $hallSeatAllocationEvent->status != "") ? $statusMeanings[$hallSeatAllocationEvent->status] : "not yet published";
+                                                        echo htmlspecialchars($statusMeaning);
+                                                        ?>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Application Start Date</th>
+                                                    <td><?php echo (!empty($hallSeatAllocationEvent->application_start_date)) ? htmlspecialchars($hallSeatAllocationEvent->application_start_date) : "not yet published"; ?></td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Application End Date</th>
+                                                    <td><?php echo (!empty($hallSeatAllocationEvent->application_end_date)) ? htmlspecialchars($hallSeatAllocationEvent->application_end_date) : "not yet published"; ?></td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Viva Notice Date</th>
+                                                    <td><?php echo (!empty($hallSeatAllocationEvent->viva_notice_date)) ? htmlspecialchars($hallSeatAllocationEvent->viva_notice_date) : "not yet published"; ?></td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Viva Date List</th>
+                                                    <td><?php echo (!empty($hallSeatAllocationEvent->viva_date_list)) ? htmlspecialchars($hallSeatAllocationEvent->viva_date_list) : "not yet published"; ?></td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Viva Student Count</th>
+                                                    <td><?php echo (!empty($hallSeatAllocationEvent->viva_student_count)) ? htmlspecialchars($hallSeatAllocationEvent->viva_student_count) : "not yet published"; ?></td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Seat Allotment Result Notice Date</th>
+                                                    <td><?php echo (!empty($hallSeatAllocationEvent->seat_allotment_result_notice_date)) ? htmlspecialchars($hallSeatAllocationEvent->seat_allotment_result_notice_date) : "not yet published"; ?></td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Seat Allotment Result Notice Text</th>
+                                                    <td><?php echo (!empty($hallSeatAllocationEvent->seat_allotment_result_notice_text)) ? htmlspecialchars($hallSeatAllocationEvent->seat_allotment_result_notice_text) : "not yet published"; ?></td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Seat Confirm Deadline Date</th>
+                                                    <td><?php echo (!empty($hallSeatAllocationEvent->seat_confirm_deadline_date)) ? htmlspecialchars($hallSeatAllocationEvent->seat_confirm_deadline_date) : "not yet published"; ?></td>
+                                                </tr>
+                                                <?php
+                                                include_once '../class-file/PriorityList.php';
+                                                $priorityMapping = getPriorityList();
 
+                                                $priorityOutput = "not yet published";
+                                                if (!empty($hallSeatAllocationEvent->priority_list)) {
+                                                    $priorityKeys = array_map('trim', explode(',', $hallSeatAllocationEvent->priority_list));
+                                                    $priorityOutput = '';
+                                                    foreach ($priorityKeys as $index => $key) {
+                                                        $text = isset($priorityMapping[$key]) ? $priorityMapping[$key] : htmlspecialchars($key);
+                                                        $priorityOutput .= ($index + 1) . " - " . $text . "<br>";
+                                                    }
+                                                }
+                                                ?>
+                                                <tr>
+                                                    <th>Priority List</th>
+                                                    <td>
+                                                        <small>Note: Lower value means higher priority.</small>
+                                                        <br>
+                                                        <?php echo $priorityOutput; ?>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Seat Distribution Quota</th>
+                                                    <td>
+                                                        <?php
+                                                        if (!empty($hallSeatAllocationEvent->seat_distribution_quota)) {
+                                                            $quotaArray = array_map('trim', explode(',', $hallSeatAllocationEvent->seat_distribution_quota));
+                                                            $quotaLabels = [
+                                                                "B.Sc. First Year First Semester",
+                                                                "B.Sc. First Year Second Semester",
+                                                                "B.Sc. Second Year First Semester",
+                                                                "B.Sc. Second Year Second Semester",
+                                                                "B.Sc. Third Year First Semester",
+                                                                "B.Sc. Third Year Second Semester",
+                                                                "B.Sc. Fourth Year First Semester",
+                                                                "B.Sc. Fourth Year Second Semester",
+                                                                "M.Sc. First Year First Semester",
+                                                                "M.Sc. First Year Second Semester",
+                                                                "M.Sc. Second Year First Semester",
+                                                                "M.Sc. Second Year Second Semester"
+                                                            ];
+                                                            foreach ($quotaLabels as $i => $label) {
+                                                                $quotaValue = isset($quotaArray[$i]) ? htmlspecialchars($quotaArray[$i]) : "N/A";
+                                                                echo $label . " : " . $quotaValue . "<br>";
+                                                            }
+                                                        } else {
+                                                            echo "not yet published";
+                                                        }
+                                                        ?>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Created On</th>
+                                                    <td><?php echo (!empty($hallSeatAllocationEvent->created)) ? htmlspecialchars($hallSeatAllocationEvent->created) : "not yet published"; ?></td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Modified On</th>
+                                                    <td><?php echo (!empty($hallSeatAllocationEvent->modified)) ? htmlspecialchars($hallSeatAllocationEvent->modified) : "not yet published"; ?></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <p><i>*Hall authority can change any information at any time</i></p>
 
-    <!-- Registration Section Start -->
-    <section class="auth-section">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-10">
-                    <div class="contact-form-wrapper">
-                        <div class="card-header text-center">
-                            <h4>Apply for Seat In Hall</h4>
-                        </div>
+                                        <!-- Apply seat in hall form button -->
+                                        <?php if (!$isApplicationClosed): ?>
+                                            <form action="form-1.php" method="post">
+                                                <input type="hidden" name="event_id" value="<?php echo htmlspecialchars($hallSeatAllocationEvent->event_id); ?>">
+                                                <button type="submit" name="apply" class="btn btn-primary">Apply for Seat in Hall</button>
+                                            </form>
+                                        <?php else: ?>
+                                            <p class="text-danger">Application is closed for this event.</p>
+                                        <?php endif; ?>
 
-                        <div class="form-block">
-                            <!-- Details button with text -->
-                            <div class="noc-consideration-text-wrap myt-3 mb-5">
-                                <p>I am submitting my application for a seat with my
-                                    <span> <button type="submit" class="primary-button details-btn"
-                                            data-bs-toggle="modal" data-bs-target="#exampleModal"
-                                            style="cursor: pointer;">Details</button></span>
-                                    I would sincerely appreciate your consideration and approval of my request.
-                                </p>
-                                <!-- Modal -->
-                                <div class="modal fade" id="exampleModal" tabindex="-1"
-                                    aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="exampleModalLabel">MY Information</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <!-- Modal All Contents Start-->
-                                                <div>
-                                                    <div class="profile-info-flex">
-                                                        <div class="profile-wrap">
-                                                            <img src="../images/avatar4.png" alt="User Image"
-                                                                class="img-fluid">
-                                                        </div>
-                                                    </div>
-                                                    <div class="row">
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Name:</strong> Arafat</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Email:</strong> abc@gmail.com</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Zilla:</strong> Dhaka</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="row pt-4">
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Gender:</strong> Male</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Contact No:</strong> 012382917</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Zilla:</strong> Dhaka</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="row pt-4">
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Session:</strong> 2020-21</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Year:</strong> 1st</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Semester:</strong> 2nd</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="row pt-4">
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Last Semester CGPA:</strong> 3.00</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>University Merit:</strong> 100</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Semester:</strong> 2nd</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="row pt-4">
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Permanent Address:</strong> Khulna</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Present Address:</strong> Jashore</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>All Document:</strong> <a href="#">Download</a>
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="text-center mt-5 mb-4">
-                                                        <h5 class="form-info-title">Father's Information</h5>
-                                                    </div>
-
-                                                    <div class="row">
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Father Name:</strong> Hello</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Father's Contact No:</strong> 012321</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Father's Profession:</strong> Teacher</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="row mt-3">
-                                                        <div class="col-lg-12">
-                                                            <p><strong>Father Monthly Income:</strong> 12000</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="text-center mt-5 mb-4">
-                                                        <h5 class="form-info-title">Guardian's Information</h5>
-                                                    </div>
-
-                                                    <div class="row">
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Guardian's Name:</strong> Hello</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Guardian's Contact No:</strong> 012321</p>
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <p><strong>Guardian's Address:</strong> Teacher</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <!-- Modal All Contents End-->
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Close</button>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
-                                <!-- Modal -->
                             </div>
-                            <!-- Details button with text -->
-                            <form>
-                                <div class="mb-3">
-                                    <label for="nocOpinion" class="form-label">Why you I applying for seat in hall,
-                                        please let us
-                                        know your opinion.</label>
-                                    <textarea class="form-control" placeholder="Write Message" id="nocOpinion"
-                                        name="nocOpinion" rows="2" required></textarea>
-                                </div>
-                                <div class="text-center">
-                                    <button type="submit" class="primary-button"
-                                        style="cursor: pointer;">Submit</button>
-                                </div>
-                            </form>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="alert alert-info" role="alert">
+                            No active events found.
                         </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
+
+
         </div>
-    </section>
-    <!-- Registration Section End -->
 
-
-    <!-- Footer Section -->
-    <footer class="footer-section ">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="footer-logo-wrapper">
-                        <h3>HMS</h3>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                    </div>
-                </div>
-
-                <div class="col-md-3 ml-auto">
-                    <div class="footer-link-col">
-                        <h3>Links</h3>
-                        <ul class="list-unstyled footer-links">
-                            <li><a href="#">Home</a></li>
-                            <li><a href="#">Courses</a></li>
-                            <li><a href="#">Programs</a></li>
-                            <li><a href="#">Teachers</a></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="col-md-3 ml-auto">
-                    <div class="footer-link-col">
-                        <h3>Links</h3>
-                        <ul class="list-unstyled footer-links">
-                            <li><a href="#">Home</a></li>
-                            <li><a href="#">Courses</a></li>
-                            <li><a href="#">Programs</a></li>
-                            <li><a href="#">Teachers</a></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="col-md-3 ml-auto">
-                    <div class="footer-link-col">
-                        <h3>Social Media</h3>
-                        <ul class="list-unstyled footer-social-links">
-                            <li><a href="#"><i class="fa-brands fa-facebook"></i></a></li>
-                            <li><a href="#"><i class="fa-brands fa-linkedin"></i></a></li>
-                            <li><a href="#"><i class="fa-brands fa-twitter"></i></a></li>
-                        </ul>
-                    </div>
-                </div>
-
+        <!-- Second parent div for the footer -->
+        <footer class="bg-dark text-white mt-auto">
+            <div class="container py-4 text-center">
+                <p class="mb-0">&copy; 2025 MM Hall. All rights reserved.</p>
             </div>
-
-            <div class="row pt-5 mt-5 text-center">
-                <div class="col-md-12">
-                    <div class="border-top pt-5">
-                        <p class="footer-copyright-text">
-                            <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                            Copyright &copy;
-                            <script>document.write(new Date().getFullYear());</script> JUST Credit <i class="icon-heart"
-                                aria-hidden="true"></i> by <a href="#" target="_blank">Arafat &
-                                Shakil</a>
-                        </p>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </footer>
-
-    <script src="../js/jquery-3.3.1.min.js"></script>
-    <script src="../js/jquery-migrate-3.0.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
-    <script src="../js/jquery-ui.js"></script>
-    <script src="../https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script src="../js/popper.min.js"></script>
-    <script src="../js/bootstrap.min.js"></script>
-    <script src="../js/owl.carousel.min.js"></script>
-    <script src="../js/jquery.stellar.min.js"></script>
-    <script src="../js/jquery.countdown.min.js"></script>
-    <script src="../js/bootstrap-datepicker.min.js"></script>
-    <script src="../js/jquery.easing.1.3.js"></script>
-    <script src="../js/aos.js"></script>
-    <script src="../js/jquery.fancybox.min.js"></script>
-    <script src="../js/jquery.sticky.js"></script>
+        </footer>
+    </div>
 
 
-    <script src="../js/main.js"></script>
-
-
-
-
-
-
+    <!-- Bootstrap JS and dependencies from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

@@ -268,6 +268,40 @@ class UserDetails
         }
     }
 
+    /**
+     * Update the status of a user details based on details_id.
+     * 
+     * @param int $details_id The ID of the user details to update.
+     * @param int $status The new status to set.
+     * @return bool Returns true if the update is successful, false otherwise.
+     */ 
+    public function updateStatusByDetailsId($details_id, $status)
+    {
+        $sql = "UPDATE tbl_user_details SET status = $status WHERE details_id = $details_id";
+        $result = mysqli_query($this->conn, $sql);
+        return $result;
+    }
+
+    /**
+     * Load user details based on details_id.
+     *
+     * @param int $details_id The ID of the user details to load.
+     * @return bool Returns true if the record is found, false otherwise.
+     */
+    public function getByDetailsId($details_id)
+    {
+        $sql = "SELECT * FROM tbl_user_details WHERE details_id = $details_id LIMIT 1";
+        $result = mysqli_query($this->conn, $sql);
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            $row = mysqli_fetch_assoc($result);
+            $this->setProperties($row);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 
     /**
      * Load user details based on user_id, student_id, status
@@ -356,11 +390,11 @@ class UserDetails
      * @param int|null $user_id (Optional) User ID to check. Defaults to null.
      * @param int|null $student_id (Optional) Student ID to check. Defaults to null.
      * @param int|null $status (Optional) Status filter. Defaults to null.
-     * @return int Returns 1 if a matching record exists, 0 otherwise.
+     * @return int Returns the details_id if a matching record exists, 0 otherwise.
      */
     public function isRecordAvailable($user_id = null, $student_id = null, $status = null)
     {
-        $sql = "SELECT 1 FROM tbl_user_details WHERE 1=1";
+        $sql = "SELECT details_id FROM tbl_user_details WHERE 1";
 
         if ($user_id !== null) {
             $user_id = intval($user_id);
@@ -380,8 +414,15 @@ class UserDetails
         $sql .= " LIMIT 1";
 
         $result = mysqli_query($this->conn, $sql);
-        return ($result && mysqli_num_rows($result) > 0) ? 1 : 0;
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            $row = mysqli_fetch_assoc($result);
+            return (int)$row['details_id'];
+        } else {
+            return 0;
+        }
     }
+
 
     /**
      * Get distinct rows based on user_id and status.

@@ -4,14 +4,14 @@ include_once 'DatabaseConnector.php';
 class HallSeatApplication
 {
     public $application_id = 0;
-    public $status = 0;
+    public $status = 1;
     public $event_id = 0;
     public $user_id = 0;
     public $user_details_id = 0;
     public $serial_no = 0;
-    public $viva_date = "";
+    public $viva_date = null;
     public $allotted_seat_id = 0;
-    public $seat_confirm_date = "";
+    public $seat_confirm_date = null;
     public $created;
     public $modified;
 
@@ -38,25 +38,25 @@ class HallSeatApplication
     }
 
     /**
-     * Create table tbl_hall_seat_allocation_event_details with only the application_id column if it does not exist.
+     * Create table tbl_hall_seat_application with only the application_id column if it does not exist.
      *
      * @return void
      */
     public function createTableMinimal()
     {
-        $sql = "CREATE TABLE IF NOT EXISTS tbl_hall_seat_allocation_event_details (
+        $sql = "CREATE TABLE IF NOT EXISTS tbl_hall_seat_application (
                     application_id INT AUTO_INCREMENT PRIMARY KEY
                 ) ENGINE=InnoDB";
         $result = mysqli_query($this->conn, $sql);
         if ($result) {
-            echo "Minimal table 'tbl_hall_seat_allocation_event_details' created successfully <br>";
+            echo "Minimal table 'tbl_hall_seat_application' created successfully <br>";
         } else {
             echo "Error creating minimal table: " . mysqli_error($this->conn) . "<br>";
         }
     }
 
     /**
-     * Alter table tbl_hall_seat_allocation_event_details to add additional columns.
+     * Alter table tbl_hall_seat_application to add additional columns.
      *
      * Each query is defined as a map entry where the key is a number and the value is an array:
      * [column name, SQL query].
@@ -68,16 +68,16 @@ class HallSeatApplication
     {
         // Define queries as a map: key => [column name, SQL query]
         $alterQueries = [
-            1  => ['status',           "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN status INT NOT NULL"],
-            2  => ['event_id',         "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN event_id INT NOT NULL"],
-            3  => ['user_id',          "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN user_id INT NOT NULL"],
-            4  => ['user_details_id',  "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN user_details_id INT NOT NULL"],
-            5  => ['serial_no',        "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN serial_no INT NOT NULL"],
-            6  => ['viva_date',        "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN viva_date DATE"],
-            7  => ['allotted_seat_id', "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN allotted_seat_id INT NOT NULL"],
-            8  => ['seat_confirm_date', "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN seat_confirm_date DATE"],
-            9 => ['created',          "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
-            10 => ['modified',         "ALTER TABLE tbl_hall_seat_allocation_event_details ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
+            1  => ['status',           "ALTER TABLE tbl_hall_seat_application ADD COLUMN status INT NOT NULL"],
+            2  => ['event_id',         "ALTER TABLE tbl_hall_seat_application ADD COLUMN event_id INT NOT NULL"],
+            3  => ['user_id',          "ALTER TABLE tbl_hall_seat_application ADD COLUMN user_id INT NOT NULL"],
+            4  => ['user_details_id',  "ALTER TABLE tbl_hall_seat_application ADD COLUMN user_details_id INT NOT NULL"],
+            5  => ['serial_no',        "ALTER TABLE tbl_hall_seat_application ADD COLUMN serial_no INT NOT NULL"],
+            6  => ['viva_date',        "ALTER TABLE tbl_hall_seat_application ADD COLUMN viva_date DATE DEFAULT NULL"],
+            7  => ['allotted_seat_id', "ALTER TABLE tbl_hall_seat_application ADD COLUMN allotted_seat_id INT NOT NULL"],
+            8  => ['seat_confirm_date', "ALTER TABLE tbl_hall_seat_application ADD COLUMN seat_confirm_date DATE DEFAULT NULL"],
+            9 => ['created',          "ALTER TABLE tbl_hall_seat_application ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
+            10 => ['modified',         "ALTER TABLE tbl_hall_seat_application ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
         ];
 
         // Filter the queries if a subset is provided.
@@ -104,21 +104,22 @@ class HallSeatApplication
     }
 
     /**
-     * Insert a new record into tbl_hall_seat_allocation_event_details.
+     * Insert a new record into tbl_hall_seat_application.
      *
      * @return bool|string Returns true if successful, otherwise an error message.
      */
     public function insert()
     {
-        $sql = "INSERT INTO tbl_hall_seat_allocation_event_details 
-                (status, event_id, user_id, user_details_id, serial_no, viva_date, allotted_seat_id, seat_confirm_date)
-                VALUES ($this->status, $this->event_id, $this->user_id, $this->user_details_id, $this->serial_no, '$this->viva_date', $this->allotted_seat_id, '$this->seat_confirm_date')";
+        $sql = "INSERT INTO tbl_hall_seat_application 
+                (status, event_id, user_id, user_details_id)
+                VALUES ($this->status, $this->event_id, $this->user_id, $this->user_details_id)";
 
         if (mysqli_query($this->conn, $sql)) {
             $this->application_id = mysqli_insert_id($this->conn);
-            return true;
+            return $this->application_id;
         } else {
-            return "Error inserting record: " . mysqli_error($this->conn);
+            // return "Error inserting record: " . mysqli_error($this->conn);
+            return false;
         }
     }
 
@@ -129,14 +130,14 @@ class HallSeatApplication
      */
     public function load()
     {
-        $sql = "SELECT * FROM tbl_hall_seat_allocation_event_details WHERE application_id = $this->application_id LIMIT 1";
+        $sql = "SELECT * FROM tbl_hall_seat_application WHERE application_id = $this->application_id LIMIT 1";
         $result = mysqli_query($this->conn, $sql);
         if ($result && mysqli_num_rows($result) > 0) {
             $row = mysqli_fetch_assoc($result);
             $this->setProperties($row);
             return true;
         } else {
-            return "No record found with application_id: $this->application_id";
+            return false; // No record found or error occurred.
         }
     }
 
@@ -151,7 +152,7 @@ class HallSeatApplication
             return "Application ID not set. Cannot update record.";
         }
 
-        $sql = "UPDATE tbl_hall_seat_allocation_event_details SET
+        $sql = "UPDATE tbl_hall_seat_application SET
                     status = $this->status,
                     event_id = $this->event_id,
                     user_id = $this->user_id,
@@ -177,12 +178,12 @@ class HallSeatApplication
         $this->ensureConnection();
         $application_id = intval($application_id);
         $status = intval($status);
-        $sql = "UPDATE tbl_hall_seat_allocation_event_details SET status = $status WHERE application_id = $application_id";
+        $sql = "UPDATE tbl_hall_seat_application SET status = $status WHERE application_id = $application_id";
 
         if (mysqli_query($this->conn, $sql)) {
             return true;
         } else {
-            return "Error updating status: " . mysqli_error($this->conn);
+            return false;
         }
     }
 
@@ -213,11 +214,6 @@ class HallSeatApplication
         // Ensure inputs are arrays.
         if (!is_array($application_ids) || !is_array($date_list) || !is_array($student_counts)) {
             return "application_ids, date_list, and student_counts must be arrays.";
-        }
-
-        // Ensure that date_list and student_counts have the same number of elements.
-        if (count($date_list) != count($student_counts)) {
-            return "The date_list and student_counts arrays must have the same number of elements.";
         }
 
         // Initialize the CASE expression.
@@ -253,7 +249,7 @@ class HallSeatApplication
         $idListStr = implode(',', $idList);
 
         // Construct the combined SQL update query.
-        $sql = "UPDATE tbl_hall_seat_allocation_event_details 
+        $sql = "UPDATE tbl_hall_seat_application 
             SET viva_date = $caseVivaDate 
             WHERE application_id IN ($idListStr)";
 
@@ -286,7 +282,7 @@ class HallSeatApplication
         $new_status = intval($new_status);
 
         // Build the SQL query.
-        $sql = "UPDATE tbl_hall_seat_allocation_event_details 
+        $sql = "UPDATE tbl_hall_seat_application 
             SET status = $new_status 
             WHERE event_id = $event_id AND status = $expected_current_status";
 
@@ -329,7 +325,7 @@ class HallSeatApplication
      *
      * @return array|false Returns an array of application IDs or false if none found.
      */
-    public function getApplicationIdsByEventAndStatus($event_id, $status, $sortCol = 'created', $sortType = 'ASC')
+    public function getApplicationIdsByEventAndStatus($event_id, $status = null, $sortCol = 'created', $sortType = 'ASC')
     {
         // Ensure a database connection is established.
         $this->ensureConnection();
@@ -338,7 +334,7 @@ class HallSeatApplication
         $event_id = intval($event_id);
 
         // Start building the SQL query.
-        $sql = "SELECT application_id FROM tbl_hall_seat_allocation_event_details WHERE event_id = $event_id";
+        $sql = "SELECT application_id FROM tbl_hall_seat_application WHERE event_id = $event_id";
 
         // Process status filter if provided.
         if (!is_null($status)) {
@@ -355,11 +351,10 @@ class HallSeatApplication
         }
 
         // Validate and set sorting.
-        // Define allowed columns to protect against SQL injection in ORDER BY clause.
-        $allowedSortCols = ['application_id', 'status', 'event_id', 'created', 'modified'];
-        if (!in_array($sortCol, $allowedSortCols)) {
+        if (is_null($sortCol)) {
             $sortCol = 'created';
         }
+
         // Normalize sort type.
         $sortType = strtoupper($sortType);
         if ($sortType !== 'ASC' && $sortType !== 'DESC') {
@@ -378,7 +373,7 @@ class HallSeatApplication
             }
             return $applicationIds;
         }
-        return false;
+        return [];
     }
 
 
@@ -400,7 +395,7 @@ class HallSeatApplication
         $this->ensureConnection();
 
         // Start building the SQL query.
-        $sql = "SELECT * FROM tbl_hall_seat_allocation_event_details WHERE 1=1";
+        $sql = "SELECT * FROM tbl_hall_seat_application WHERE 1=1";
 
         // Filter by application_id.
         if (!is_null($application_id)) {
@@ -465,6 +460,126 @@ class HallSeatApplication
             return $applications;
         }
         return false;
+    }
+
+    /**
+     * Retrieve all application records filtered by user_id, event_id, and status.
+     *
+     * @param int|array|null $user_id  Filter by user_id.
+     * @param int|null       $event_id Filter by event_id.
+     * @param int|array|null $status   Filter by status.
+     * @param string         $sortCol  Column to sort by (default: 'application_id').
+     * @param string         $sortType Sort order, either 'ASC' or 'DESC' (default: 'ASC').
+     *
+     * @return array|false Returns an array of matching records or false if none found.
+     */
+    public function getApplicationsByUserIdEventStatus($user_id = null, $event_id = null, $status = null, $sortCol = 'application_id', $sortType = 'ASC')
+    {
+        $this->ensureConnection();
+        $sql = "SELECT * FROM tbl_hall_seat_application WHERE 1=1";
+
+        // Filter by user_id.
+        if (!is_null($user_id)) {
+            if (is_array($user_id)) {
+                $userIds = array_map('intval', $user_id);
+                $userList = implode(',', $userIds);
+                $sql .= " AND user_id IN ($userList)";
+            } else {
+                $uid = intval($user_id);
+                $sql .= " AND user_id = $uid";
+            }
+        }
+
+        // Filter by event_id.
+        if (!is_null($event_id)) {
+            $event_id = intval($event_id);
+            $sql .= " AND event_id = $event_id";
+        }
+
+        // Filter by status.
+        if (!is_null($status)) {
+            if (is_array($status)) {
+                $statusArray = array_map('intval', $status);
+                $statusList = implode(',', $statusArray);
+                $sql .= " AND status IN ($statusList)";
+            } else {
+                $statusInt = intval($status);
+                $sql .= " AND status = $statusInt";
+            }
+        }
+
+        if (is_null($sortCol)) {
+            $sortCol = 'created';
+        }
+
+        // Normalize sort order.
+        $sortType = strtoupper($sortType);
+        if ($sortType !== 'ASC' && $sortType !== 'DESC') {
+            $sortType = 'ASC';
+        }
+
+        $sql .= " ORDER BY $sortCol $sortType";
+
+        $result = mysqli_query($this->conn, $sql);
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            $applications = [];
+            while ($row = mysqli_fetch_assoc($result)) {
+                $applications[] = $row;
+            }
+            if (count($applications) == 1) {
+                $this->setProperties($applications[0]);
+            }
+            return $applications;
+        }
+        return false;
+    }
+
+
+    /**
+     * Check if a user has already applied for a given event with an optional status filter.
+     *
+     * @param int       $user_id  The user ID to check.
+     * @param int       $event_id The event ID to check.
+     * @param int|array|null $status Optional status filter (either a single integer or an array of integers).
+     *
+     * @return bool Returns true if an application exists, otherwise false.
+     */
+    public function isAppliedByUserIdEventStatus($user_id, $event_id, $status = null)
+    {
+        // Ensure the database connection is established.
+        $this->ensureConnection();
+
+        // Convert user_id and event_id to integers.
+        $user_id = intval($user_id);
+        $event_id = intval($event_id);
+
+        // Start building the SQL query.
+        $sql = "SELECT application_id FROM tbl_hall_seat_application 
+                WHERE user_id = $user_id AND event_id = $event_id";
+
+        // If a status filter is provided, add it to the query.
+        if (!is_null($status)) {
+            if (is_array($status)) {
+                // Convert each status value to int and build an IN clause.
+                $statusArr = array_map('intval', $status);
+                $statusList = implode(',', $statusArr);
+                $sql .= " AND status IN ($statusList)";
+            } else {
+                // Single status value.
+                $status = intval($status);
+                $sql .= " AND status = $status";
+            }
+        }
+
+        // Limit the result to a single record for efficiency.
+        $sql .= " LIMIT 1";
+
+        // Execute the query.
+        $result = mysqli_query($this->conn, $sql);
+
+        // Return true if a record is found, otherwise false.
+        return ($result && mysqli_num_rows($result) > 0) ? true : false;
     }
 }
 ?>

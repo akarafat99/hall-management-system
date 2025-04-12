@@ -1,0 +1,40 @@
+/* Custom CSS for the sidebar and offcanvas menu */
+/* This CSS is designed to be used with Bootstrap 5.3.0 and Font Awesome 6.5.2 */
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+/* Sidebar and offcanvas styling */
+.sidebar,
+.offcanvas {
+    background-color: #000;
+    color: #fff;
+}
+
+.sidebar a,
+.offcanvas a {
+    color: #fff;
+    border: none;
+    transition: none;
+    /* Animation will be handled via JavaScript */
+}
+
+/* Left align texts in the sidebar */
+.sidebar h4,
+.offcanvas h5 {
+    text-align: left;
+    margin-left: 1rem;
+}
+
+/* Adjust button group styling */
+.btn-group-vertical>.btn {
+    border-radius: 0;
+    text-align: left;
+    padding-left: 1rem;
+}

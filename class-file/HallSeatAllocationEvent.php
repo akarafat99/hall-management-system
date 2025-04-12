@@ -10,6 +10,9 @@ class HallSeatAllocationEvent
     public $application_start_date = "";
     public $application_end_date = "";
     public $viva_notice_date = "";
+    // Added new variables right after viva_notice_date
+    public $viva_date_list = "";
+    public $viva_student_count = "";
     public $seat_allotment_result_notice_date = "";
     public $seat_allotment_result_notice_text = "";
     public $seat_confirm_deadline_date = "";
@@ -75,13 +78,16 @@ class HallSeatAllocationEvent
             4  => ['application_start_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN application_start_date DATE"],
             5  => ['application_end_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN application_end_date DATE"],
             6  => ['viva_notice_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN viva_notice_date DATE"],
-            7  => ['seat_allotment_result_notice_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_allotment_result_notice_date DATE"],
-            8  => ['seat_allotment_result_notice_text', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_allotment_result_notice_text TEXT"],
-            9  => ['seat_confirm_deadline_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_confirm_deadline_date DATE"],
-            10  => ['priority_list', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN priority_list TEXT"],
-            11 => ['seat_distribution_quota', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_distribution_quota TEXT"],
-            12 => ['created', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
-            13 => ['modified', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
+            // Insert new columns right after viva_notice_date using the AFTER clause.
+            7  => ['viva_date_list', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN viva_date_list TEXT AFTER viva_notice_date"],
+            8  => ['viva_student_count', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN viva_student_count TEXT AFTER viva_date_list"],
+            9  => ['seat_allotment_result_notice_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_allotment_result_notice_date DATE DEFAULT NULL"],
+            10 => ['seat_allotment_result_notice_text', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_allotment_result_notice_text TEXT"],
+            11 => ['seat_confirm_deadline_date', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_confirm_deadline_date DATE DEFAULT NULL"],
+            12 => ['priority_list', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN priority_list TEXT"],
+            13 => ['seat_distribution_quota', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_distribution_quota TEXT"],
+            14 => ['created', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
+            15 => ['modified', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
         ];
 
         // If a subset of queries is provided, filter the map.
@@ -114,12 +120,13 @@ class HallSeatAllocationEvent
     public function insert()
     {
         $this->ensureConnection();
+        // Include the new columns viva_date_list and viva_student_count in the INSERT statement.
         $sql = "INSERT INTO tbl_hall_seat_allocation_event 
-                (status, title, details, application_start_date, application_end_date, viva_notice_date, priority_list, seat_distribution_quota)
-                VALUES ($this->status, '$this->title', '$this->details', '$this->application_start_date', '$this->application_end_date', '$this->viva_notice_date', '$this->priority_list', '$this->seat_distribution_quota')";
+                (status, title, details, application_start_date, application_end_date, viva_notice_date, viva_date_list, viva_student_count, priority_list, seat_distribution_quota)
+                VALUES ($this->status, '$this->title', '$this->details', '$this->application_start_date', '$this->application_end_date', '$this->viva_notice_date', '$this->viva_date_list', '$this->viva_student_count', '$this->priority_list', '$this->seat_distribution_quota')";
         if (mysqli_query($this->conn, $sql)) {
             $this->event_id = mysqli_insert_id($this->conn);
-            return 1;
+            return $this->event_id;
         } else {
             return 0;
         }
@@ -140,6 +147,9 @@ class HallSeatAllocationEvent
             $this->application_start_date = $row['application_start_date'];
             $this->application_end_date = $row['application_end_date'];
             $this->viva_notice_date = $row['viva_notice_date'];
+            // Load new columns
+            $this->viva_date_list = $row['viva_date_list'];
+            $this->viva_student_count = $row['viva_student_count'];
             $this->seat_allotment_result_notice_date = $row['seat_allotment_result_notice_date'];
             $this->seat_allotment_result_notice_text = $row['seat_allotment_result_notice_text'];
             $this->seat_confirm_deadline_date = $row['seat_confirm_deadline_date'];
@@ -168,13 +178,14 @@ class HallSeatAllocationEvent
                     application_start_date = '$this->application_start_date',
                     application_end_date = '$this->application_end_date',
                     viva_notice_date = '$this->viva_notice_date',
+                    viva_date_list = '$this->viva_date_list',
+                    viva_student_count = '$this->viva_student_count',
                     seat_allotment_result_notice_date = '$this->seat_allotment_result_notice_date',
                     seat_allotment_result_notice_text = '$this->seat_allotment_result_notice_text',
                     seat_confirm_deadline_date = '$this->seat_confirm_deadline_date',
                     priority_list = '$this->priority_list',
                     seat_distribution_quota = '$this->seat_distribution_quota'
                 WHERE event_id = $this->event_id";
-        // return mysqli_query($this->conn, $sql) ? true : "Error updating record: " . mysqli_error($this->conn);
         if (mysqli_query($this->conn, $sql)) {
             return true;
         } else {
@@ -195,7 +206,7 @@ class HallSeatAllocationEvent
         // Ensure the database connection is established
         $this->ensureConnection();
 
-        // Validate the seat_id
+        // Validate the event_id
         if ($event_id <= 0) {
             return false;
         }
@@ -259,13 +270,101 @@ class HallSeatAllocationEvent
             while ($row = mysqli_fetch_assoc($result)) {
                 $rows[] = $row;
             }
+
+            if(count($rows) === 1) {
+                $this->setProperties($rows[0]);
+            }
             return $rows;
         }
         return false;
     }
+
+    /**
+     * Get all events filtered by status and sorted by a specific column and direction.
+     *
+     * @param int|array $status The status value(s) to filter by.
+     * @param string|null $sort_col The column name to sort the results by. For example, "event_id", "title", etc.
+     * @param string|null $sort_type The sort direction; either "ASC" or "DESC". Defaults to "ASC" if not provided.
+     * @return array|false Returns an array of event rows (associative arrays) if found, or false otherwise.
+     */
+    public function getEventsByStatus($status, $sort_col = null, $sort_type = null)
+    {
+        $this->ensureConnection();
+
+        // Start building the base query.
+        $sql = "SELECT * FROM tbl_hall_seat_allocation_event WHERE 1";
+
+        // Add status filter: supports an integer or an array of integers.
+        if ($status !== null) {
+            if (is_array($status)) {
+                $statusList = implode(',', array_map('intval', $status));
+                $sql .= " AND status IN ($statusList)";
+            } else {
+                $sql .= " AND status = " . intval($status);
+            }
+        }
+
+        // Append sorting if a sort column is provided.
+        if ($sort_col !== null) {
+            // Validate sort type, default to ASC if not explicitly DESC.
+            $sort_type = (strtoupper($sort_type) === 'DESC') ? 'DESC' : 'ASC';
+            $sql .= " ORDER BY " . $sort_col . " " . $sort_type;
+        }
+
+        $result = mysqli_query($this->conn, $sql);
+        if ($result && mysqli_num_rows($result) > 0) {
+            $rows = [];
+            while ($row = mysqli_fetch_assoc($result)) {
+                $rows[] = $row;
+            }
+            return $rows;
+        }
+        return false;
+    }
+
+    /**
+     * Set Properties of the object from an associative array.
+     * 
+     * * @param array $data Associative array containing property names and values.
+     */
+    public function setProperties($data)
+    {
+        foreach ($data as $key => $value) {
+            if (property_exists($this, $key)) {
+                $this->$key = $value;
+            }
+        }
+    }
+
+    /**
+     * Check if the application is closed based on the application end date.
+     * 
+     * @param string $applicationEndDate The application end date in 'Y-m-d' format.
+     * @return int Returns 1 if the application is closed, 0 otherwise.
+     */
+    function isApplicationClosed($applicationEndDate) {
+        // Set timezone for Asia/Dhaka.
+        $tz = new DateTimeZone('Asia/Dhaka');
+    
+        // Get the current DateTime in Asia/Dhaka.
+        $currentTime = new DateTime('now', $tz);
+    
+        // Create a DateTime object from the provided application end date.
+        $endTime = new DateTime($applicationEndDate, $tz);
+    
+        // Calculate the time difference in seconds.
+        $diffSeconds = $currentTime->getTimestamp() - $endTime->getTimestamp();
+    
+        // If more than 24 hours (86400 seconds) have passed since the application end date, return 1 (closed)
+        if ($diffSeconds > 86400) {
+            return 1;
+        }
+    
+        // Otherwise, return 0 (still open for application)
+        return 0;
+    }
+    
 }
-
-
 ?>
 
 <!-- end of file -->

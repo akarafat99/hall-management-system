@@ -1,39 +1,71 @@
 <?php
+include_once '../class-file/SessionManager.php';
+$session = SessionStatic::class;
+include_once '../class-file/HallSeatAllocationEvent.php';
 include_once '../class-file/HallSeatApplication.php';
-$hallSeatApplication = new HallSeatApplication();
+include_once '../popup-1.php';
 
-if (isset($_GET['eventId'])) {
-    $eventId = $_GET['eventId'];
-} else {
-    echo "<script>window.location.href='hall-seat-allocation-event-management.php';</script>";
-    exit;
+if ($session::get('msg1')) {
+  showPopup($session::get('msg1'));
+  $session::delete('msg1');
 }
 
-// In this example, totalApplications is set to 100.
-$totalApplications = 100;
+$hallSeatAllocationEvent = new HallSeatAllocationEvent();
+$hallSeatApplication = new HallSeatApplication();
+
+$alreadyPublished = false;
+if (isset($_GET['eventId'])) {
+  $eventId = $_GET['eventId'];
+  $hallSeatAllocationEvent->getByEventAndStatus($eventId);
+  if ($hallSeatAllocationEvent->status == 2) {
+    $alreadyPublished = true;
+  }
+} else {
+  echo "<script>window.location.href='hall-seat-allocation-event-management.php';</script>";
+  exit;
+}
+
+$allApplicationIds = $hallSeatApplication->getApplicationIdsByEventAndStatus($eventId, null, "created", "DESC");
+$totalApplications = count($allApplicationIds);
 
 // If the form has been submitted via POST, capture the submitted values.
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $savedVivaDates = isset($_POST['viva_date_day']) ? $_POST['viva_date_day'] : array();
-    $savedStudents  = isset($_POST['students_day']) ? $_POST['students_day'] : array();
-    $savedResultDate = isset($_POST['result_date']) ? $_POST['result_date'] : '';
-    $savedResultNotice = isset($_POST['result_notice']) ? $_POST['result_notice'] : '';
+if (isset($_POST['submitViva'])) {
+  $eventId = $_POST['event_id'];
+  $savedVivaDates = isset($_POST['viva_date_day']) ? $_POST['viva_date_day'] : array();
+  $savedStudents  = isset($_POST['students_day']) ? $_POST['students_day'] : array();
+  $savedResultDate = isset($_POST['result_date']) ? $_POST['result_date'] : null;
+  $savedResultNotice = isset($_POST['result_notice']) ? $_POST['result_notice'] : null;
+
+  $hallSeatAllocationEvent->getByEventAndStatus($eventId);
+  $hallSeatAllocationEvent->viva_date_list = implode(',', $savedVivaDates);
+  $hallSeatAllocationEvent->viva_student_count = implode(',', $savedStudents);
+  $hallSeatAllocationEvent->seat_allotment_result_notice_date = $savedResultDate;
+  $hallSeatAllocationEvent->seat_allotment_result_notice_text = $savedResultNotice;
+  $hallSeatAllocationEvent->status = 2;
+  $hallSeatAllocationEvent->update();
+
+  $hallSeatApplication->updateVivaDetailsByStudentCount($allApplicationIds, $savedVivaDates, $savedStudents);
+
+  $session::set('msg1', 'Viva dates and result publication date have been successfully saved.');
+  echo "<script>window.location.href='viva-generation-result-date.php?eventId=$eventId';</script>";
+  exit;
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <title>Event Management - Dashboard</title>
-  
+
   <!-- CSS Libraries -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet" />
   <link href="../css/Dashboard/dashboard.css" rel="stylesheet" />
-  
+
   <style>
     /* Card header styling */
     .card-header {
@@ -41,15 +73,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       padding: 15px;
       cursor: pointer;
     }
+
     .card-header h5,
     .card-header strong {
       margin: 0;
       font-size: 1.1rem;
     }
+
     .card-body {
       background: #fff;
       padding: 20px;
     }
+
     /* Custom message card style */
     .message-card {
       border: 1px solid #ddd;
@@ -61,11 +96,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       background-color: #f8f9fa;
       font-size: 14px;
     }
+
     .message-card.error {
       border-color: #dc3545;
       background-color: #f8d7da;
       color: #721c24;
     }
+
     .message-card.info {
       border-color: #17a2b8;
       background-color: #d1ecf1;
@@ -73,23 +110,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
   </style>
 </head>
+
 <body class="sb-nav-fixed">
   <div id="layoutSidenav">
     <?php include 'admin-sidebar.php'; ?>
     <div id="layoutSidenav_content">
       <main>
         <div class="container-fluid px-4">
+          <!-- Card Start: Display Saved Data (shown after submit or if already published) -->
+          <?php if ($_SERVER['REQUEST_METHOD'] === 'POST' || $alreadyPublished):
+            // If form was submitted, use posted values; otherwise, load from the event.
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+              $displayVivaDates = isset($savedVivaDates) ? $savedVivaDates : array();
+              $displayStudents  = isset($savedStudents) ? $savedStudents : array();
+              $displayResultDate = isset($savedResultDate) ? $savedResultDate : '';
+              $displayResultNotice = isset($savedResultNotice) ? $savedResultNotice : '';
+            } else {
+              // Retrieve from the $hallSeatAllocationEvent object.
+              $displayVivaDates = !empty($hallSeatAllocationEvent->viva_date_list) ? explode(',', $hallSeatAllocationEvent->viva_date_list) : array();
+              $displayStudents  = !empty($hallSeatAllocationEvent->viva_student_count) ? explode(',', $hallSeatAllocationEvent->viva_student_count) : array();
+              $displayResultDate = $hallSeatAllocationEvent->seat_allotment_result_notice_date;
+              $displayResultNotice = $hallSeatAllocationEvent->seat_allotment_result_notice_text;
+            }
+          ?>
+            <div class="card mb-4">
+              <div class="card-header">
+                <h5>Currently Viva & Result Details</h5>
+              </div>
+              <div class="card-body">
+                <p><strong>Viva Details:</strong></p>
+                <ul>
+                  <?php
+                  if (!empty($displayVivaDates)) {
+                    foreach ($displayVivaDates as $i => $date) {
+                      $count = isset($displayStudents[$i]) ? $displayStudents[$i] : 'Not specified';
+                      echo "<li>Date " . ($i + 1) . " (" . htmlspecialchars($date) . "): " . htmlspecialchars($count) . " student" . ((intval($count) === 1) ? "" : "s") . " will take part in viva</li>";
+                    }
+                  } else {
+                    echo "<li>None</li>";
+                  }
+                  ?>
+                </ul>
+                <p><strong>Result Publication Date:</strong> <?php echo htmlspecialchars($displayResultDate); ?></p>
+                <p><strong>Notice:</strong> <?php echo htmlspecialchars($displayResultNotice); ?></p>
+              </div>
+            </div>
+          <?php endif; ?>
+          <!-- End Card -->
+
           <!-- Card Start: Form to enter Viva & Result Details -->
           <div class="card mb-4">
             <div class="card-header">
-              <h5>Publish Seat Allotment Result</h5>
+              <h5>Publish Viva Dates(s) and Seat Allotment Result Date and Notice</h5>
             </div>
             <div class="card-body">
               <!-- Set action="" to post to the same page -->
-              <form id="seatAllotmentForm" action="" method="post">
+              <form id="seatAllotmentForm" action="" method="post" enctype="multipart/form-data">
                 <!-- Hidden field for eventId -->
                 <input type="hidden" name="event_id" value="<?php echo htmlspecialchars($eventId); ?>" />
-                
+
                 <!-- Viva Details Section (1st Part) -->
                 <div class="mb-3">
                   <label for="vivaDays" class="form-label">Number of Viva Days:</label>
@@ -101,63 +180,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div id="dateWarning" class="message-card error" style="display:none;"></div>
                 <!-- Display of Student Total will appear here -->
                 <div id="studentsTotal" class="message-card info"></div>
-                
+
                 <!-- Result Publication Date Section (2nd Part) -->
                 <div class="mb-3">
                   <label for="resultDate" class="form-label">Result Publication Date:</label>
                   <input type="date" id="resultDate" name="result_date" class="form-control" required>
                 </div>
-                
+
                 <!-- Notice Section (3rd Part) -->
                 <div class="mb-3">
                   <label for="resultNotice" class="form-label">Notice for Viva & Result:</label>
-                  <textarea id="resultNotice" name="result_notice" class="form-control" rows="3" placeholder="Enter notice regarding viva and result publication..." required></textarea>
+                  <input id="resultNotice" name="result_notice" class="form-control" placeholder="Enter notice regarding viva and result publication..." required>
                 </div>
-                
-                <button type="submit" id="submitBtn" class="btn btn-primary">Submit</button>
+
+                <button type="submit" id="submitBtn" name="submitViva" class="btn btn-primary">Submit</button>
               </form>
             </div>
           </div>
           <!-- End Card -->
-          
-          <!-- Card Start: Display Saved Data (only shown after submit) -->
-          <?php if ($_SERVER['REQUEST_METHOD'] === 'POST'): ?>
-          <div class="card mb-4">
-            <div class="card-header">
-              <h5>Saved Viva & Result Details</h5>
-            </div>
-            <div class="card-body">
-              <p><strong>Viva Dates:</strong></p>
-              <ul>
-                <?php
-                  if (!empty($savedVivaDates)) {
-                    foreach ($savedVivaDates as $date) {
-                      echo "<li>" . htmlspecialchars($date) . "</li>";
-                    }
-                  } else {
-                    echo "<li>None</li>";
-                  }
-                ?>
-              </ul>
-              <p><strong>Student Counts:</strong></p>
-              <ul>
-                <?php
-                  if (!empty($savedStudents)) {
-                    foreach ($savedStudents as $count) {
-                      echo "<li>" . htmlspecialchars($count) . "</li>";
-                    }
-                  } else {
-                    echo "<li>None</li>";
-                  }
-                ?>
-              </ul>
-              <p><strong>Result Publication Date:</strong> <?php echo htmlspecialchars($savedResultDate); ?></p>
-              <p><strong>Notice:</strong> <?php echo htmlspecialchars($savedResultNotice); ?></p>
-            </div>
-          </div>
-          <?php endif; ?>
-          <!-- End Card -->
-          
+
+
         </div>
       </main>
       <footer class="py-4 dashboard-copyright-footer mt-auto">
@@ -174,28 +216,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </footer>
     </div>
   </div>
-  
+
   <!-- JavaScript Libraries -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-  
+
   <script>
     $(document).ready(function() {
       // Total applications count from PHP.
       var totalApplications = <?php echo $totalApplications; ?>;
-      
+
       // On page load, if no dynamic fields exist, show total 0.
       $('#studentsTotal').text('Total Students Assigned: 0 / ' + totalApplications);
-      
+
       // Helper: get today's date in Asia/Dhaka timezone (formatted as YYYY-MM-DD).
       function getDhakaToday() {
-        var dhakaDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" }));
+        var dhakaDate = new Date(new Date().toLocaleString("en-US", {
+          timeZone: "Asia/Dhaka"
+        }));
         return dhakaDate.toISOString().split("T")[0];
       }
-      
+
       var todayDhaka = getDhakaToday();
-      
+
       // Distribute student counts equally among viva days.
       function distributeEqually(numDays) {
         var base = Math.floor(totalApplications / numDays);
@@ -206,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
         recalcStudentTotal();
       }
-      
+
       // Update min attributes for all viva date inputs (set each to at least today).
       // Also update the result date's min as one day after the last viva date.
       function updateVivaMinAttributes() {
@@ -221,7 +265,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $('#resultDate').attr('min', todayDhaka);
         }
       }
-      
+
       // Helper: add one day to a date string (YYYY-MM-DD).
       function addOneDay(dateString) {
         var dateObj = new Date(dateString);
@@ -233,7 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (day.length < 2) day = '0' + day;
         return [year, month, day].join('-');
       }
-      
+
       // Validate that each viva date is filled and that each is later than its previous date.
       function validateVivaDates() {
         var valid = true;
@@ -262,7 +306,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         return valid;
       }
-      
+
       // Recalculate the total of student counts.
       function recalcStudentTotal() {
         var sum = 0;
@@ -281,7 +325,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $('#submitBtn').prop('disabled', false);
         }
       }
-      
+
       // When the number of viva days is entered, generate dynamic fields.
       $('#vivaDays').on('input', function() {
         var numDays = parseInt($(this).val());
@@ -294,41 +338,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             var labelDate = $('<label class="form-label"></label>').text('Viva Date for Day ' + i + ':');
             var inputDate = $('<input type="date" name="viva_date_day[]" class="form-control viva-date" required>');
             // Prefill default: today's date plus (i - 1) days (in Dhaka time)
-            var defaultDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" }));
+            var defaultDate = new Date(new Date().toLocaleString("en-US", {
+              timeZone: "Asia/Dhaka"
+            }));
             defaultDate.setDate(defaultDate.getDate() + (i - 1));
             inputDate.val(defaultDate.toISOString().split("T")[0]);
             colDate.append(labelDate).append(inputDate);
-            
+
             var colStudent = $('<div class="col-md-6"></div>');
             var labelStudent = $('<label class="form-label"></label>').text('Number of Students for Day ' + i + ':');
             var inputStudent = $('<input type="number" name="students_day[]" class="form-control student-count" min="0" required>');
             colStudent.append(labelStudent).append(inputStudent);
-            
+
             row.append(colDate).append(colStudent);
             vivaContainer.append(row);
           }
-          // Append only the Redistribute Equally button.
+          // Append the Redistribute Equally button.
           var redistributeBtn = $('<button type="button" id="redistributeBtn" class="btn btn-secondary btn-sm" style="margin-bottom:15px;">Redistribute Equally</button>');
           vivaContainer.append(redistributeBtn);
-          
+
           distributeEqually(numDays);
           updateVivaMinAttributes();
         }
         validateVivaDates();
         recalcStudentTotal();
       });
-      
+
       // When any viva date changes, revalidate and update result date min.
       $(document).on('change', '.viva-date', function() {
         updateVivaMinAttributes();
         validateVivaDates();
       });
-      
+
       // When any student count input changes, recalc total.
       $(document).on('input', '.student-count', function() {
         recalcStudentTotal();
       });
-      
+
       // Handler for the Redistribute Equally button.
       $(document).on('click', '#redistributeBtn', function() {
         var numDays = parseInt($('#vivaDays').val());
@@ -336,7 +382,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           distributeEqually(numDays);
         }
       });
-      
+
       // Before form submission, ensure validations pass.
       $('#seatAllotmentForm').on('submit', function(e) {
         if (!validateVivaDates()) {
@@ -344,10 +390,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           alert("Please ensure all viva dates are filled and each is later than the previous date.");
         }
       });
-      
-      // On page load, recalc student total (shows 0 if no viva fields exist).
+
+      // On page load, recalc student total.
       recalcStudentTotal();
     });
   </script>
 </body>
+
 </html>
