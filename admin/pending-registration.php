@@ -2,6 +2,7 @@
 include_once '../class-file/User.php';
 include_once '../class-file/UserDetails.php';
 include_once '../class-file/FileManager.php';
+include_once '../class-file/Department.php';
 include_once '../popup-1.php';
 
 // Process approve/decline actions.
@@ -27,6 +28,7 @@ if (isset($_POST['approve']) || isset($_POST['decline'])) {
 
 $user = new User();
 $userList = $user->getDistinctUsersByStatus(0, "user"); // Get all pending users
+$department = new Department();
 ?>
 
 <!DOCTYPE html>
@@ -184,6 +186,8 @@ $userList = $user->getDistinctUsersByStatus(0, "user"); // Get all pending users
                                     $userDetails = new UserDetails();
                                     $userDetails->getUsers($userId, null, 0);
 
+                                    $department->getDepartments($userDetails->department_id);
+
                                     $file = new FileManager();
                                     $file->loadByFileId($userDetails->profile_picture_id);
 
@@ -249,10 +253,42 @@ $userList = $user->getDistinctUsersByStatus(0, "user"); // Get all pending users
                                                         <p><strong>Session:</strong> <?php echo isset($userDetails->session) ? htmlspecialchars($userDetails->session) : 'N/A'; ?></p>
                                                     </div>
                                                     <div class="col-lg-4">
-                                                        <p><strong>Year:</strong> <?php echo isset($userDetails->year) ? htmlspecialchars($userDetails->year) : 'N/A'; ?></p>
-                                                        <p><strong>Semester:</strong> <?php echo isset($userDetails->semester) ? htmlspecialchars($userDetails->semester) : 'N/A'; ?></p>
+                                                        <p><strong>Department:</strong> <?php echo isset($userDetails->department_id) ? htmlspecialchars($department->department_name) : 'N/A'; ?></p>
                                                     </div>
                                                 </div>
+                                                <?php
+                                                /* --- Friendly labels --- */
+                                                $yearMap = [
+                                                    1 => 'B.Sc 1st Year',
+                                                    2 => 'B.Sc 2nd Year',
+                                                    3 => 'B.Sc 3rd Year',
+                                                    4 => 'B.Sc 4th Year',
+                                                    5 => 'M.Sc 1st Year',
+                                                    6 => 'M.Sc 2nd Year',
+                                                ];
+
+                                                $semMap  = [
+                                                    1 => '1st Semester',
+                                                    2 => '2nd Semester',
+                                                ];
+
+                                                /* resolve labels or fall back to raw value / “N/A” */
+                                                $yearLabel = isset($userDetails->year)
+                                                    ? ($yearMap[$userDetails->year] ?? htmlspecialchars($userDetails->year))
+                                                    : 'N/A';
+
+                                                $semLabel  = isset($userDetails->semester)
+                                                    ? ($semMap[$userDetails->semester] ?? htmlspecialchars($userDetails->semester))
+                                                    : 'N/A';
+                                                ?>
+
+                                                <div class="row pt-4">
+                                                    <div class="col-lg-4">
+                                                        <p><strong>Year:</strong> <?php echo $yearLabel; ?></p>
+                                                        <p><strong>Semester:</strong> <?php echo $semLabel; ?></p>
+                                                    </div>
+                                                </div>
+
                                                 <div class="row pt-4">
                                                     <div class="col-lg-4">
                                                         <p><strong>Last Semester CGPA/Merit:</strong> <?php echo isset($userDetails->last_semester_cgpa_or_merit) ? htmlspecialchars($userDetails->last_semester_cgpa_or_merit) : 'N/A'; ?></p>
@@ -425,54 +461,54 @@ $userList = $user->getDistinctUsersByStatus(0, "user"); // Get all pending users
         }
 
         function paginateItems() {
-    // Get all accordion items.
-    const items = Array.from(document.querySelectorAll('.accordion-item.faq-item'));
-    
-    // Hide all items initially.
-    items.forEach(item => item.style.display = 'none');
+            // Get all accordion items.
+            const items = Array.from(document.querySelectorAll('.accordion-item.faq-item'));
 
-    // Filter items that match the search criteria.
-    const visibleItems = items.filter(item => item.getAttribute('data-match') === 'true');
-    const totalPages = Math.ceil(visibleItems.length / itemsPerPage);
+            // Hide all items initially.
+            items.forEach(item => item.style.display = 'none');
 
-    // Calculate start and end index for the current page.
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
+            // Filter items that match the search criteria.
+            const visibleItems = items.filter(item => item.getAttribute('data-match') === 'true');
+            const totalPages = Math.ceil(visibleItems.length / itemsPerPage);
 
-    // Show only items for the current page.
-    visibleItems.slice(startIndex, endIndex).forEach(item => item.style.display = '');
+            // Calculate start and end index for the current page.
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
 
-    // Build Bootstrap pagination controls.
-    const paginationContainer = document.getElementById('paginationContainer');
-    paginationContainer.innerHTML = '';
+            // Show only items for the current page.
+            visibleItems.slice(startIndex, endIndex).forEach(item => item.style.display = '');
 
-    if (totalPages > 1) {
-        let paginationHTML = '';
+            // Build Bootstrap pagination controls.
+            const paginationContainer = document.getElementById('paginationContainer');
+            paginationContainer.innerHTML = '';
 
-        // Previous button.
-        paginationHTML += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            if (totalPages > 1) {
+                let paginationHTML = '';
+
+                // Previous button.
+                paginationHTML += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
             <a class="page-link" href="#" aria-label="Previous" onclick="changePage(${currentPage - 1}); return false;">
                 <span aria-hidden="true">&laquo;</span>
             </a>
         </li>`;
 
-        // Page number buttons.
-        for (let i = 1; i <= totalPages; i++) {
-            paginationHTML += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                // Page number buttons.
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationHTML += `<li class="page-item ${i === currentPage ? 'active' : ''}">
                 <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
             </li>`;
-        }
+                }
 
-        // Next button.
-        paginationHTML += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                // Next button.
+                paginationHTML += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
             <a class="page-link" href="#" aria-label="Next" onclick="changePage(${currentPage + 1}); return false;">
                 <span aria-hidden="true">&raquo;</span>
             </a>
         </li>`;
 
-        paginationContainer.innerHTML = paginationHTML;
-    }
-}
+                paginationContainer.innerHTML = paginationHTML;
+            }
+        }
 
 
         function changePage(page) {

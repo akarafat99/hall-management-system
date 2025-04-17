@@ -1,11 +1,11 @@
 <?php
 include_once '../class-file/SessionManager.php';
 
-$session = new SessionManager();
+$session = SessionStatic::class;
 include_once '../popup-1.php';
-$session->get('msg1') ? showPopup($session->get('msg1')) : '';
-$session->delete('msg1');
-// $session->destroy();
+$session::get('msg1') ? showPopup($session::get('msg1')) : '';
+$session::delete('msg1');
+// $session::destroy();
 
 if (isset($_POST['login'])) {
     $email = $_POST['email'];
@@ -21,7 +21,7 @@ if (isset($_POST['login'])) {
         // echo 'all ok <br>';
         include_once '../popup-1.php';
         showPopup($userCheck[1]);
-        $session->storeObject('admin_user', $user);
+        $session::storeObject('admin_user', $user);
         echo '<script>window.location.href = "dashboard.php";</script>';
     } elseif ($userCheck[0] == "10") {
         include_once '../popup-1.php';
@@ -33,10 +33,9 @@ if (isset($_POST['login'])) {
 }
 
 $alreadyLoggedIn = false;
-if ($session->getObject('admin_user') !== null) {
+if ($session::getObject('admin_user') !== null) {
     $alreadyLoggedIn = true;
 }
-
 
 ?>
 

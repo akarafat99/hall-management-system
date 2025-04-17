@@ -3,6 +3,7 @@ include_once '../class-file/User.php';
 include_once '../class-file/UserDetails.php';
 include_once '../class-file/FileManager.php';
 include_once '../class-file/SessionManager.php';
+include_once '../class-file/Department.php';
 include_once '../popup-1.php';
 
 $session = SessionStatic::class;
@@ -12,16 +13,17 @@ if ($session::get('user') == null) {
   exit;
 }
 
-if($session::get('msg1') != null) {
+if ($session::get('msg1') != null) {
   showPopup($session::get('msg1'));
   $session::delete('msg1');
 }
 
 $user = new User();
 $userDetails = new UserDetails();
+$department = new Department();
 
 // load user details
-if(isset($_POST['viewEditRequest']) || isset($_GET['viewEditRequest'])) {
+if (isset($_POST['viewEditRequest']) || isset($_GET['viewEditRequest'])) {
   $userDetails->details_id = $_POST['viewEditRequest'];
   $userDetails->getByDetailsId($userDetails->details_id);
   $user->user_id = $userDetails->user_id;
@@ -30,6 +32,8 @@ if(isset($_POST['viewEditRequest']) || isset($_GET['viewEditRequest'])) {
   echo "<script>window.location.href = 'profile.php';</script>";
   exit;
 }
+
+$department->getDepartments($userDetails->department_id);
 
 $file1 = new FileManager();
 $file1->file_id = $userDetails->profile_picture_id;
@@ -197,216 +201,231 @@ $file2->loadByFileId($file2->file_id);
 </head>
 
 <body>
-  <div class="container-fluid">
-    <!-- Parent container with flex and min-vh-100 -->
-    <div class="d-flex flex-column min-vh-100">
-      <!-- First parent div for all main content including the navbar -->
-      <div class="flex-grow-1">
-        <!-- Navbar -->
-        <?php include_once 'navbar-student-1.php'; ?>
+  <div class="d-flex flex-column min-vh-100">
+    <div class="flex-grow-1">
+      <!-- Navbar Section Start -->
+      <?php include_once 'navbar-student-1.php'; ?>
+      <!-- Navbar Section End  -->
 
-        <!-- Main Content Area -->
-        <main>
-          <div class="container-fluid px-4">
-            <div class="card__wrapper">
-              <div class="card__title-wrap mb-20">
-                <h3 class="table__heading-title mb-5">Profile Details</h3>
-              </div>
-              <div class="card-body">
-                <!-- Form Part 1: Profile Picture Display -->
-                <div class="card mb-4">
-                  <div class="card-header">
-                    <i class="fa fa-info-circle text-info me-2"></i>
-                    Profile Picture
-                  </div>
-                  <div class="card-body">
-                    <div class="row align-items-center mb-4">
-                      <div class="col-md-9">
-                        <div class="d-inline-block position-relative me-4 mb-3 account-profile">
-                          <div class="avatar-preview rounded">
-                            <div id="imagePreview" class="rounded-4 profile-avatar"
-                              style="background-image: url('../uploads1/<?= htmlspecialchars($file1->file_new_name) ?>');"></div>
-                          </div>
+      <!-- Main Content Area -->
+      <main>
+        <div class="container-fluid px-4">
+          <div class="card__wrapper">
+            <div class="card__title-wrap mb-20">
+              <h3 class="table__heading-title mb-5">Profile Details</h3>
+            </div>
+            <div class="card-body">
+              <!-- Form Part 1: Profile Picture Display -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <i class="fa fa-info-circle text-info me-2"></i>
+                  Profile Picture
+                </div>
+                <div class="card-body">
+                  <div class="row align-items-center mb-4">
+                    <div class="col-md-9">
+                      <div class="d-inline-block position-relative me-4 mb-3 account-profile">
+                        <div class="avatar-preview rounded">
+                          <div id="imagePreview" class="rounded-4 profile-avatar"
+                            style="background-image: url('../uploads1/<?= htmlspecialchars($file1->file_new_name) ?>');"></div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <!-- Modified section to display read-only profile details -->
-                <div class="card mb-4">
-                  <div class="card-header">
-                    <i class="fa fa-info-circle text-warning me-2"></i>
-                    Profile Details
+              <!-- Modified section to display read-only profile details -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <i class="fa fa-info-circle text-warning me-2"></i>
+                  Profile Details
+                </div>
+                <div class="card-body">
+                  <!-- Personal Information Section -->
+                  <div class="row mb-2">
+                    <div class="col-md-6">
+                      <label class="form-label mb-md-2">Full Name</label>
+                      <p><?= htmlspecialchars($userDetails->full_name) ?></p>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label mb-md-2">Email</label>
+                      <p><?= htmlspecialchars($user->email) ?></p>
+                    </div>
                   </div>
-                  <div class="card-body">
-                    <!-- Personal Information Section -->
-                    <div class="row mb-2">
-                      <div class="col-md-6">
-                        <label class="form-label mb-md-2">Full Name</label>
-                        <p><?= htmlspecialchars($userDetails->full_name) ?></p>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label mb-md-2">Email</label>
-                        <p><?= htmlspecialchars($user->email) ?></p>
-                      </div>
+                  <div class="row mb-2">
+                    <div class="col-md-6">
+                      <label class="form-label">Gender</label>
+                      <p><?= htmlspecialchars($userDetails->gender) ?></p>
                     </div>
-                    <div class="row mb-2">
-                      <div class="col-md-6">
-                        <label class="form-label">Gender</label>
-                        <p><?= htmlspecialchars($userDetails->gender) ?></p>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label">Contact No</label>
-                        <p><?= htmlspecialchars($userDetails->contact_no) ?></p>
-                      </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Contact No</label>
+                      <p><?= htmlspecialchars($userDetails->contact_no) ?></p>
                     </div>
-                    <div class="row mb-2">
-                      <div class="col-md-6">
-                        <label class="form-label">Student ID</label>
-                        <p><?= htmlspecialchars($userDetails->student_id) ?></p>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label">Session</label>
-                        <p><?= htmlspecialchars($userDetails->session) ?></p>
-                      </div>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-md-6">
+                      <label class="form-label">Student ID</label>
+                      <p><?= htmlspecialchars($userDetails->student_id) ?></p>
                     </div>
-                    <div class="row mb-2">
-                      <div class="col-md-4">
-                        <label class="form-label">Year</label>
-                        <p>
-                          <?php 
-                          switch($userDetails->year) {
-                            case 1: echo '1st Year B.Sc.'; break;
-                            case 2: echo '2nd Year B.Sc.'; break;
-                            case 3: echo '3rd Year B.Sc.'; break;
-                            case 4: echo '4th Year B.Sc.'; break;
-                            case 5: echo '1st Year MSc'; break;
-                            case 6: echo '2nd Year MSc'; break;
-                            default: echo htmlspecialchars($userDetails->year); 
-                          }
-                          ?>
-                        </p>
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Semester</label>
-                        <p><?= ($userDetails->semester == 1) ? 'Semester 1' : 'Semester 2' ?></p>
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Last Semester CGPA/Merit</label>
-                        <p><?= htmlspecialchars($userDetails->last_semester_cgpa_or_merit) ?></p>
-                      </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Session</label>
+                      <p><?= htmlspecialchars($userDetails->session) ?></p>
                     </div>
-                    <div class="mb-2">
-                      <label class="form-label">Zilla</label>
-                      <p><?= htmlspecialchars($userDetails->district) ?></p>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-md-6">
+                      <label class="form-label">Department</label>
+                      <p><?= htmlspecialchars($department->department_name . ' (' . $department->department_short_form . ')') ?></p>
                     </div>
-                    <div class="mb-2">
-                      <label class="form-label">Permanent Address</label>
-                      <p><?= nl2br(htmlspecialchars($userDetails->permanent_address)) ?></p>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-md-4">
+                      <label class="form-label">Year</label>
+                      <p>
+                        <?php
+                        switch ($userDetails->year) {
+                          case 1:
+                            echo '1st Year B.Sc.';
+                            break;
+                          case 2:
+                            echo '2nd Year B.Sc.';
+                            break;
+                          case 3:
+                            echo '3rd Year B.Sc.';
+                            break;
+                          case 4:
+                            echo '4th Year B.Sc.';
+                            break;
+                          case 5:
+                            echo '1st Year MSc';
+                            break;
+                          case 6:
+                            echo '2nd Year MSc';
+                            break;
+                          default:
+                            echo htmlspecialchars($userDetails->year);
+                        }
+                        ?>
+                      </p>
                     </div>
-                    <div class="mb-2">
-                      <label class="form-label">Present Address</label>
-                      <p><?= nl2br(htmlspecialchars($userDetails->present_address)) ?></p>
+                    <div class="col-md-4">
+                      <label class="form-label">Semester</label>
+                      <p><?= ($userDetails->semester == 1) ? 'Semester 1' : 'Semester 2' ?></p>
                     </div>
-                    <!-- Father's Information -->
-                    <div class="text-center my-4">
-                      <h5>Father's Information</h5>
+                    <div class="col-md-4">
+                      <label class="form-label">Last Semester CGPA/Merit</label>
+                      <p><?= htmlspecialchars($userDetails->last_semester_cgpa_or_merit) ?></p>
                     </div>
-                    <div class="row mb-2">
-                      <div class="col-md-4">
-                        <label class="form-label">Father's Name</label>
-                        <p><?= htmlspecialchars($userDetails->father_name) ?></p>
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Father's Contact No</label>
-                        <p><?= htmlspecialchars($userDetails->father_contact_no) ?></p>
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Father's Profession</label>
-                        <p><?= htmlspecialchars($userDetails->father_profession) ?></p>
-                      </div>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Zilla</label>
+                    <p><?= htmlspecialchars($userDetails->district) ?></p>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Permanent Address</label>
+                    <p><?= nl2br(htmlspecialchars($userDetails->permanent_address)) ?></p>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Present Address</label>
+                    <p><?= nl2br(htmlspecialchars($userDetails->present_address)) ?></p>
+                  </div>
+                  <!-- Father's Information -->
+                  <div class="text-center my-4">
+                    <h5>Father's Information</h5>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-md-4">
+                      <label class="form-label">Father's Name</label>
+                      <p><?= htmlspecialchars($userDetails->father_name) ?></p>
                     </div>
-                    <div class="mb-2">
-                      <label class="form-label">Father's Monthly Income</label>
-                      <p><?= htmlspecialchars($userDetails->father_monthly_income) ?></p>
+                    <div class="col-md-4">
+                      <label class="form-label">Father's Contact No</label>
+                      <p><?= htmlspecialchars($userDetails->father_contact_no) ?></p>
                     </div>
-                    <!-- Mother's Information -->
-                    <div class="text-center my-4">
-                      <h5>Mother's Information</h5>
+                    <div class="col-md-4">
+                      <label class="form-label">Father's Profession</label>
+                      <p><?= htmlspecialchars($userDetails->father_profession) ?></p>
                     </div>
-                    <div class="row mb-2">
-                      <div class="col-md-4">
-                        <label class="form-label">Mother's Name</label>
-                        <p><?= htmlspecialchars($userDetails->mother_name) ?></p>
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Mother's Contact No</label>
-                        <p><?= htmlspecialchars($userDetails->mother_contact_no) ?></p>
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Mother's Profession</label>
-                        <p><?= htmlspecialchars($userDetails->mother_profession) ?></p>
-                      </div>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Father's Monthly Income</label>
+                    <p><?= htmlspecialchars($userDetails->father_monthly_income) ?></p>
+                  </div>
+                  <!-- Mother's Information -->
+                  <div class="text-center my-4">
+                    <h5>Mother's Information</h5>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-md-4">
+                      <label class="form-label">Mother's Name</label>
+                      <p><?= htmlspecialchars($userDetails->mother_name) ?></p>
                     </div>
-                    <div class="mb-2">
-                      <label class="form-label">Mother's Monthly Income</label>
-                      <p><?= htmlspecialchars($userDetails->mother_monthly_income) ?></p>
+                    <div class="col-md-4">
+                      <label class="form-label">Mother's Contact No</label>
+                      <p><?= htmlspecialchars($userDetails->mother_contact_no) ?></p>
                     </div>
-                    <!-- Guardian's Information -->
-                    <div class="text-center my-4">
-                      <h5>Guardian's Information</h5>
+                    <div class="col-md-4">
+                      <label class="form-label">Mother's Profession</label>
+                      <p><?= htmlspecialchars($userDetails->mother_profession) ?></p>
                     </div>
-                    <div class="row mb-2">
-                      <div class="col-md-6">
-                        <label class="form-label">Guardian's Name</label>
-                        <p><?= htmlspecialchars($userDetails->guardian_name) ?></p>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label">Guardian's Contact No</label>
-                        <p><?= htmlspecialchars($userDetails->guardian_contact_no) ?></p>
-                      </div>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Mother's Monthly Income</label>
+                    <p><?= htmlspecialchars($userDetails->mother_monthly_income) ?></p>
+                  </div>
+                  <!-- Guardian's Information -->
+                  <div class="text-center my-4">
+                    <h5>Guardian's Information</h5>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-md-6">
+                      <label class="form-label">Guardian's Name</label>
+                      <p><?= htmlspecialchars($userDetails->guardian_name) ?></p>
                     </div>
-                    <div class="mb-2">
-                      <label class="form-label">Guardian's Address</label>
-                      <p><?= nl2br(htmlspecialchars($userDetails->guardian_address)) ?></p>
+                    <div class="col-md-6">
+                      <label class="form-label">Guardian's Contact No</label>
+                      <p><?= htmlspecialchars($userDetails->guardian_contact_no) ?></p>
                     </div>
-                    <!-- Document File Section -->
-                    <div class="mb-2">
-                      <label class="form-label">Document</label>
-                      <?php if (!empty($file2->file_new_name)) : ?>
-                        <div class="card">
-                          <div class="card-body d-flex align-items-center">
-                            <i class="fa fa-file-alt fa-2x text-primary me-3"></i>
-                            <div>
-                              <h5 class="card-title mb-1"><?= htmlspecialchars($file2->file_new_name) ?></h5>
-                              <a href="../uploads1/<?= htmlspecialchars($file2->file_new_name) ?>" target="_blank" class="btn btn-sm btn-outline-primary">View Document</a>
-                            </div>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Guardian's Address</label>
+                    <p><?= nl2br(htmlspecialchars($userDetails->guardian_address)) ?></p>
+                  </div>
+                  <!-- Document File Section -->
+                  <div class="mb-2">
+                    <label class="form-label">Document</label>
+                    <?php if (!empty($file2->file_new_name)) : ?>
+                      <div class="card">
+                        <div class="card-body d-flex align-items-center">
+                          <i class="fa fa-file-alt fa-2x text-primary me-3"></i>
+                          <div>
+                            <h5 class="card-title mb-1"><?= htmlspecialchars($file2->file_new_name) ?></h5>
+                            <a href="../uploads1/<?= htmlspecialchars($file2->file_new_name) ?>" target="_blank" class="btn btn-sm btn-outline-primary">View Document</a>
                           </div>
                         </div>
-                      <?php else : ?>
-                        <div class="alert alert-warning" role="alert">
-                          No document file available.
-                        </div>
-                      <?php endif; ?>
-                    </div>
+                      </div>
+                    <?php else : ?>
+                      <div class="alert alert-warning" role="alert">
+                        No document file available.
+                      </div>
+                    <?php endif; ?>
                   </div>
                 </div>
               </div>
             </div>
-        </main>
+          </div>
+      </main>
 
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3 mt-auto">
+      <div class="container">
+        <p class="mb-0">&copy; <?php echo date('Y'); ?> JUST Credit by Arafat &amp; Shakil</p>
       </div>
-
-    </div>
+    </footer>
   </div>
-
-  <!-- Second parent div for the footer -->
-  <footer class="bg-dark text-white mt-auto">
-    <div class="container-fluid px-0 py-4 text-center">
-      <p class="mb-0">&copy; 2025 MM Hall. All rights reserved.</p>
-    </div>
-  </footer>
 
 
   <!-- Bootstrap Bundle with Popper -->

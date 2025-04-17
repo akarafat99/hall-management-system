@@ -4,514 +4,419 @@ include_once 'class-file/User.php';
 include_once 'class-file/UserDetails.php';
 include_once 'class-file/FileManager.php';
 include_once 'class-file/NoteManager.php';
-include_once 'class-file/Division.php';  // Include the Division class
+include_once 'class-file/Division.php';
+include_once 'class-file/Department.php';
 
 $session = SessionStatic::class;
-// Get divisions array from the Division class.
 $divisions = getDivisions();
+$department = new Department();
+$departmentList = $department->getDepartments(null, 1);
 
 if (isset($_POST['register'])) {
-    $user = new User();
-    $temp_user = $session::getObject('signup_user');
-    $user->user_type = "user";
-    $session::copyProperties($temp_user, $user);
+    // Insert User
+    $user  = new User();
+    $temp  = $session::getObject('signup_user');
+    $session::copyProperties($temp, $user);
+    $user->user_type = 'user';
     $user->insert();
 
-    $userDetails = new UserDetails();
-    $userDetails->user_id = $user->user_id;
+    // Insert User Details
+    $detail = new UserDetails();
+    $detail->user_id                    = $user->user_id;
+    $detail->full_name                  = $_POST['fullName'];
+    $detail->student_id                 = $_POST['studentId'];
+    $detail->gender                     = $_POST['gender'];
+    $detail->contact_no                 = $_POST['contactNo'];
+    $detail->session                    = $_POST['session'];
+    $detail->department_id              = $_POST['department'];
+    $detail->year                       = $_POST['year'];
+    $detail->semester                   = $_POST['semester'];
+    $detail->last_semester_cgpa_or_merit = $_POST['university-merit-or-cgpa'];
+    $detail->division                   = $_POST['division'];
+    $detail->district                   = $_POST['district'];
+    $detail->permanent_address          = $_POST['permanentAddress'];
+    $detail->present_address            = $_POST['presentAddress'];
+    $detail->father_name                = $_POST['fatherName'];
+    $detail->father_contact_no          = $_POST['fatherContactNo'];
+    $detail->father_profession          = $_POST['fatherProfession'];
+    $detail->father_monthly_income      = $_POST['fatherMonthlyIncome'];
+    $detail->mother_name                = $_POST['motherName'];
+    $detail->mother_contact_no          = $_POST['motherContactNo'];
+    $detail->mother_profession          = $_POST['motherProfession'];
+    $detail->mother_monthly_income      = $_POST['motherMonthlyIncome'];
+    $detail->guardian_name              = $_POST['guardianName'];
+    $detail->guardian_contact_no        = $_POST['guardianContactNo'];
+    $detail->guardian_address           = $_POST['guardianAddress'];
+    $detail->insert();
 
-    $userDetails->full_name = $_POST['fullName'];
-    $userDetails->student_id = $_POST['studentId'];
-    $userDetails->gender = $_POST['gender'];
-    $userDetails->contact_no = $_POST['contactNo'];
-    $userDetails->session = $_POST['session'];
-    $userDetails->year = $_POST['year'];
-    $userDetails->semester = $_POST['semester'];
-    $userDetails->last_semester_cgpa_or_merit = $_POST['university-merit-or-cgpa'];
-    $userDetails->division = $_POST['division'];
-    $userDetails->district = $_POST['district'];
-    $userDetails->permanent_address = $_POST['permanentAddress'];
-    $userDetails->present_address = $_POST['presentAddress'];
-    $userDetails->father_name = $_POST['fatherName'];
-    $userDetails->father_contact_no = $_POST['fatherContactNo'];
-    $userDetails->father_profession = $_POST['fatherProfession'];
-    $userDetails->father_monthly_income = $_POST['fatherMonthlyIncome'];
-    $userDetails->mother_name = $_POST['motherName'];
-    $userDetails->mother_contact_no = $_POST['motherContactNo'];
-    $userDetails->mother_profession = $_POST['motherProfession'];
-    $userDetails->mother_monthly_income = $_POST['motherMonthlyIncome'];
-    $userDetails->guardian_name = $_POST['guardianName'];
-    $userDetails->guardian_contact_no = $_POST['guardianContactNo'];
-    $userDetails->guardian_address = $_POST['guardianAddress'];
-
-    $userDetails->insert();
-
-    $file1 = new FileManager();
+    /* ---- profile photo ---- */
+    $file1              = new FileManager();
     $file1->file_owner_id = $user->user_id;
-    $file1->file_id = $file1->insert();
-    $ans = $file1->doOp($_FILES['profilePhoto']);
-    if ($ans == 1) {
-        // echo 'Profile photo uploaded <br>';
+    $file1->file_id       = $file1->insert();
+    if ($file1->doOp($_FILES['profilePhoto']) === 1) {
         $file1->update();
-    } else {
-        // echo 'Profile photo upload failed <br>';
+        $detail->profile_picture_id = $file1->file_id;
     }
 
-    $file2 = new FileManager();
+    /* ---- document ---- */
+    $file2              = new FileManager();
     $file2->file_owner_id = $user->user_id;
-    $file2->file_id = $file2->insert();
-    $ans = $file2->doOp($_FILES['formFile']);
-    if ($ans == 1) {
-        // echo 'Document uploaded <br>';
+    $file2->file_id       = $file2->insert();
+    if ($file2->doOp($_FILES['formFile']) === 1) {
         $file2->update();
-    } else {
-        // echo 'Document upload failed <br>';
+        $detail->document_id = $file2->file_id;
     }
 
-    $userDetails->profile_picture_id = $file1->file_id;
-    $userDetails->document_id = $file2->file_id;
-    $userDetails->update();
+    $detail->update();
 
-    // echo 'All done <br>';
     $session::delete('signup_user');
-    $session::set('msg1', 'Registration successful. Please login to continue.'); // Set success message
-    // $session::destroy();
-    echo "<script>window.location = 'index.php';</script>";
-    exit();
+    $session::set('msg1', 'Registration successful. Please login.');
+    echo "<script>window.location='index.php';</script>";
+    exit;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
-<meta charset="utf-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>JUST Hall ‑ Registration</title>
 
-
+    <!-- Google Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css?family=Muli:300,400,700,900" rel="stylesheet">
-    <link rel="stylesheet" href="fonts/icomoon/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="css/jquery-ui.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css">
-    <link rel="stylesheet" href="css/owl.carousel.min.css">
-    <link rel="stylesheet" href="css/owl.theme.default.min.css">
-    <link rel="stylesheet" href="css/owl.theme.default.min.css">
-
-    <link rel="stylesheet" href="css/jquery.fancybox.min.css">
-
-    <link rel="stylesheet" href="css/bootstrap-datepicker.css">
-
-    <link rel="stylesheet" href="fonts/flaticon/font/flaticon.css">
-
-    <link rel="stylesheet" href="css/aos.css">
-
     <link rel="stylesheet" href="css/style.css">
 
-    <title>JUST Hall</title>
-
-
     <style>
+        /* Enhanced selects */
+        .form-select {
+            border-radius: .75rem;
+            background: #f8f9fa;
+            border: 1px solid #ced4da;
+            padding: .75rem 1rem;
+            transition: border-color .2s, box-shadow .2s
+        }
+
+        .form-select:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25)
+        }
+
+        .form-control,
+        textarea.form-control {
+            border-radius: .5rem;
+            padding: .75rem 1rem
+        }
+
         .card-header {
-            background-color: #f4e90a;
-            color: #201e1f;
+            background: #007bff;
+            color: #fff
         }
 
-        .form-block {
-            padding: 2rem;
-            box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-            border: none;
-
+        /* never let a .form-select grow wider than its parent */
+        .form-select.w-100 {
+            max-width: 100%;
         }
 
-        .form-info-title {
-            color: #201e1f;
-            font-weight: 600;
+        /* wrap text *inside* the dropdown list so long options are readable there */
+        .form-select.w-100 option {
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        /* but truncate the single selected line to keep the control itself narrow */
+        .form-select.w-100.text-truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     </style>
-
 </head>
 
-<body data-spy="scroll" data-target=".site-navbar-target" data-offset="300">
+<body>
+    <div class="d-flex flex-column min-vh-100">
+        
+        <?php include_once 'student/navbar-student-2.php'; ?>
 
-    <!-- navbar section start -->
-    <?php include_once 'student/navbar-student.php'; ?>
-    <!-- Navbar Section End -->
+        <div class="container my-5">
+            <div class="card border-0 shadow-sm">
+                <!-- Card header -->
+                <div class="card-header bg-light border-0 text-center py-3">
+                    <h4 class="mb-0 fw-bold text-primary text-uppercase d-inline-flex align-items-center gap-2">
+                        <!-- icon adds a visual cue (optional) -->
+                        <i class="fas fa-user-plus"></i>
+                        Registration
+                    </h4>
+                </div>
 
-    <!-- Registration Section Start -->
-    <section class="auth-section">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-10">
-                    <div class="contact-form-wrapper">
-                        <div class="card-header text-center">
-                            <h4>Provide Each Input Valid Information</h4>
+
+                <div class="card-body p-4 p-lg-5">
+                    <form method="post" enctype="multipart/form-data" class="mx-auto" style="max-width: 900px;">
+
+                        <!-- Personal Information -->
+                        <h5 class="fw-semibold mb-4">Personal Information</h5>
+
+                        <div class="row">
+                            <div class="col-12 col-md-6 mb-3">
+                                <label for="profilePhoto" class="form-label fw-semibold">Profile Photo</label>
+                                <input class="form-control" type="file" id="profilePhoto" name="profilePhoto" accept="image/*" required>
+                            </div>
+                            <div class="col-12 col-md-6 mb-3">
+                                <label for="formFile" class="form-label fw-semibold">Document (scanned copy)</label>
+                                <input class="form-control" type="file" id="formFile" name="formFile" required>
+                            </div>
+
+                            <div class="col-12 col-md-12 mb-3">
+                                <label for="fullName" class="form-label fw-semibold">Full Name</label>
+                                <input class="form-control" type="text" id="fullName" name="fullName" placeholder="Enter full name" required>
+                            </div>
+
+                            <div class="col-12 col-md-12 mb-3">
+                                <label for="gender" class="form-label fw-semibold">Gender</label>
+                                <select class="form-select" id="gender" name="gender" required>
+                                    <option value="male" selected>Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-6 mb-3">
+                                <label for="studentId" class="form-label fw-semibold">Student ID</label>
+                                <input class="form-control" type="text" id="studentId" name="studentId" placeholder="Enter student ID" required>
+                            </div>
+                            <div class="col-12 col-md-6 mb-3">
+                                <label for="contactNo" class="form-label fw-semibold">Contact No</label>
+                                <input class="form-control" type="tel" id="contactNo" name="contactNo" placeholder="+8801XXXXXXXXX" required>
+                            </div>
+
+                            <!-- Session (full‑width) -->
+                            <div class="col-12 mb-3">
+                                <label for="session" class="form-label fw-semibold">Session</label>
+                                <input class="form-control" type="text" id="session" name="session"
+                                    placeholder="2022–2023" required>
+                            </div>
+
+                            <!-- Department -->
+                            <div class="col-12 mb-3">
+                                <label for="department" class="form-label fw-semibold">Department</label>
+
+                                <!-- w-100 fixes the width; text-truncate prevents overflow; -->
+                                <select class="form-select w-100 text-truncate" id="department"
+                                    name="department" required>
+                                    <?php foreach ($departmentList as $dept): ?>
+                                        <option value="<?php echo htmlspecialchars($dept['department_id'], ENT_QUOTES); ?>">
+                                            <?php echo htmlspecialchars($dept['department_name'] . ' (' . $dept['department_short_form'] . ')'); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+
+                            <!-- Year & Semester side‑by‑side -->
+                            <div class="col-12 col-md-6 mb-3">
+                                <label for="year" class="form-label fw-semibold">Year</label>
+                                <select class="form-select" id="year" name="year" required>
+                                    <option value="1">B.Sc 1st year</option>
+                                    <option value="2">B.Sc 2nd year</option>
+                                    <option value="3">B.Sc 3rd year</option>
+                                    <option value="4">B.Sc 4th year</option>
+                                    <option value="5">M.Sc 1st year</option>
+                                    <option value="6">M.Sc 2nd year</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-6 mb-3">
+                                <label for="semester" class="form-label fw-semibold">Semester</label>
+                                <select class="form-select" id="semester" name="semester" required>
+                                    <option value="1">1st semester</option>
+                                    <option value="2">2nd semester</option>
+                                </select>
+                            </div>
+
+
+                            <!-- Merit / CGPA -->
+                            <div class="col-12 mb-3">
+                                <label for="dynamic-input" class="form-label fw-semibold" id="dynamic-label">
+                                    University Merit
+                                </label>
+
+                                <input class="form-control"
+                                    type="number"
+                                    id="dynamic-input"
+                                    name="university-merit-or-cgpa"
+                                    placeholder="Enter value"
+                                    required>
+
+                                <!-- new help‑text -->
+                                <small id="dynamic-help" class="form-text text-muted">
+                                    For B.Sc. 1st year 1st semester and M.Sc. 1st year 1st semester, enter your merit list position.
+                                    All other students should enter their last‑semester CGPA.
+                                </small>
+                            </div>
+
+
+                            <div class="col-12 col-md-6 mb-3">
+                                <label for="division" class="form-label fw-semibold">Division</label>
+                                <select class="form-select" id="division" name="division" required>
+                                    <?php foreach ($divisions as $divisionName => $districtList) : ?>
+                                        <option value="<?php echo htmlspecialchars($divisionName, ENT_QUOTES); ?>">
+                                            <?php echo htmlspecialchars($divisionName); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-6 mb-3">
+                                <label for="district" class="form-label fw-semibold">District</label>
+                                <select class="form-select" id="district" name="district" required></select>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label for="permanentAddress" class="form-label fw-semibold">Permanent Address</label>
+                                <textarea class="form-control" id="permanentAddress" name="permanentAddress" rows="3" placeholder="Enter permanent address" required></textarea>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="presentAddress" class="form-label fw-semibold">Present Address</label>
+                                <textarea class="form-control" id="presentAddress" name="presentAddress" rows="3" placeholder="Enter present address" required></textarea>
+                            </div>
+                        </div><!-- /.row -->
+
+                        <!-- Father’s Information -->
+                        <h5 class="fw-semibold mt-5 mb-4">Father’s Information</h5>
+                        <div class="row">
+                            <div class="col-12 col-md-4 mb-3">
+                                <label for="fatherName" class="form-label fw-semibold">Father’s Name</label>
+                                <input class="form-control" type="text" id="fatherName" name="fatherName" required>
+                            </div>
+                            <div class="col-12 col-md-4 mb-3">
+                                <label for="fatherContactNo" class="form-label fw-semibold">Contact No</label>
+                                <input class="form-control" type="tel" id="fatherContactNo" name="fatherContactNo" required>
+                            </div>
+                            <div class="col-12 col-md-4 mb-3">
+                                <label for="fatherProfession" class="form-label fw-semibold">Profession</label>
+                                <input class="form-control" type="text" id="fatherProfession" name="fatherProfession" required>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="fatherMonthlyIncome" class="form-label fw-semibold">Monthly Income</label>
+                                <input class="form-control" type="number" id="fatherMonthlyIncome" name="fatherMonthlyIncome" required>
+                            </div>
                         </div>
-                        <div class="form-block">
-                            <form method="post" action="" enctype="multipart/form-data">
 
-                                <div class="text-center mb-5">
-                                    <h5 class="form-info-title">Personal Information</h5>
-                                </div>
-                                <div class="row">
-                                    <!-- Profile Photo Upload Section -->
-                                    <div class="col-md-6 mb-5">
-                                        <label for="profilePhoto" class="form-label">Profile Photo</label>
-                                        <div class="custom-file">
-                                            <input type="file" class="form-control" id="profilePhoto"
-                                                name="profilePhoto" accept="image/*">
-                                        </div>
-                                        <!-- <small class="form-text text-muted">Upload a professional profile photo.</small> -->
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="fullName" class="form-label">Full Name</label>
-                                        <input type="text" class="form-control" id="fullName" name="fullName" required>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="studentId" class="form-label">Student ID</label>
-                                        <input type="number" class="form-control" id="studentId" name="studentId"
-                                            required>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="gender" class="form-label">Gender</label>
-                                        <select class="form-control" id="gender" name="gender" required>
-                                            <option value="male">Male</option>
-                                            <option value="female">Female</option>
-                                            <option value="other">Other</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="contactNo" class="form-label">Contact No</label>
-                                        <input type="number" maxlength="11" class="form-control" id="contactNo" name="contactNo"
-                                            required>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <!-- Session Input -->
-                                    <div class="col-md-4 mb-3">
-                                        <label for="session" class="form-label">Session</label>
-                                        <input type="text" class="form-control" id="session" name="session" required>
-                                    </div>
-
-                                    <!-- Year Dropdown -->
-                                    <div class="col-md-4 mb-3">
-                                        <label for="year" class="form-label">Year</label>
-                                        <select class="form-control" id="year" name="year" required>
-                                            <option value="1">B.Sc 1 year</option>
-                                            <option value="2">B.Sc 2 year</option>
-                                            <option value="3">B.Sc 3 year</option>
-                                            <option value="4">B.Sc 4 year</option>
-                                            <option value="5">M.Sc 1 year</option>
-                                            <option value="6">M.Sc 2 year</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Semester Dropdown -->
-                                    <div class="col-md-4 mb-3">
-                                        <label for="semester" class="form-label">Semester</label>
-                                        <select class="form-control" id="semester" name="semester" required>
-                                            <option value="1">1<sup>st</sup> semester</option>
-                                            <option value="2">2<sup>nd</sup> semester</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- University Merit Field -->
-                                <!-- Last Semester CGPA Field -->
-                                <!-- Common Input Field -->
-                                <div class="row">
-                                    <div class="col-md-12 mb-3">
-                                        <label for="dynamic-input" class="form-label" id="dynamic-label">University Merit</label>
-                                        <input type="number" class="form-control" id="dynamic-input" name="university-merit-or-cgpa" required>
-                                    </div>
-                                </div>
-
-                                <!-- Division Dropdown -->
-                                <div class="mb-3">
-                                    <label for="division" class="form-label">Division</label>
-                                    <select class="form-control" id="division" name="division" required>
-                                        <?php foreach ($divisions as $divisionName => $districts): ?>
-                                            <option value="<?php echo htmlspecialchars($divisionName); ?>">
-                                                <?php echo htmlspecialchars($divisionName); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <!-- District Dropdown -->
-                                <div class="mb-3">
-                                    <label for="district" class="form-label">District</label>
-                                    <select class="form-control" id="district" name="district" required>
-                                        <!-- District options will be populated dynamically -->
-                                    </select>
-                                </div>
-
-
-                                <div class="mb-3">
-                                    <label for="permanentAddress" class="form-label">Permanent Address</label>
-                                    <input class="form-control" id="permanentAddress" name="permanentAddress"
-                                        rows="2" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="presentAddress" class="form-label">Present Address</label>
-                                    <input class="form-control" id="presentAddress" name="presentAddress" rows="2"
-                                        required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="formFile" class="form-label">Upload your file (Document scanned copy)</label>
-                                    <input class="form-control" type="file" id="formFile" name="formFile" required>
-                                </div>
-                                <div class="text-center my-5">
-                                    <h5 class="form-info-title">Father's Information</h5>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label for="fatherName" class="form-label">Father's Name</label>
-                                        <input type="text" class="form-control" id="fatherName" name="fatherName"
-                                            required>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label for="fatherContactNo" class="form-label">Father's Contact No</label>
-                                        <input type="text" class="form-control" id="fatherContactNo"
-                                            name="fatherContactNo" required>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label for="fatherProfession" class="form-label">Father's Profession</label>
-                                        <input type="text" class="form-control" id="fatherProfession"
-                                            name="fatherProfession" required>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="fatherMonthlyIncome" class="form-label">Father's Monthly
-                                        Income</label>
-                                    <input type="number" class="form-control" id="fatherMonthlyIncome"
-                                        name="fatherMonthlyIncome" required>
-                                </div>
-                                <div class="text-center my-5">
-                                    <h5 class="form-info-title">Mother's Information</h5>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label for="motherName" class="form-label">Mother's Name</label>
-                                        <input type="text" class="form-control" id="motherName" name="motherName"
-                                            required>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label for="motherContactNo" class="form-label">Mother's Contact No</label>
-                                        <input type="text" class="form-control" id="motherContactNo"
-                                            name="motherContactNo" required>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label for="motherProfession" class="form-label">Mother's Profession</label>
-                                        <input type="text" class="form-control" id="motherProfession"
-                                            name="motherProfession" required>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="motherMonthlyIncome" class="form-label">Mother's Monthly
-                                        Income</label>
-                                    <input type="number" class="form-control" id="motherMonthlyIncome"
-                                        name="motherMonthlyIncome" required>
-                                </div>
-                                <div class="text-center my-5">
-                                    <h5 class="form-info-title">Guardian's Information</h5>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="guardianName" class="form-label">Guardian's Name</label>
-                                        <input type="text" class="form-control" id="guardianName" name="guardianName"
-                                            required>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="guardianContactNo" class="form-label">Guardian's Contact
-                                            No</label>
-                                        <input type="text" class="form-control" id="guardianContactNo"
-                                            name="guardianContactNo" required>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="guardianAddress" class="form-label">Guardian's Address</label>
-                                    <input class="form-control" id="guardianAddress" name="guardianAddress" rows="2"
-                                        required>
-                                </div>
-
-                                <div class="text-center">
-                                    <button type="submit" class="primary-button"
-                                        style="cursor: pointer;" name="register">Create account</button>
-                                </div>
-                            </form>
+                        <!-- Mother’s Information -->
+                        <h5 class="fw-semibold mt-5 mb-4">Mother’s Information</h5>
+                        <div class="row">
+                            <div class="col-12 col-md-4 mb-3">
+                                <label for="motherName" class="form-label fw-semibold">Mother’s Name</label>
+                                <input class="form-control" type="text" id="motherName" name="motherName" required>
+                            </div>
+                            <div class="col-12 col-md-4 mb-3">
+                                <label for="motherContactNo" class="form-label fw-semibold">Contact No</label>
+                                <input class="form-control" type="tel" id="motherContactNo" name="motherContactNo" required>
+                            </div>
+                            <div class="col-12 col-md-4 mb-3">
+                                <label for="motherProfession" class="form-label fw-semibold">Profession</label>
+                                <input class="form-control" type="text" id="motherProfession" name="motherProfession" required>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="motherMonthlyIncome" class="form-label fw-semibold">Monthly Income</label>
+                                <input class="form-control" type="number" id="motherMonthlyIncome" name="motherMonthlyIncome" required>
+                            </div>
                         </div>
-                    </div>
+
+                        <!-- Guardian’s Information -->
+                        <h5 class="fw-semibold mt-5 mb-4">Guardian’s Information</h5>
+                        <div class="row">
+                            <div class="col-12 col-md-6 mb-3">
+                                <label for="guardianName" class="form-label fw-semibold">Guardian’s Name</label>
+                                <input class="form-control" type="text" id="guardianName" name="guardianName" required>
+                            </div>
+                            <div class="col-12 col-md-6 mb-3">
+                                <label for="guardianContactNo" class="form-label fw-semibold">Contact No</label>
+                                <input class="form-control" type="tel" id="guardianContactNo" name="guardianContactNo" required>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="guardianAddress" class="form-label fw-semibold">Guardian’s Address</label>
+                                <textarea class="form-control" id="guardianAddress" name="guardianAddress" rows="3" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-5">
+                            <button class="btn btn-primary btn-lg" type="submit" name="register">Create Account</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-    </section>
-    <!-- Registration Section End -->
 
 
-    <!-- Footer Section -->
-    <footer class="footer-section ">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="footer-logo-wrapper">
-                        <h3>HMS</h3>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                    </div>
-                </div>
 
-                <div class="col-md-3 ml-auto">
-                    <div class="footer-link-col">
-                        <h3>Links</h3>
-                        <ul class="list-unstyled footer-links">
-                            <li><a href="#">Home</a></li>
-                            <li><a href="#">Courses</a></li>
-                            <li><a href="#">Programs</a></li>
-                            <li><a href="#">Teachers</a></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="col-md-3 ml-auto">
-                    <div class="footer-link-col">
-                        <h3>Links</h3>
-                        <ul class="list-unstyled footer-links">
-                            <li><a href="#">Home</a></li>
-                            <li><a href="#">Courses</a></li>
-                            <li><a href="#">Programs</a></li>
-                            <li><a href="#">Teachers</a></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="col-md-3 ml-auto">
-                    <div class="footer-link-col">
-                        <h3>Social Media</h3>
-                        <ul class="list-unstyled footer-social-links">
-                            <li><a href="#"><i class="fa-brands fa-facebook"></i></a></li>
-                            <li><a href="#"><i class="fa-brands fa-linkedin"></i></a></li>
-                            <li><a href="#"><i class="fa-brands fa-twitter"></i></a></li>
-                        </ul>
-                    </div>
-                </div>
-
+        <footer class="bg-dark text-white text-center py-3 mt-auto">
+            <div class="container">
+                <p class="mb-0">&copy; <?= date('Y') ?> JUST Credit by Arafat & Shakil</p>
             </div>
+        </footer>
+    </div>
 
-            <div class="row pt-5 mt-5 text-center">
-                <div class="col-md-12">
-                    <div class="border-top pt-5">
-                        <p class="footer-copyright-text">
-                            <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                            Copyright &copy;
-                            <script>
-                                document.write(new Date().getFullYear());
-                            </script> JUST Credit <i class="icon-heart"
-                                aria-hidden="true"></i> by <a href="#" target="_blank">Arafat &
-                                Shakil</a>
-                        </p>
-                    </div>
-                </div>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
 
-            </div>
-        </div>
-    </footer>
-
-    <script src="js/jquery-3.3.1.min.js"></script>
-    <script src="js/jquery-migrate-3.0.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
-    <script src="js/jquery-ui.js"></script>
-    <script src="js/popper.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/owl.carousel.min.js"></script>
-    <script src="js/jquery.stellar.min.js"></script>
-    <script src="js/jquery.countdown.min.js"></script>
-    <script src="js/bootstrap-datepicker.min.js"></script>
-    <script src="js/jquery.easing.1.3.js"></script>
-    <script src="js/aos.js"></script>
-    <script src="js/jquery.fancybox.min.js"></script>
-    <script src="js/jquery.sticky.js"></script>
-
-
-    <script src="js/main.js"></script>
-
-    <!-- JavaScript to Handle Division and District Dropdowns -->
+    <!-- Division ➜ District cascade -->
+    <!-- Division → District cascade -->
     <script>
-        // Pass the PHP $divisions array to JavaScript as a JSON object.
-        var divisionData = <?php echo json_encode($divisions); ?>;
+        const divisionData = <?= json_encode($divisions, JSON_UNESCAPED_UNICODE) ?>;
 
-        // Function to populate districts based on the selected division.
-        function populateDistricts(selectedDivision) {
-            var districtSelect = document.getElementById("district");
-            districtSelect.innerHTML = ""; // Clear existing options.
-            if (divisionData[selectedDivision]) {
-                for (var district in divisionData[selectedDivision]) {
-                    if (divisionData[selectedDivision].hasOwnProperty(district)) {
-                        var option = document.createElement("option");
-                        option.value = district;
-                        option.text = district;
-                        districtSelect.appendChild(option);
-                    }
-                }
-            }
+        function populateDistricts(division) {
+            const districtSel = document.getElementById('district');
+            districtSel.innerHTML = ''; // ← wipe everything, no placeholder
+
+            if (!division || !divisionData[division]) return;
+
+            Object.keys(divisionData[division]).forEach(name => {
+                districtSel.add(new Option(name, name));
+            });
         }
 
-        // Initialize districts on page load based on the first division option.
-        document.addEventListener("DOMContentLoaded", function() {
-            var divisionSelect = document.getElementById("division");
-            populateDistricts(divisionSelect.value);
-            // Update districts when the division selection changes.
-            divisionSelect.addEventListener("change", function() {
-                populateDistricts(this.value);
-            });
+        document.addEventListener('DOMContentLoaded', () => {
+            const divSel = document.getElementById('division');
+
+            populateDistricts(divSel.value); // useful on form re‑render
+            divSel.addEventListener('change', () => populateDistricts(divSel.value));
         });
     </script>
 
-    <!-- JavaScript to Handle Text & Attribute Change -->
+
+
+    <!-- Dynamic label Merit ↔ CGPA -->
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const yearDropdown = document.getElementById("year");
-            const semesterDropdown = document.getElementById("semester");
-            const inputField = document.getElementById("dynamic-input");
-            const labelField = document.getElementById("dynamic-label");
+        document.addEventListener('DOMContentLoaded', () => {
+            const yearSel = document.getElementById('year');
+            const semSel = document.getElementById('semester');
+            const input = document.getElementById('dynamic-input');
+            const label = document.getElementById('dynamic-label');
 
-            function updateField() {
-                const year = yearDropdown.value;
-                const semester = semesterDropdown.value;
-
-                if ((year === "1" || year === "5") && semester === "1") {
-                    // First Year, First Semester: University Merit
-                    labelField.textContent = "University Merit";
-                    inputField.type = "number";
-                    inputField.removeAttribute("min");
-                    inputField.removeAttribute("max");
-                    inputField.removeAttribute("step");
+            const update = () => {
+                const isFirst = (yearSel.value === '1' || yearSel.value === '5') && semSel.value === '1';
+                label.textContent = isFirst ? 'University Merit' : 'Last Semester CGPA';
+                if (isFirst) {
+                    input.removeAttribute('min');
+                    input.removeAttribute('max');
+                    input.removeAttribute('step');
                 } else {
-                    // Other Cases: Last Semester CGPA
-                    labelField.textContent = "Last Semester CGPA";
-                    inputField.type = "number";
-                    inputField.setAttribute("min", "0");
-                    inputField.setAttribute("max", "4");
-                    inputField.setAttribute("step", "0.001");
+                    input.setAttribute('min', '0');
+                    input.setAttribute('max', '4');
+                    input.setAttribute('step', '0.001');
                 }
-            }
+            };
 
-            yearDropdown.addEventListener("change", updateField);
-            semesterDropdown.addEventListener("change", updateField);
-
-            updateField(); // Ensure correct display on page load
+            yearSel.addEventListener('change', update);
+            semSel.addEventListener('change', update);
+            update(); // initial call
         });
     </script>
-
-
 </body>
 
 </html>

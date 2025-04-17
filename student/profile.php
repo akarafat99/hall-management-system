@@ -1,8 +1,9 @@
 <?php
+include_once '../class-file/SessionManager.php';
 include_once '../class-file/User.php';
 include_once '../class-file/UserDetails.php';
 include_once '../class-file/FileManager.php';
-include_once '../class-file/SessionManager.php';
+include_once '../class-file/Department.php';
 include_once '../popup-1.php';
 
 $session = SessionStatic::class;
@@ -12,7 +13,7 @@ if ($session::get('user') == null) {
   exit;
 }
 
-if($session::get('msg1') != null) {
+if ($session::get('msg1') != null) {
   showPopup($session::get('msg1'));
   $session::delete('msg1');
 }
@@ -26,6 +27,10 @@ $userDetails = new UserDetails();
 $userDetails->user_id = $user->user_id;
 $userDetails->getUsers($userDetails->user_id, null, 1);
 $session::storeObject('userDetails', $userDetails);
+
+$department = new Department();
+$allDepartments = $department->getDepartments(null, 1);
+$department->getDepartments($userDetails->department_id);
 
 $editPending = $userDetails->isRecordAvailable($userDetails->user_id, null, 0);
 
@@ -195,279 +200,342 @@ $file2->loadByFileId($file2->file_id);
 </head>
 
 <body>
-  <div class="container-fluid">
-    <!-- Parent container with flex and min-vh-100 -->
-    <div class="d-flex flex-column min-vh-100">
-      <!-- First parent div for all main content including the navbar -->
-      <div class="flex-grow-1">
-        <!-- Navbar -->
-        <?php include_once 'navbar-student-1.php'; ?>
+  <div class="d-flex flex-column min-vh-100">
+    <div class="flex-grow-1">
+      <!-- Navbar Section Start -->
+      <?php include_once 'navbar-student-1.php'; ?>
+      <!-- Navbar Section End  -->
 
-        <!-- Info Card (shown when an edit request is pending) -->
-        <?php if ($editPending != 0): ?>
-          <div class="container-fluid px-4 mt-3">
-            <div class="alert alert-info d-flex justify-content-between align-items-center" role="alert">
-              <form action="view-profile.php" method="post" enctype="multipart/form-data">
-                <span>An edit request has already been submitted.</span>
-                <button type="submit" name="viewEditRequest" value="<?php echo $editPending; ?>" class="btn btn-info">View Edit Request</button>
-              </form>
-              <form action="delete-edit-request-profile.php" method="post" enctype="multipart/form-data">
-                <button type="submit" name="deleteEditRequest" value="<?php echo $editPending; ?>" class="btn btn-danger">Delete Edit Request</button>
-              </form>
+      <!-- Info Card (shown when an edit request is pending) -->
+      <?php if ($editPending != 0): ?>
+        <div class="container-fluid px-4 mt-3">
+          <div class="alert alert-info d-flex justify-content-between align-items-center" role="alert">
+            <form action="view-profile.php" method="post" enctype="multipart/form-data">
+              <span>An edit request has already been submitted.</span>
+              <button type="submit" name="viewEditRequest" value="<?php echo $editPending; ?>" class="btn btn-info">View Edit Request</button>
+            </form>
+            <form action="delete-edit-request-profile.php" method="post" enctype="multipart/form-data">
+              <button type="submit" name="deleteEditRequest" value="<?php echo $editPending; ?>" class="btn btn-danger">Delete Edit Request</button>
+            </form>
+          </div>
+        </div>
+      <?php endif; ?>
+
+      <!-- Main Content Area -->
+      <main>
+        <div class="container-fluid px-4">
+          <div class="card__wrapper">
+            <div class="card__title-wrap mb-20">
+              <h3 class="table__heading-title mb-5">Profile Details</h3>
+            </div>
+            <div class="card-body">
+              <!-- Form Part 1: Profile Picture Update (No Admin Approval Required) -->
+              <!-- Change Profile Picture -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <i class="fa fa-info-circle text-info me-2"></i>
+                  Change Profile Picture <small class="text-muted">(No admin approval required)</small>
+                </div>
+
+                <div class="card-body">
+                  <form action="update-profile-picture.php" method="post" enctype="multipart/form-data">
+                    <div class="row g-4 align-items-center">
+
+                      <!-- 1.5× larger preview -->
+                      <div class="col-auto">
+                        <div class="position-relative account-profile">
+                          <div class="avatar-preview rounded">
+                            <div id="imagePreview"
+                              class="rounded-4 profile-avatar border"
+                              style="
+                                      width: 150px;              /* ← 1.5× */
+                                      height: 150px;             /* ← 1.5× */
+                                      background-image: url('../uploads1/<?= htmlspecialchars($file1->file_new_name) ?>');
+                                      background-size: cover;
+                                      background-position: center;
+                                  ">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- nicer file input + button -->
+                      <div class="col">
+                        <div class="input-group">
+                          <label class="input-group-text" for="imageUpload">
+                            Select image
+                            <input class="form-control" type="file" id="imageUpload" name="profileImage" accept="image/*" required>
+                          </label>
+                        </div>
+
+                        <button type="submit" name="updateProfilePicture"
+                          class="btn btn-primary mt-3">
+                          Update Profile Picture
+                        </button>
+                      </div>
+
+                    </div><!-- /.row -->
+                  </form>
+                </div>
+              </div>
+
+
+              <!-- Form Part 2: Profile Details Update (Admin Approval Required) -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <i class="fa fa-info-circle text-warning me-2"></i>
+                  Update Profile Details (Admin Approval Required)
+                </div>
+                <div class="card-body">
+                  <!-- Unified Form Start -->
+                  <form action="update-profile-details.php" class="profile-page-form" method="post" enctype="multipart/form-data">
+                    <!-- Personal Information Section -->
+                    <div class="row align-items-center mb-4">
+                      <div class="col-md-6">
+                        <label class="form-label mb-md-2">Full Name</label>
+                        <input type="text" class="form-control" name="fullName" value="<?= htmlspecialchars($userDetails->full_name) ?>">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label mb-md-2">Email</label>
+                        <!-- Assuming $user holds the email -->
+                        <input type="email" class="form-control" name="email" value="<?= htmlspecialchars($user->email) ?>" readonly>
+                      </div>
+                    </div>
+                    <div class="row align-items-center mb-4">
+                      <div class="col-md-6">
+                        <label for="gender" class="form-label">Gender</label>
+                        <select class="form-control" id="gender" name="gender" required>
+                          <option value="">Select</option>
+                          <option value="male" <?= ($userDetails->gender === 'male') ? 'selected' : '' ?>>Male</option>
+                          <option value="female" <?= ($userDetails->gender === 'female') ? 'selected' : '' ?>>Female</option>
+                          <option value="other" <?= ($userDetails->gender === 'other') ? 'selected' : '' ?>>Other</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="contactNo" class="form-label">Contact No</label>
+                        <input type="text" class="form-control" id="contactNo" name="contactNo" value="<?= htmlspecialchars($userDetails->contact_no) ?>">
+                      </div>
+                    </div>
+                    <div class="row align-items-center mb-4">
+                      <div class="col-md-6">
+                        <label for="studentId" class="form-label">Student ID</label>
+                        <input type="text" class="form-control" id="studentId" name="studentId" value="<?= htmlspecialchars($userDetails->student_id) ?>">
+                      </div>
+                      <div class="col-md-6">
+                        <label for="session" class="form-label">Session</label>
+                        <input type="text" class="form-control" id="session" name="session" value="<?= htmlspecialchars($userDetails->session) ?>">
+                      </div>
+                    </div>
+
+                    <!-- Department Dropdown -->
+                    <div class="row mb-4">
+                      <div class="col-md-6 mb-3">
+                        <label for="department" class="form-label">Department</label>
+
+                        <div class="custom-select-wrapper">
+                          <select class="form-control" id="department" name="departmentId">
+                            <?php
+                            $deptFound = false;
+
+                            /* normal list */
+                            foreach ($allDepartments as $dept) {
+                              $selected = ($userDetails->department_id == $dept['department_id']);
+                              if ($selected) {
+                                $deptFound = true;
+                              }
+
+                              echo '<option value="' . htmlspecialchars($dept['department_id']) . '"' .
+                                ($selected ? ' selected' : '') . '>' .
+                                htmlspecialchars($dept['department_name']) . '</option>';
+                            }
+
+                            /* fallback if the saved ID isn’t in the list */
+                            if (!$deptFound) {
+                              if (!empty($userDetails->department_id)) {
+                                echo '<option value="' . $userDetails->department_id .
+                                  '" selected disabled>' .
+                                  'Unknown Department (ID ' . $userDetails->department_id . ')</option>';
+                              } else {
+                                echo '<option value="" selected disabled>' .
+                                  '— Select Department —</option>';
+                              }
+                            }
+                            ?>
+                          </select>
+                          <span class="dropdown-icon"><i class="fa fa-chevron-down"></i></span>
+                        </div>
+                      </div>
+                    </div>
+
+
+                    <div class="row">
+                      <!-- Year Dropdown -->
+                      <div class="col-md-4 mb-3">
+                        <label for="year" class="form-label">Year</label>
+                        <div class="custom-select-wrapper">
+                          <select class="form-control" id="year" name="year">
+                            <option value="1" <?= ($userDetails->year == 1) ? 'selected' : '' ?>>1st Year B.Sc.</option>
+                            <option value="2" <?= ($userDetails->year == 2) ? 'selected' : '' ?>>2nd Year B.Sc.</option>
+                            <option value="3" <?= ($userDetails->year == 3) ? 'selected' : '' ?>>3rd Year B.Sc.</option>
+                            <option value="4" <?= ($userDetails->year == 4) ? 'selected' : '' ?>>4th Year B.Sc.</option>
+                            <option value="5" <?= ($userDetails->year == 5) ? 'selected' : '' ?>>1st Year MSc</option>
+                            <option value="6" <?= ($userDetails->year == 6) ? 'selected' : '' ?>>2nd Year MSc</option>
+                          </select>
+                          <span class="dropdown-icon"><i class="fa fa-chevron-down"></i></span>
+                        </div>
+                      </div>
+
+                      <!-- Semester Dropdown -->
+                      <div class="col-md-4 mb-3">
+                        <label for="semester" class="form-label">Semester</label>
+                        <div class="custom-select-wrapper">
+                          <select class="form-control" id="semester" name="semester">
+                            <option value="1" <?= ($userDetails->semester == 1) ? 'selected' : '' ?>>Semester 1</option>
+                            <option value="2" <?= ($userDetails->semester == 2) ? 'selected' : '' ?>>Semester 2</option>
+                          </select>
+                          <span class="dropdown-icon"><i class="fa fa-chevron-down"></i></span>
+                        </div>
+                      </div>
+                    </div>
+
+                </div>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="lastSemesterCgpa" class="form-label">Last Semester CGPA/Merit</label>
+                    <input type="text" class="form-control" id="lastSemesterCgpa" name="lastSemesterCgpa" value="<?= htmlspecialchars($userDetails->last_semester_cgpa_or_merit) ?>">
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="zilla" class="form-label">Zilla</label>
+                    <!-- Using district value here -->
+                    <input type="text" class="form-control" id="zilla" name="zilla" value="<?= htmlspecialchars($userDetails->district) ?>">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="permanentAddress" class="form-label">Permanent Address</label>
+                  <textarea class="form-control" id="permanentAddress" name="permanentAddress" rows="2"><?= htmlspecialchars($userDetails->permanent_address) ?></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="presentAddress" class="form-label">Present Address</label>
+                  <textarea class="form-control" id="presentAddress" name="presentAddress" rows="2"><?= htmlspecialchars($userDetails->present_address) ?></textarea>
+                </div>
+                <!-- Father's Information -->
+                <div class="text-center my-5">
+                  <h5 class="form-info-title">Father's Information</h5>
+                </div>
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label for="fatherName" class="form-label">Father's Name</label>
+                    <input type="text" class="form-control" id="fatherName" name="fatherName" value="<?= htmlspecialchars($userDetails->father_name) ?>">
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="fatherContactNo" class="form-label">Father's Contact No</label>
+                    <input type="text" class="form-control" id="fatherContactNo" name="fatherContactNo" value="<?= htmlspecialchars($userDetails->father_contact_no) ?>">
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="fatherProfession" class="form-label">Father's Profession</label>
+                    <input type="text" class="form-control" id="fatherProfession" name="fatherProfession" value="<?= htmlspecialchars($userDetails->father_profession) ?>">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="fatherMonthlyIncome" class="form-label">Father's Monthly Income</label>
+                  <input type="text" class="form-control" id="fatherMonthlyIncome" name="fatherMonthlyIncome" value="<?= htmlspecialchars($userDetails->father_monthly_income) ?>">
+                </div>
+                <!-- Mother's Information -->
+                <div class="text-center my-5">
+                  <h5 class="form-info-title">Mother's Information</h5>
+                </div>
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label for="motherName" class="form-label">Mother's Name</label>
+                    <input type="text" class="form-control" id="motherName" name="motherName" value="<?= htmlspecialchars($userDetails->mother_name) ?>">
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="motherContactNo" class="form-label">Mother's Contact No</label>
+                    <input type="text" class="form-control" id="motherContactNo" name="motherContactNo" value="<?= htmlspecialchars($userDetails->mother_contact_no) ?>">
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label for="motherProfession" class="form-label">Mother's Profession</label>
+                    <input type="text" class="form-control" id="motherProfession" name="motherProfession" value="<?= htmlspecialchars($userDetails->mother_profession) ?>">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="motherMonthlyIncome" class="form-label">Mother's Monthly Income</label>
+                  <input type="text" class="form-control" id="motherMonthlyIncome" name="motherMonthlyIncome" value="<?= htmlspecialchars($userDetails->mother_monthly_income) ?>">
+                </div>
+                <!-- Guardian's Information -->
+                <div class="text-center my-5">
+                  <h5 class="form-info-title">Guardian's Information</h5>
+                </div>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="guardianName" class="form-label">Guardian's Name</label>
+                    <input type="text" class="form-control" id="guardianName" name="guardianName" value="<?= htmlspecialchars($userDetails->guardian_name) ?>">
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="guardianContactNo" class="form-label">Guardian's Contact No</label>
+                    <input type="text" class="form-control" id="guardianContactNo" name="guardianContactNo" value="<?= htmlspecialchars($userDetails->guardian_contact_no) ?>">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="guardianAddress" class="form-label">Guardian's Address</label>
+                  <textarea class="form-control" id="guardianAddress" name="guardianAddress" rows="2"><?= htmlspecialchars($userDetails->guardian_address) ?></textarea>
+                </div>
+
+                <!-- Document File Section -->
+                <div class="mb-3">
+                  <label class="form-label">Existing Document</label>
+                  <?php if (!empty($file2->file_new_name)) : ?>
+                    <div class="card">
+                      <div class="card-body d-flex align-items-center">
+                        <i class="fa fa-file-alt fa-2x text-primary me-3"></i>
+                        <div>
+                          <h5 class="card-title mb-1"><?= htmlspecialchars($file2->file_new_name) ?></h5>
+                          <a href="../uploads1/<?= htmlspecialchars($file2->file_new_name) ?>" target="_blank" class="btn btn-sm btn-outline-primary">View Document</a>
+                        </div>
+                      </div>
+                    </div>
+                  <?php else : ?>
+                    <div class="alert alert-warning" role="alert">
+                      No document file available.
+                    </div>
+                  <?php endif; ?>
+                </div>
+
+
+                <!-- File Change Section -->
+                <div class="mb-3">
+                  <label for="formFile" class="form-label">Change Document</label>
+                  <input class="form-control" type="file" id="formFile" name="changeFile">
+                </div>
+
+                <!-- Form Actions -->
+                <div class="card-footer text-end">
+                  <?php if ($editPending == 0): ?>
+                    <button type="submit" name="editDetails" value="<?php echo $userDetails->details_id; ?>" class="btn btn-primary ms-2">Save Changes</button>
+                  <?php else: ?>
+                    <div class="alert alert-warning mb-0" role="alert">
+                      A pending edit request already exists. Please delete that request to submit another edit request.
+                    </div>
+                  <?php endif; ?>
+                </div>
+
+                </form>
+                <!-- Unified Form End -->
+              </div>
             </div>
           </div>
-        <?php endif; ?>
+      </main>
 
-        <!-- Main Content Area -->
-        <main>
-          <div class="container-fluid px-4">
-            <div class="card__wrapper">
-              <div class="card__title-wrap mb-20">
-                <h3 class="table__heading-title mb-5">Profile Details</h3>
-              </div>
-              <div class="card-body">
-                <!-- Form Part 1: Profile Picture Update (No Admin Approval Required) -->
-                <div class="card mb-4">
-                  <div class="card-header">
-                    <i class="fa fa-info-circle text-info me-2"></i>
-                    Change Profile Picture (No Admin Approval Required)
-                  </div>
-                  <div class="card-body">
-                    <form action="update-profile-picture.php" method="post" enctype="multipart/form-data">
-                      <div class="row align-items-center mb-4">
-                        <div class="col-md-9">
-                          <div class="d-inline-block position-relative me-4 mb-3 account-profile">
-                            <div class="avatar-preview rounded">
-                              <div id="imagePreview" class="rounded-4 profile-avatar"
-                                style="background-image: url('../uploads1/<?= htmlspecialchars($file1->file_new_name) ?>');"></div>
-                            </div>
-                            <div class="upload-link" title="Update">
-                              <input type="file" class="update-flie" id="imageUpload" name="profileImage" accept="image/*" required>
-                              <i class="fa-solid fa-pen-to-square fs-update"></i>
-                            </div>
-                          </div>
-                          <button type="submit" name="updateProfilePicture" class="btn btn-primary ms-2">Update Profile Picture</button>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-
-                <!-- Form Part 2: Profile Details Update (Admin Approval Required) -->
-                <div class="card mb-4">
-                  <div class="card-header">
-                    <i class="fa fa-info-circle text-warning me-2"></i>
-                    Update Profile Details (Admin Approval Required)
-                  </div>
-                  <div class="card-body">
-                    <!-- Unified Form Start -->
-                    <form action="update-profile-details.php" class="profile-page-form" method="post" enctype="multipart/form-data">
-                      <!-- Personal Information Section -->
-                      <div class="row align-items-center mb-4">
-                        <div class="col-md-6">
-                          <label class="form-label mb-md-2">Full Name</label>
-                          <input type="text" class="form-control" name="fullName" value="<?= htmlspecialchars($userDetails->full_name) ?>">
-                        </div>
-                        <div class="col-md-6">
-                          <label class="form-label mb-md-2">Email</label>
-                          <!-- Assuming $user holds the email -->
-                          <input type="email" class="form-control" name="email" value="<?= htmlspecialchars($user->email) ?>" readonly>
-                        </div>
-                      </div>
-                      <div class="row align-items-center mb-4">
-                        <div class="col-md-6">
-                          <label for="gender" class="form-label">Gender</label>
-                          <select class="form-control" id="gender" name="gender" required>
-                            <option value="">Select</option>
-                            <option value="male" <?= ($userDetails->gender === 'male') ? 'selected' : '' ?>>Male</option>
-                            <option value="female" <?= ($userDetails->gender === 'female') ? 'selected' : '' ?>>Female</option>
-                            <option value="other" <?= ($userDetails->gender === 'other') ? 'selected' : '' ?>>Other</option>
-                          </select>
-                        </div>
-                        <div class="col-md-6">
-                          <label for="contactNo" class="form-label">Contact No</label>
-                          <input type="text" class="form-control" id="contactNo" name="contactNo" value="<?= htmlspecialchars($userDetails->contact_no) ?>">
-                        </div>
-                      </div>
-                      <div class="row align-items-center mb-4">
-                        <div class="col-md-6">
-                          <label for="studentId" class="form-label">Student ID</label>
-                          <input type="text" class="form-control" id="studentId" name="studentId" value="<?= htmlspecialchars($userDetails->student_id) ?>">
-                        </div>
-                        <div class="col-md-6">
-                          <label for="session" class="form-label">Session</label>
-                          <input type="text" class="form-control" id="session" name="session" value="<?= htmlspecialchars($userDetails->session) ?>">
-                        </div>
-                      </div>
-                      <div class="row">
-                        <!-- Year Dropdown -->
-                        <div class="col-md-4 mb-3">
-                          <label for="year" class="form-label">Year</label>
-                          <div class="custom-select-wrapper">
-                            <select class="form-control" id="year" name="year">
-                              <option value="1" <?= ($userDetails->year == 1) ? 'selected' : '' ?>>1st Year B.Sc.</option>
-                              <option value="2" <?= ($userDetails->year == 2) ? 'selected' : '' ?>>2nd Year B.Sc.</option>
-                              <option value="3" <?= ($userDetails->year == 3) ? 'selected' : '' ?>>3rd Year B.Sc.</option>
-                              <option value="4" <?= ($userDetails->year == 4) ? 'selected' : '' ?>>4th Year B.Sc.</option>
-                              <option value="5" <?= ($userDetails->year == 5) ? 'selected' : '' ?>>1st Year MSc</option>
-                              <option value="6" <?= ($userDetails->year == 6) ? 'selected' : '' ?>>2nd Year MSc</option>
-                            </select>
-                            <span class="dropdown-icon"><i class="fa fa-chevron-down"></i></span>
-                          </div>
-                        </div>
-
-                        <!-- Semester Dropdown -->
-                        <div class="col-md-4 mb-3">
-                          <label for="semester" class="form-label">Semester</label>
-                          <div class="custom-select-wrapper">
-                            <select class="form-control" id="semester" name="semester">
-                              <option value="1" <?= ($userDetails->semester == 1) ? 'selected' : '' ?>>Semester 1</option>
-                              <option value="2" <?= ($userDetails->semester == 2) ? 'selected' : '' ?>>Semester 2</option>
-                            </select>
-                            <span class="dropdown-icon"><i class="fa fa-chevron-down"></i></span>
-                          </div>
-                        </div>
-                      </div>
-
-                  </div>
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label for="lastSemesterCgpa" class="form-label">Last Semester CGPA/Merit</label>
-                      <input type="text" class="form-control" id="lastSemesterCgpa" name="lastSemesterCgpa" value="<?= htmlspecialchars($userDetails->last_semester_cgpa_or_merit) ?>">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <label for="zilla" class="form-label">Zilla</label>
-                      <!-- Using district value here -->
-                      <input type="text" class="form-control" id="zilla" name="zilla" value="<?= htmlspecialchars($userDetails->district) ?>">
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <label for="permanentAddress" class="form-label">Permanent Address</label>
-                    <textarea class="form-control" id="permanentAddress" name="permanentAddress" rows="2"><?= htmlspecialchars($userDetails->permanent_address) ?></textarea>
-                  </div>
-                  <div class="mb-3">
-                    <label for="presentAddress" class="form-label">Present Address</label>
-                    <textarea class="form-control" id="presentAddress" name="presentAddress" rows="2"><?= htmlspecialchars($userDetails->present_address) ?></textarea>
-                  </div>
-                  <!-- Father's Information -->
-                  <div class="text-center my-5">
-                    <h5 class="form-info-title">Father's Information</h5>
-                  </div>
-                  <div class="row">
-                    <div class="col-md-4 mb-3">
-                      <label for="fatherName" class="form-label">Father's Name</label>
-                      <input type="text" class="form-control" id="fatherName" name="fatherName" value="<?= htmlspecialchars($userDetails->father_name) ?>">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                      <label for="fatherContactNo" class="form-label">Father's Contact No</label>
-                      <input type="text" class="form-control" id="fatherContactNo" name="fatherContactNo" value="<?= htmlspecialchars($userDetails->father_contact_no) ?>">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                      <label for="fatherProfession" class="form-label">Father's Profession</label>
-                      <input type="text" class="form-control" id="fatherProfession" name="fatherProfession" value="<?= htmlspecialchars($userDetails->father_profession) ?>">
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <label for="fatherMonthlyIncome" class="form-label">Father's Monthly Income</label>
-                    <input type="text" class="form-control" id="fatherMonthlyIncome" name="fatherMonthlyIncome" value="<?= htmlspecialchars($userDetails->father_monthly_income) ?>">
-                  </div>
-                  <!-- Mother's Information -->
-                  <div class="text-center my-5">
-                    <h5 class="form-info-title">Mother's Information</h5>
-                  </div>
-                  <div class="row">
-                    <div class="col-md-4 mb-3">
-                      <label for="motherName" class="form-label">Mother's Name</label>
-                      <input type="text" class="form-control" id="motherName" name="motherName" value="<?= htmlspecialchars($userDetails->mother_name) ?>">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                      <label for="motherContactNo" class="form-label">Mother's Contact No</label>
-                      <input type="text" class="form-control" id="motherContactNo" name="motherContactNo" value="<?= htmlspecialchars($userDetails->mother_contact_no) ?>">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                      <label for="motherProfession" class="form-label">Mother's Profession</label>
-                      <input type="text" class="form-control" id="motherProfession" name="motherProfession" value="<?= htmlspecialchars($userDetails->mother_profession) ?>">
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <label for="motherMonthlyIncome" class="form-label">Mother's Monthly Income</label>
-                    <input type="text" class="form-control" id="motherMonthlyIncome" name="motherMonthlyIncome" value="<?= htmlspecialchars($userDetails->mother_monthly_income) ?>">
-                  </div>
-                  <!-- Guardian's Information -->
-                  <div class="text-center my-5">
-                    <h5 class="form-info-title">Guardian's Information</h5>
-                  </div>
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label for="guardianName" class="form-label">Guardian's Name</label>
-                      <input type="text" class="form-control" id="guardianName" name="guardianName" value="<?= htmlspecialchars($userDetails->guardian_name) ?>">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <label for="guardianContactNo" class="form-label">Guardian's Contact No</label>
-                      <input type="text" class="form-control" id="guardianContactNo" name="guardianContactNo" value="<?= htmlspecialchars($userDetails->guardian_contact_no) ?>">
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <label for="guardianAddress" class="form-label">Guardian's Address</label>
-                    <textarea class="form-control" id="guardianAddress" name="guardianAddress" rows="2"><?= htmlspecialchars($userDetails->guardian_address) ?></textarea>
-                  </div>
-
-                  <!-- Document File Section -->
-                  <div class="mb-3">
-                    <label class="form-label">Existing Document</label>
-                    <?php if (!empty($file2->file_new_name)) : ?>
-                      <div class="card">
-                        <div class="card-body d-flex align-items-center">
-                          <i class="fa fa-file-alt fa-2x text-primary me-3"></i>
-                          <div>
-                            <h5 class="card-title mb-1"><?= htmlspecialchars($file2->file_new_name) ?></h5>
-                            <a href="../uploads1/<?= htmlspecialchars($file2->file_new_name) ?>" target="_blank" class="btn btn-sm btn-outline-primary">View Document</a>
-                          </div>
-                        </div>
-                      </div>
-                    <?php else : ?>
-                      <div class="alert alert-warning" role="alert">
-                        No document file available.
-                      </div>
-                    <?php endif; ?>
-                  </div>
+    </div>
 
 
-                  <!-- File Change Section -->
-                  <div class="mb-3">
-                    <label for="formFile" class="form-label">Change Document</label>
-                    <input class="form-control" type="file" id="formFile" name="changeFile">
-                  </div>
-
-                  <!-- Form Actions -->
-                  <div class="card-footer text-end">
-                    <?php if ($editPending == 0): ?>
-                      <button type="submit" name="editDetails" value="<?php echo $userDetails->details_id; ?>" class="btn btn-primary ms-2">Save Changes</button>
-                    <?php else: ?>
-                      <div class="alert alert-warning mb-0" role="alert">
-                        A pending edit request already exists. Please delete that request to submit another edit request.
-                      </div>
-                    <?php endif; ?>
-                  </div>
-
-                  </form>
-                  <!-- Unified Form End -->
-                </div>
-              </div>
-            </div>
-        </main>
-
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3 mt-auto">
+      <div class="container">
+        <p class="mb-0">&copy; <?php echo date('Y'); ?> JUST Credit by Arafat &amp; Shakil</p>
       </div>
-
-    </div>
+    </footer>
   </div>
-
-  <!-- Second parent div for the footer -->
-  <footer class="bg-dark text-white mt-auto">
-    <div class="container-fluid px-0 py-4 text-center">
-      <p class="mb-0">&copy; 2025 MM Hall. All rights reserved.</p>
-    </div>
-  </footer>
 
 
   <!-- Bootstrap Bundle with Popper -->

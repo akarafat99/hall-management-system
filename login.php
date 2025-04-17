@@ -9,7 +9,6 @@ if ($session::get('msg1') != null) {
     $session::delete('msg1');
 }
 
-
 if (isset($_POST['login'])) {
     $email = $_POST['email'];
     $password = $_POST['password'];
@@ -36,34 +35,27 @@ if ($session::get('user') !== null) {
             window.location.href = "index.php";
           </script>';
 }
-
-
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
+    <title>MM Hall</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Google Fonts: Roboto for Material Design look -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <title>MM Hall</title>
-
 </head>
 
 <body>
     <!-- Parent container with flex and min-vh-100 -->
     <div class="d-flex flex-column min-vh-100">
-        <!-- First parent div for all main content including the navbar -->
+        <!-- Main content area -->
         <div class="flex-grow-1">
-
-            <!-- navbar section start -->
+            <!-- Navbar Section Start -->
             <?php
             if ($session::get('user') !== null) {
                 include_once 'student/navbar-student-1.php';
@@ -73,15 +65,15 @@ if ($session::get('user') !== null) {
             ?>
             <!-- Navbar Section End -->
 
-            <!-- Registration Section Start -->
+            <!-- Login Section Start -->
             <section class="auth-section mt-5">
                 <div class="container">
                     <div class="row justify-content-center">
-                        <!-- Adjust the column width as needed -->
+                        <!-- Adjusted column width for responsiveness -->
                         <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header text-center">
-                                    <h4>Login</h4>
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-primary text-white text-center">
+                                    <h4 class="mb-0">Login</h4>
                                 </div>
                                 <div class="card-body">
                                     <form method="post" action="" enctype="multipart/form-data">
@@ -93,22 +85,32 @@ if ($session::get('user') !== null) {
                                             <label for="password" class="form-label">Password</label>
                                             <input type="password" class="form-control" id="password" name="password" required>
                                         </div>
+                                        <!-- Forgot password link -->
+                                        <div class="mb-3 text-end">
+                                            <a href="reset-pass-1.php" class="small text-decoration-none">Forgot Password?</a>
+                                        </div>
                                         <div class="text-center">
-                                            <button type="submit" name="login" class="btn btn-primary">Login</button>
+                                            <button type="submit" name="login" class="btn btn-primary px-4">Login</button>
                                         </div>
                                     </form>
                                 </div>
                             </div>
+                            <!-- Sign Up Section Start -->
+                            <div class="card mt-4 shadow-sm border-0">
+                                <div class="card-body text-center">
+                                    <p class="mb-3">Don't have an account?</p>
+                                    <a href="registration-step-1.php" class="btn btn-success px-4">Sign Up</a>
+                                </div>
+                            </div>
+                            <!-- Sign Up Section End -->
                         </div>
                     </div>
                 </div>
             </section>
-            <!-- Registration Section End -->
-
-
+            <!-- Login Section End -->
         </div>
 
-        <!-- Second parent div for the footer -->
+        <!-- Footer Section -->
         <footer class="bg-dark text-white mt-auto">
             <div class="container py-4 text-center">
                 <p class="mb-0">&copy; 2025 MM Hall. All rights reserved.</p>
@@ -116,9 +118,8 @@ if ($session::get('user') !== null) {
         </footer>
     </div>
 
-  <!-- Bootstrap JS and dependencies -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

@@ -38,6 +38,8 @@ $statusMap = [
     7 => 'Unconfirmed Seat'
 ];
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

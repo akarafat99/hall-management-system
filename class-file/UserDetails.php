@@ -16,6 +16,7 @@ class UserDetails
     public $gender = "";
     public $contact_no = "";
     public $session = "";
+    public $department_id = 0;
     public $year = 0;
     public $semester = 0;
     public $last_semester_cgpa_or_merit = 0.0;
@@ -38,6 +39,7 @@ class UserDetails
     public $note_ids = "";
     public $created = "";
     public $modified = "";
+    public $modified_by = 0;
 
     /**
      * Constructor: Initializes the database connection.
@@ -131,7 +133,9 @@ class UserDetails
             27 => ['document_id',              "ALTER TABLE $table ADD COLUMN document_id INT DEFAULT 0"],
             28 => ['note_ids',                 "ALTER TABLE $table ADD COLUMN note_ids TEXT"],
             29 => ['created',                  "ALTER TABLE $table ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
-            30 => ['modified',                 "ALTER TABLE $table ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
+            30 => ['modified',                 "ALTER TABLE $table ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"],
+            31 => ['modified_by',              "ALTER TABLE $table ADD COLUMN modified_by INT DEFAULT 0"],
+            32 => ['department_id',            "ALTER TABLE $table ADD COLUMN department_id INT DEFAULT 0 AFTER session"]
         ];
 
         if ($selectedNums !== null && is_array($selectedNums)) {
@@ -162,19 +166,22 @@ class UserDetails
     public function insert()
     {
         $sql = "INSERT INTO tbl_user_details (
-            status, user_id, profile_picture_id, full_name, student_id, gender, contact_no, session,
+            status, user_id, profile_picture_id, full_name, student_id, gender, contact_no, session, department_id,
             year, semester, last_semester_cgpa_or_merit, district, division, permanent_address, present_address,
             father_name, father_contact_no, father_profession, father_monthly_income,
             mother_name, mother_contact_no, mother_profession, mother_monthly_income,
-            guardian_name, guardian_contact_no, guardian_address, document_id, note_ids
+            guardian_name, guardian_contact_no, guardian_address, document_id, note_ids,
+            modified_by
         ) VALUES (
             $this->status, $this->user_id, $this->profile_picture_id, '$this->full_name', $this->student_id, 
-            '$this->gender', '$this->contact_no', '$this->session', $this->year, $this->semester, 
+            '$this->gender', '$this->contact_no', '$this->session', $this->department_id,
+            $this->year, $this->semester,
             $this->last_semester_cgpa_or_merit, '$this->district', '$this->division', '$this->permanent_address', '$this->present_address', 
             '$this->father_name', '$this->father_contact_no', '$this->father_profession', 
             $this->father_monthly_income, '$this->mother_name', '$this->mother_contact_no', 
             '$this->mother_profession', $this->mother_monthly_income, '$this->guardian_name', 
             '$this->guardian_contact_no', '$this->guardian_address', $this->document_id, '$this->note_ids'
+            , $this->modified_by
         )";
 
         $result = mysqli_query($this->conn, $sql);
@@ -205,6 +212,7 @@ class UserDetails
             gender = '$this->gender',
             contact_no = '$this->contact_no',
             session = '$this->session',
+            department_id = $this->department_id,
             year = $this->year,
             semester = $this->semester,
             last_semester_cgpa_or_merit = $this->last_semester_cgpa_or_merit,
@@ -224,7 +232,8 @@ class UserDetails
             guardian_contact_no = '$this->guardian_contact_no',
             guardian_address = '$this->guardian_address',
             document_id = $this->document_id,
-            note_ids = '$this->note_ids'
+            note_ids = '$this->note_ids',
+            modified_by = $this->modified_by
             WHERE details_id = $this->details_id";
 
         $result = mysqli_query($this->conn, $sql);
@@ -274,7 +283,7 @@ class UserDetails
      * @param int $details_id The ID of the user details to update.
      * @param int $status The new status to set.
      * @return bool Returns true if the update is successful, false otherwise.
-     */ 
+     */
     public function updateStatusByDetailsId($details_id, $status)
     {
         $sql = "UPDATE tbl_user_details SET status = $status WHERE details_id = $details_id";
@@ -385,6 +394,50 @@ class UserDetails
     }
 
     /**
+     * Get a summary of user details by a list of details IDs.
+     *
+     * This function queries the database for records whose details_id is in the provided list.
+     * It returns an array of associative arrays. Each associative array contains:
+     * - details_id
+     * - father_monthly_income
+     * - division
+     * - district
+     * - academic_result (derived from last_semester_cgpa_or_merit)
+     *
+     * @param int|array $details_ids A single details_id or an array of details_ids.
+     * @return array Returns an array of summary details.
+     */
+    public function getUserSummaryByIds($details_ids)
+    {
+        // Ensure the input is an array.
+        if (!is_array($details_ids)) {
+            $details_ids = array($details_ids);
+        }
+
+        // Sanitize the input by converting each id to an integer.
+        $details_ids = array_map('intval', $details_ids);
+        $ids_string = implode(',', $details_ids);
+
+        // Build the query; alias academic_result for clarity.
+        $sql = "SELECT details_id, father_monthly_income, division, district, 
+                   last_semester_cgpa_or_merit
+            FROM tbl_user_details 
+            WHERE details_id IN ($ids_string)";
+
+        $result = mysqli_query($this->conn, $sql);
+        $data = [];
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $data[] = $row;
+            }
+        }
+
+        return $data;
+    }
+
+
+    /**
      * Check if any record exists based on user_id, student_id, and status.
      *
      * @param int|null $user_id (Optional) User ID to check. Defaults to null.
@@ -471,6 +524,7 @@ class UserDetails
         $this->gender = $row['gender'];
         $this->contact_no = $row['contact_no'];
         $this->session = $row['session'];
+        $this->department_id = $row['department_id'];
         $this->year = $row['year'];
         $this->semester = $row['semester'];
         $this->last_semester_cgpa_or_merit = $row['last_semester_cgpa_or_merit'];
@@ -493,6 +547,7 @@ class UserDetails
         $this->note_ids = $row['note_ids'];
         $this->created = $row['created'];
         $this->modified = $row['modified'];
+        $this->modified_by = $row['modified_by'];
     }
 
     /**

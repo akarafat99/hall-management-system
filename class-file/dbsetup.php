@@ -8,6 +8,7 @@ include_once 'Admin.php';
 include_once 'HallSeatDetails.php';
 include_once 'HallSeatAllocationEvent.php';
 include_once 'HallSeatApplication.php';
+include_once 'Department.php';
 
 // //session 1
 // $db = new DatabaseConnector();
@@ -61,6 +62,19 @@ include_once 'HallSeatApplication.php';
 // $hallSeatApplication->alterTableAddColumns();
 // echo "Hall Seat Application table created successfully";
 // echo "<br><br><br>";
+
+// $department = new Department();
+// $department->createTableMinimal();
+// $department->alterTableAddColumns();
+// echo "Department table created successfully";
+// $department->insertDefaultDepartments();
+// echo "<br><br><br>";
+
+
+// Session 2
+// $userDetails = new UserDetails();
+// $userDetails->alterTableAddColumns([31,32]);
+// echo "User Details table updated successfully";
 
 
 
