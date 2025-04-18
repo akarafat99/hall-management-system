@@ -17,47 +17,68 @@
         <div class="sidebar-links flex-grow-1 py-2">
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="#link1">Dashboard</a>
+                    <!-- Dashboard Link -->
+                    <a class="nav-link text-white" href="dashboard.php">
+                        <div class="sb-nav-link-icon"><i class="fa-solid fa-house"></i></div>
+                        Dashboard
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="#link2">Profile</a>
+                    <!-- User Review Link -->
+                    <a class="nav-link text-white" href="pending-registration.php">
+                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                        Users Review
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="#link3">Settings</a>
+                    <!-- Manage User Link -->
+                    <a class="nav-link text-white" href="manage-user.php">
+                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                        Manage User
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="#link4">Messages</a>
+                    <!-- Profile update request -->
+                    <a class="nav-link text-white" href="update-profile-requests.php">
+                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                        Profile Update Requests
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="#link5">Reports</a>
+                    <!-- Manage Departments -->
+                    <a class="nav-link text-white" href="manage-departments.php">
+                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                        Manage Departments
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="#link6">Analytics</a>
+                    <!-- Seat Management Link -->
+                    <a class="nav-link text-white" href="seat-management.php">
+                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                        Seat Management
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="#link7">Help</a>
+                    <!-- Create Event Link -->
+                    <a class="nav-link text-white" href="create-hall-seat-allocation-event.php">
+                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                        Create Hall Seat Allocation Event
+                    </a>
                 </li>
                 <!-- Additional links to demonstrate scrolling -->
                 <li class="nav-item">
-                    <a class="nav-link text-white" href="#link8">Link 8</a>
+                    <!-- Event Management Link -->
+                    <a class="nav-link text-white" href="hall-seat-allocation-event-management.php">
+                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                        Hall Seat Allocation Event Management
+                    </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" href="#link9">Link 9</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" href="#link10">Link 10</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" href="#link11">Link 11</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white" href="#link12">Link 12</a>
-                </li>
+
             </ul>
         </div>
         <!-- Footer (Fixed) with full-width button -->
         <div class="py-3 flex-shrink-0 border-top border-secondary">
-            <p > <i>Logged in as admin </i></p>
+            <p> <i>Logged in as admin </i></p>
             <button class="btn btn-danger w-100">Logout</button>
         </div>
     </div>

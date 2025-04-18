@@ -2,9 +2,13 @@
 include_once '../class-file/HallSeatAllocationEvent.php';
 include_once '../class-file/HallSeatDetails.php';
 include_once '../class-file/PriorityList.php';
+include_once '../class-file/Department.php';
 
 // Fetch the priority list from PriorityList.php
 $priorityMapping = getPriorityList();  // This returns an associative array, e.g., [1 => "District", 2 => "Academic Result", 3 => "Father's Monthly Income"]
+
+$department = new Department();
+$departmentList = $department->getDepartments(null, 1); // Fetching all departments with status 1
 
 $hallSeatDetails = new HallSeatDetails();
 $totalAvailableSeats = $hallSeatDetails->countSeatsByStatus(0);
@@ -302,82 +306,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
     <script>
-(function($, document) {
-    // Get current time in Asia/Dhaka as a locale string and then create a Date object from it.
-    const dhakaTimeString = new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" });
-    const dhakaDate = new Date(dhakaTimeString);
+        (function($, document) {
+            // Get current time in Asia/Dhaka as a locale string and then create a Date object from it.
+            const dhakaTimeString = new Date().toLocaleString("en-US", {
+                timeZone: "Asia/Dhaka"
+            });
+            const dhakaDate = new Date(dhakaTimeString);
 
-    const dd = String(dhakaDate.getDate()).padStart(2, '0');
-    const mm = String(dhakaDate.getMonth() + 1).padStart(2, '0');
-    const yyyy = dhakaDate.getFullYear();
-    const minD = `${yyyy}-${mm}-${dd}`;
+            const dd = String(dhakaDate.getDate()).padStart(2, '0');
+            const mm = String(dhakaDate.getMonth() + 1).padStart(2, '0');
+            const yyyy = dhakaDate.getFullYear();
+            const minD = `${yyyy}-${mm}-${dd}`;
 
-    // Set today's date as the minimum for all date fields.
-    document.querySelectorAll('input[type="date"]').forEach(el => el.min = minD);
+            // Set today's date as the minimum for all date fields.
+            document.querySelectorAll('input[type="date"]').forEach(el => el.min = minD);
 
-    // If in edit mode, override the min attribute for Application Start, End, and Viva Notice Dates.
-    <?php if ($isEditMode): ?>
-        const minStartDate = '<?php echo $hallSeatAllocationEvent->application_start_date; ?>';
-        document.querySelector('input[name="startDate"]').min = minStartDate;
-        document.querySelector('input[name="endDate"]').min = minStartDate;
-        document.querySelector('input[name="vivaNoticeDate"]').min = minStartDate;
-    <?php endif; ?>
+            // If in edit mode, override the min attribute for Application Start, End, and Viva Notice Dates.
+            <?php if ($isEditMode): ?>
+                const minStartDate = '<?php echo $hallSeatAllocationEvent->application_start_date; ?>';
+                document.querySelector('input[name="startDate"]').min = minStartDate;
+                document.querySelector('input[name="endDate"]').min = minStartDate;
+                document.querySelector('input[name="vivaNoticeDate"]').min = minStartDate;
+            <?php endif; ?>
 
-    // Priority list initialization.
-    function updatePriorityList() {
-        const vals = $('#priorityList').children()
-            .map((_, li) => $(li).data('value'))
-            .get()
-            .join(',');
-        $('#priorityListInput').val(vals);
-    }
-    $('#priorityList')
-        .sortable({
-            update: updatePriorityList
-        })
-        .disableSelection();
-    updatePriorityList();
+            // Priority list initialization.
+            function updatePriorityList() {
+                const vals = $('#priorityList').children()
+                    .map((_, li) => $(li).data('value'))
+                    .get()
+                    .join(',');
+                $('#priorityListInput').val(vals);
+            }
+            $('#priorityList')
+                .sortable({
+                    update: updatePriorityList
+                })
+                .disableSelection();
+            updatePriorityList();
 
-    // Seat quota logic.
-    const totalAvailable = parseInt($('#totalAvailable').text(), 10) || 0;
-    const inputs = $('.seat-quota').toArray();
-    const submitBtn = $('#submitBtn');
-    const submitWarning = $('#submitWarning');
+            // Seat quota logic.
+            const totalAvailable = parseInt($('#totalAvailable').text(), 10) || 0;
+            const inputs = $('.seat-quota').toArray();
+            const submitBtn = $('#submitBtn');
+            const submitWarning = $('#submitWarning');
 
-    function recalc() {
-        const sum = inputs.reduce((s, el) => s + (parseInt(el.value, 10) || 0), 0);
-        $('#totalSelected').text(sum);
+            function recalc() {
+                const sum = inputs.reduce((s, el) => s + (parseInt(el.value, 10) || 0), 0);
+                $('#totalSelected').text(sum);
 
-        if (sum > totalAvailable) {
-            $('#quotaWarning').removeClass('d-none');
-            $('#exceedInfo').text(`Exceeded by ${sum - totalAvailable} seat(s).`);
-            submitBtn.prop('disabled', true);
-            submitWarning.removeClass('d-none');
-        } else {
-            $('#quotaWarning').addClass('d-none');
-            $('#exceedInfo').text('');
-            submitBtn.prop('disabled', false);
-            submitWarning.addClass('d-none');
-        }
-    }
+                if (sum > totalAvailable) {
+                    $('#quotaWarning').removeClass('d-none');
+                    $('#exceedInfo').text(`Exceeded by ${sum - totalAvailable} seat(s).`);
+                    submitBtn.prop('disabled', true);
+                    submitWarning.removeClass('d-none');
+                } else {
+                    $('#quotaWarning').addClass('d-none');
+                    $('#exceedInfo').text('');
+                    submitBtn.prop('disabled', false);
+                    submitWarning.addClass('d-none');
+                }
+            }
 
-    $('#redistributeBtn').on('click', () => {
-        const n = inputs.length;
-        const base = Math.floor(totalAvailable / n);
-        let rem = totalAvailable - base * n;
-        inputs.forEach((el, i) => el.value = base + (i < rem ? 1 : 0));
-        recalc();
-    });
+            $('#redistributeBtn').on('click', () => {
+                const n = inputs.length;
+                const base = Math.floor(totalAvailable / n);
+                let rem = totalAvailable - base * n;
+                inputs.forEach((el, i) => el.value = base + (i < rem ? 1 : 0));
+                recalc();
+            });
 
-    $('.seat-quota').on('input', recalc);
-    recalc();
+            $('.seat-quota').on('input', recalc);
+            recalc();
 
-    <?php if (!$isEditMode): ?>
-        $('#redistributeBtn').trigger('click');
-    <?php endif; ?>
+            <?php if (!$isEditMode): ?>
+                $('#redistributeBtn').trigger('click');
+            <?php endif; ?>
 
-})(jQuery, document);
-</script>
+        })(jQuery, document);
+    </script>
 
 
 

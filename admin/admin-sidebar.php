@@ -35,6 +35,11 @@ $sidebarDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', dirname(__FILE__)) . '/
                 </a>
 
                 <hr>
+                <!-- Manage Departments -->
+                <a class="nav-link" href="<?= $sidebarDir ?>manage-departments.php">
+                    <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                    Manage Departments
+                </a>
                 
                 <!-- Seat Management Link -->
                 <a class="nav-link" href="<?= $sidebarDir ?>seat-management.php">
