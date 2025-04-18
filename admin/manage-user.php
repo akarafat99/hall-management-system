@@ -2,6 +2,7 @@
 include_once '../class-file/User.php';
 include_once '../class-file/UserDetails.php';
 include_once '../class-file/FileManager.php';
+include_once '../class-file/Department.php';
 include_once '../popup-1.php';
 
 if (isset($_POST['active']) || isset($_POST['deactive'])) {
@@ -26,7 +27,7 @@ $userListDeactive = $user->getDistinctUsersByStatus(2, "user"); // Get all users
 
 // Merge the arrays (using an empty array fallback if one of the lists is false)
 $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
-
+$department = new Department();
 ?>
 
 <!DOCTYPE html>
@@ -188,6 +189,8 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
                                     $userDetails = new UserDetails();
                                     $userDetails->getUsers($userId, null, 1);
 
+                                    $department->getDepartments($userDetails->department_id);
+
                                     $file = new FileManager();
                                     $file->loadByFileId($userDetails->profile_picture_id);
 
@@ -261,6 +264,9 @@ $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
                                                     </div>
                                                     <div class="col-lg-4">
                                                         <p><strong>Session:</strong> <?php echo isset($userDetails->session) ? htmlspecialchars($userDetails->session) : 'N/A'; ?></p>
+                                                    </div>
+                                                    <div class="col-lg-4">
+                                                        <p><strong>Department:</strong> <?php echo isset($userDetails->department_id) ? htmlspecialchars($department->department_name) : 'N/A'; ?></p>
                                                     </div>
                                                     <div class="col-lg-4">
                                                         <p><strong>Year:</strong> <?php echo isset($userDetails->year) ? htmlspecialchars($userDetails->year) : 'N/A'; ?></p>
