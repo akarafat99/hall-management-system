@@ -528,7 +528,6 @@ $file2->loadByFileId($file2->file_id);
 
     </div>
 
-
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-3 mt-auto">
       <div class="container">
