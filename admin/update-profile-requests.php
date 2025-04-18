@@ -2,6 +2,7 @@
 include_once '../class-file/User.php';
 include_once '../class-file/UserDetails.php';
 include_once '../class-file/FileManager.php';
+include_once '../class-file/Department.php';
 include_once '../popup-1.php';
 
 if (isset($_POST['approve']) || isset($_POST['decline'])) {
@@ -38,6 +39,11 @@ if (isset($_POST['approve']) || isset($_POST['decline'])) {
 $userDetails = new UserDetails();
 $allNewList = array();
 $allCurrentList = array();
+
+$departmentNew = new Department();
+$departmentCurrent = new Department();
+$departmentNew->department_id = $userDetails->department_id;
+$departmentCurrent->department_id = $userDetails->department_id;
 
 // Requested
 $detailsList = $userDetails->cutsomGetUsersDetailByStatus(1, 0, 'user');  // Now returns an array of associative arrays (full rows)
@@ -339,6 +345,14 @@ if (is_array($detailsList)) {
                                                     </div>
                                                     <div class="col-lg-6">
                                                         <p><strong>Session (Requested):</strong> <?php echo   htmlspecialchars($userDetailsNew->session); ?></p>
+                                                    </div>
+                                                </div>
+                                                <div class="row pt-4">
+                                                    <div class="col-lg-6">
+                                                        <p><strong>Department (Current):</strong> <?php echo   htmlspecialchars($departmentCurrent->department_name); ?></p>
+                                                    </div>
+                                                    <div class="col-lg-6">
+                                                        <p><strong>Department (Requested):</strong> <?php echo   htmlspecialchars($departmentNew->department_name); ?></p>
                                                     </div>
                                                 </div>
 
