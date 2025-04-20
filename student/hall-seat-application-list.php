@@ -6,12 +6,6 @@ include_once '../class-file/UserDetails.php';
 include_once '../class-file/HallSeatAllocationEvent.php';
 include_once '../class-file/HallSeatApplication.php';
 
-if ($session::get('user') == null) {
-    $session::set('msg1', 'Please login first and then apply for a seat in the hall.');
-    echo "<script>window.location.href='../login.php';</script>";
-    exit;
-}
-
 $sUser = $session::getObject('userObj');
 $user = new User();
 $session::copyProperties($sUser, $user);

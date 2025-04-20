@@ -39,8 +39,16 @@ $department = new Department();
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>MM HALL - Dashboard</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
+        rel="stylesheet" />
+    <!-- for sidebar -->
+    <link href="../css2/sidebar-admin.css" rel="stylesheet" />
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet" />
     <link href="../css/Dashboard/dashboard.css" rel="stylesheet" />
     <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
@@ -98,333 +106,317 @@ $department = new Department();
     </style>
 </head>
 
-<body class="sb-nav-fixed">
-    <nav class="sb-topnav navbar navbar-expand dashboard-nav py-4">
-        <!-- Navbar Brand-->
-        <a class="navbar-brand ps-3" href="../index.html">HMS</a>
-        <!-- Sidebar Toggle-->
-        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle"><i
-                class="fas fa-bars"></i></button>
-        <!-- Navbar-->
-        <ul class="navbar-nav ms-auto me-3 me-lg-4">
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown"
-                    aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                    <li><a class="dropdown-item" href="#!">Profile</a></li>
-                    <li><a class="dropdown-item" href="#!">Activity Log</a></li>
-                    <li>
-                        <hr class="dropdown-divider" />
-                    </li>
-                    <li><a class="dropdown-item" href="#!">Logout</a></li>
-                </ul>
-            </li>
-        </ul>
-    </nav>
-    <div id="layoutSidenav">
-        <?php include 'admin-sidebar.php'; ?>
-        <div id="layoutSidenav_content">
-            <main>
-                <div class="container-fluid px-4">
-                    <div class="card__wrapper">
-                        <div class="card__title-wrap mb-20">
-                            <h3 class="table__heading-title">Review Account Registration</h3>
-                        </div>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Menu -->
+            <?php include 'sidebar-admin.php'; ?>
 
-                        <!-- Enhanced Search Options -->
-                        <div id="searchContainer" class="container">
-                            <div class="row g-3 align-items-center">
-                                <div class="col-auto">
-                                    <label for="searchUserId" class="col-form-label">User ID</label>
-                                </div>
-                                <div class="col-auto">
-                                    <input type="text" id="searchUserId" class="form-control" placeholder="Enter User ID" />
-                                </div>
-                                <div class="col-auto">
-                                    <label for="searchStudentId" class="col-form-label">Student ID</label>
-                                </div>
-                                <div class="col-auto">
-                                    <input type="text" id="searchStudentId" class="form-control" placeholder="Enter Student ID" />
-                                </div>
-                                <div class="col-auto">
-                                    <label for="searchEmail" class="col-form-label">Email</label>
-                                </div>
-                                <div class="col-auto">
-                                    <input type="text" id="searchEmail" class="form-control" placeholder="Enter Email" />
-                                </div>
+            <!-- Main Content Area -->
+            <main id="mainContent" class="col">
+                <!-- Toggle button for sidebar on small screens -->
+                <button
+                    class="btn btn-dark d-lg-none mt-3 mb-3"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#sidebarMenu"
+                    aria-controls="sidebarMenu"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    ☰ Menu
+                </button>
+
+                <main>
+                    <div class="container-fluid px-4">
+                        <div class="card__wrapper">
+                            <div class="card__title-wrap mb-20">
+                                <h3 class="table__heading-title">Review Account Registration</h3>
                             </div>
-                        </div>
 
-                        <!-- Accordion with User List -->
-                        <div class="accordion" id="faqAccordion">
-                            <div class="faq-heading">
-                                <div class="row">
-                                    <div class="col-lg-2">
-                                        <p>User ID</p>
+                            <!-- Enhanced Search Options -->
+                            <div id="searchContainer" class="container">
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-auto">
+                                        <label for="searchUserId" class="col-form-label">User ID</label>
                                     </div>
-                                    <div class="col-lg-2">
-                                        <p>Student ID</p>
+                                    <div class="col-auto">
+                                        <input type="text" id="searchUserId" class="form-control" placeholder="Enter User ID" />
                                     </div>
-                                    <div class="col-lg-3">
-                                        <p>Email</p>
+                                    <div class="col-auto">
+                                        <label for="searchStudentId" class="col-form-label">Student ID</label>
                                     </div>
-                                    <div class="col-lg-2">
-                                        <p>Status</p>
+                                    <div class="col-auto">
+                                        <input type="text" id="searchStudentId" class="form-control" placeholder="Enter Student ID" />
                                     </div>
-                                    <div class="col-lg-3">
-                                        <p>Action</p>
+                                    <div class="col-auto">
+                                        <label for="searchEmail" class="col-form-label">Email</label>
+                                    </div>
+                                    <div class="col-auto">
+                                        <input type="text" id="searchEmail" class="form-control" placeholder="Enter Email" />
                                     </div>
                                 </div>
                             </div>
 
-                            <?php
-                            if ($userList && count($userList) > 0) {
-                                foreach ($userList as $userItem) {
-                                    $userId = $userItem['user_id'];
-                                    $userEmail = $userItem['email'];
-                                    // Create a new instance of UserDetails and load details for this user.
-                                    $userDetails = new UserDetails();
-                                    $userDetails->getUsers($userId, null, 0);
-
-                                    $department->getDepartments($userDetails->department_id);
-
-                                    $file = new FileManager();
-                                    $file->loadByFileId($userDetails->profile_picture_id);
-
-                                    $file2 = new FileManager();
-                                    $file2->loadByFileId($userDetails->document_id);
-
-                                    $collapseId = "collapse{$userId}";
-                            ?>
-                                    <div class="accordion-item faq-item"
-                                        data-userid="<?php echo $userDetails->user_id; ?>"
-                                        data-studentid="<?php echo $userDetails->student_id; ?>"
-                                        data-email="<?php echo htmlspecialchars($userEmail); ?>">
-                                        <div class="row">
-                                            <div class="col-lg-2 d-flex align-items-center">
-                                                <p><?php echo $userDetails->user_id; ?></p>
-                                            </div>
-                                            <div class="col-lg-2 d-flex align-items-center">
-                                                <p><?php echo $userDetails->student_id; ?></p>
-                                            </div>
-                                            <div class="col-lg-3 d-flex align-items-center">
-                                                <p><?php echo htmlspecialchars($userEmail); ?></p>
-                                            </div>
-                                            <div class="col-lg-2 d-flex align-items-center">
-                                                <button class="btn btn-primary" data-bs-toggle="collapse"
-                                                    data-bs-target="#<?php echo $collapseId; ?>">Details</button>
-                                            </div>
-                                            <div class="col-lg-3 d-flex align-items-center">
-                                                <form action="" method="post">
-                                                    <button type="submit" name="approve"
-                                                        value="<?php echo htmlspecialchars($userId); ?>"
-                                                        class="btn btn-success">Approve</button>
-                                                    <button type="submit" name="decline"
-                                                        value="<?php echo htmlspecialchars($userId); ?>"
-                                                        class="btn btn-danger">Decline</button>
-                                                </form>
-                                            </div>
+                            <!-- Accordion with User List -->
+                            <div class="accordion" id="faqAccordion">
+                                <div class="faq-heading">
+                                    <div class="row">
+                                        <div class="col-lg-2">
+                                            <p>User ID</p>
                                         </div>
-                                        <div id="<?php echo $collapseId; ?>" class="accordion-collapse collapse"
-                                            data-bs-parent="#faqAccordion">
-                                            <div class="accordion-body">
-                                                <div class="profile-info-flex">
-                                                    <div class="profile-wrap">
-                                                        <img src="../uploads1/<?php echo $file->file_new_name; ?>" alt="User Image" class="img-fluid">
-                                                    </div>
-                                                </div>
+                                        <div class="col-lg-2">
+                                            <p>Student ID</p>
+                                        </div>
+                                        <div class="col-lg-3">
+                                            <p>Email</p>
+                                        </div>
+                                        <div class="col-lg-2">
+                                            <p>Status</p>
+                                        </div>
+                                        <div class="col-lg-3">
+                                            <p>Action</p>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                                <div class="row">
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Name:</strong> <?php echo htmlspecialchars($userDetails->full_name); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Gender:</strong> <?php echo isset($userDetails->gender) ? htmlspecialchars($userDetails->gender) : 'N/A'; ?></p>
-                                                    </div>
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Contact No:</strong> <?php echo isset($userDetails->contact_no) ? htmlspecialchars($userDetails->contact_no) : 'N/A'; ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Student ID:</strong> <?php echo htmlspecialchars($userDetails->student_id); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Session:</strong> <?php echo isset($userDetails->session) ? htmlspecialchars($userDetails->session) : 'N/A'; ?></p>
-                                                    </div>
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Department:</strong> <?php echo isset($userDetails->department_id) ? htmlspecialchars($department->department_name) : 'N/A'; ?></p>
-                                                    </div>
-                                                </div>
-                                                <?php
-                                                /* --- Friendly labels --- */
-                                                $yearMap = [
-                                                    1 => 'B.Sc 1st Year',
-                                                    2 => 'B.Sc 2nd Year',
-                                                    3 => 'B.Sc 3rd Year',
-                                                    4 => 'B.Sc 4th Year',
-                                                    5 => 'M.Sc 1st Year',
-                                                    6 => 'M.Sc 2nd Year',
-                                                ];
+                                <?php
+                                if ($userList && count($userList) > 0) {
+                                    foreach ($userList as $userItem) {
+                                        $userId = $userItem['user_id'];
+                                        $userEmail = $userItem['email'];
+                                        // Create a new instance of UserDetails and load details for this user.
+                                        $userDetails = new UserDetails();
+                                        $userDetails->getUsers($userId, null, 0);
 
-                                                $semMap  = [
-                                                    1 => '1st Semester',
-                                                    2 => '2nd Semester',
-                                                ];
+                                        $department->getDepartments($userDetails->department_id);
 
-                                                /* resolve labels or fall back to raw value / “N/A” */
-                                                $yearLabel = isset($userDetails->year)
-                                                    ? ($yearMap[$userDetails->year] ?? htmlspecialchars($userDetails->year))
-                                                    : 'N/A';
+                                        $file = new FileManager();
+                                        $file->loadByFileId($userDetails->profile_picture_id);
 
-                                                $semLabel  = isset($userDetails->semester)
-                                                    ? ($semMap[$userDetails->semester] ?? htmlspecialchars($userDetails->semester))
-                                                    : 'N/A';
-                                                ?>
+                                        $file2 = new FileManager();
+                                        $file2->loadByFileId($userDetails->document_id);
 
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Year:</strong> <?php echo $yearLabel; ?></p>
-                                                        <p><strong>Semester:</strong> <?php echo $semLabel; ?></p>
-                                                    </div>
+                                        $collapseId = "collapse{$userId}";
+                                ?>
+                                        <div class="accordion-item faq-item"
+                                            data-userid="<?php echo $userDetails->user_id; ?>"
+                                            data-studentid="<?php echo $userDetails->student_id; ?>"
+                                            data-email="<?php echo htmlspecialchars($userEmail); ?>">
+                                            <div class="row">
+                                                <div class="col-lg-2 d-flex align-items-center">
+                                                    <p><?php echo $userDetails->user_id; ?></p>
                                                 </div>
+                                                <div class="col-lg-2 d-flex align-items-center">
+                                                    <p><?php echo $userDetails->student_id; ?></p>
+                                                </div>
+                                                <div class="col-lg-3 d-flex align-items-center">
+                                                    <p><?php echo htmlspecialchars($userEmail); ?></p>
+                                                </div>
+                                                <div class="col-lg-2 d-flex align-items-center">
+                                                    <button class="btn btn-primary" data-bs-toggle="collapse"
+                                                        data-bs-target="#<?php echo $collapseId; ?>">Details</button>
+                                                </div>
+                                                <div class="col-lg-3 d-flex align-items-center">
+                                                    <form action="" method="post">
+                                                        <button type="submit" name="approve"
+                                                            value="<?php echo htmlspecialchars($userId); ?>"
+                                                            class="btn btn-success">Approve</button>
+                                                        <button type="submit" name="decline"
+                                                            value="<?php echo htmlspecialchars($userId); ?>"
+                                                            class="btn btn-danger">Decline</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                            <div id="<?php echo $collapseId; ?>" class="accordion-collapse collapse"
+                                                data-bs-parent="#faqAccordion">
+                                                <div class="accordion-body">
+                                                    <div class="profile-info-flex">
+                                                        <div class="profile-wrap">
+                                                            <img src="../uploads1/<?php echo $file->file_new_name; ?>" alt="User Image" class="img-fluid">
+                                                        </div>
+                                                    </div>
 
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Last Semester CGPA/Merit:</strong> <?php echo isset($userDetails->last_semester_cgpa_or_merit) ? htmlspecialchars($userDetails->last_semester_cgpa_or_merit) : 'N/A'; ?></p>
+                                                    <div class="row">
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Name:</strong> <?php echo htmlspecialchars($userDetails->full_name); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Gender:</strong> <?php echo isset($userDetails->gender) ? htmlspecialchars($userDetails->gender) : 'N/A'; ?></p>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Contact No:</strong> <?php echo isset($userDetails->contact_no) ? htmlspecialchars($userDetails->contact_no) : 'N/A'; ?></p>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-lg-4">
-                                                        <p><strong>District:</strong> <?php echo isset($userDetails->district) ? htmlspecialchars($userDetails->district) : 'N/A'; ?></p>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Student ID:</strong> <?php echo htmlspecialchars($userDetails->student_id); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Session:</strong> <?php echo isset($userDetails->session) ? htmlspecialchars($userDetails->session) : 'N/A'; ?></p>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Department:</strong> <?php echo isset($userDetails->department_id) ? htmlspecialchars($department->department_name) : 'N/A'; ?></p>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Division:</strong> <?php echo isset($userDetails->division) ? htmlspecialchars($userDetails->division) : 'N/A'; ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Permanent Address:</strong> <?php echo isset($userDetails->permanent_address) ? htmlspecialchars($userDetails->permanent_address) : 'N/A'; ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Present Address:</strong> <?php echo isset($userDetails->present_address) ? htmlspecialchars($userDetails->present_address) : 'N/A'; ?></p>
-                                                    </div>
-                                                </div>
+                                                    <?php
+                                                    /* --- Friendly labels --- */
+                                                    $yearMap = [
+                                                        1 => 'B.Sc 1st Year',
+                                                        2 => 'B.Sc 2nd Year',
+                                                        3 => 'B.Sc 3rd Year',
+                                                        4 => 'B.Sc 4th Year',
+                                                        5 => 'M.Sc 1st Year',
+                                                        6 => 'M.Sc 2nd Year',
+                                                    ];
 
-                                                <div class="text-center mt-5 mb-4">
-                                                    <h5 class="form-info-title">Father's Information</h5>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Father's Name:</strong> <?php echo isset($userDetails->father_name) ? htmlspecialchars($userDetails->father_name) : 'N/A'; ?></p>
-                                                    </div>
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Father's Contact No:</strong> <?php echo isset($userDetails->father_contact_no) ? htmlspecialchars($userDetails->father_contact_no) : 'N/A'; ?></p>
-                                                    </div>
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Father's Profession:</strong> <?php echo isset($userDetails->father_profession) ? htmlspecialchars($userDetails->father_profession) : 'N/A'; ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Father's Monthly Income:</strong> <?php echo isset($userDetails->father_monthly_income) ? htmlspecialchars($userDetails->father_monthly_income) : 'N/A'; ?></p>
-                                                    </div>
-                                                </div>
+                                                    $semMap  = [
+                                                        1 => '1st Semester',
+                                                        2 => '2nd Semester',
+                                                    ];
 
-                                                <div class="text-center mt-5 mb-4">
-                                                    <h5 class="form-info-title">Mother's Information</h5>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Mother's Name:</strong> <?php echo isset($userDetails->mother_name) ? htmlspecialchars($userDetails->mother_name) : 'N/A'; ?></p>
-                                                    </div>
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Mother's Contact No:</strong> <?php echo isset($userDetails->mother_contact_no) ? htmlspecialchars($userDetails->mother_contact_no) : 'N/A'; ?></p>
-                                                    </div>
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Mother's Profession:</strong> <?php echo isset($userDetails->mother_profession) ? htmlspecialchars($userDetails->mother_profession) : 'N/A'; ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Mother's Monthly Income:</strong> <?php echo isset($userDetails->mother_monthly_income) ? htmlspecialchars($userDetails->mother_monthly_income) : 'N/A'; ?></p>
-                                                    </div>
-                                                </div>
+                                                    /* resolve labels or fall back to raw value / “N/A” */
+                                                    $yearLabel = isset($userDetails->year)
+                                                        ? ($yearMap[$userDetails->year] ?? htmlspecialchars($userDetails->year))
+                                                        : 'N/A';
 
-                                                <div class="text-center mt-5 mb-4">
-                                                    <h5 class="form-info-title">Guardian's Information</h5>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Guardian's Name:</strong> <?php echo isset($userDetails->guardian_name) ? htmlspecialchars($userDetails->guardian_name) : 'N/A'; ?></p>
-                                                    </div>
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Guardian's Contact No:</strong> <?php echo isset($userDetails->guardian_contact_no) ? htmlspecialchars($userDetails->guardian_contact_no) : 'N/A'; ?></p>
-                                                    </div>
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Guardian's Address:</strong> <?php echo isset($userDetails->guardian_address) ? htmlspecialchars($userDetails->guardian_address) : 'N/A'; ?></p>
-                                                    </div>
-                                                </div>
+                                                    $semLabel  = isset($userDetails->semester)
+                                                        ? ($semMap[$userDetails->semester] ?? htmlspecialchars($userDetails->semester))
+                                                        : 'N/A';
+                                                    ?>
 
-                                                <div class="text-center mt-5 mb-4">
-                                                    <h5 class="form-info-title">Other Information</h5>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Document file:
-                                                                <a href="../uploads1/<?php echo isset($userDetails->document_id) ? htmlspecialchars($file2->file_new_name) : '0.jpg'; ?>" target="_blank">Click to view</strong> </a>
-                                                        </p>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Year:</strong> <?php echo $yearLabel; ?></p>
+                                                            <p><strong>Semester:</strong> <?php echo $semLabel; ?></p>
+                                                        </div>
                                                     </div>
-                                                    <!-- <div class="col-lg-4">
+
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Last Semester CGPA/Merit:</strong> <?php echo isset($userDetails->last_semester_cgpa_or_merit) ? htmlspecialchars($userDetails->last_semester_cgpa_or_merit) : 'N/A'; ?></p>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <p><strong>District:</strong> <?php echo isset($userDetails->district) ? htmlspecialchars($userDetails->district) : 'N/A'; ?></p>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Division:</strong> <?php echo isset($userDetails->division) ? htmlspecialchars($userDetails->division) : 'N/A'; ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Permanent Address:</strong> <?php echo isset($userDetails->permanent_address) ? htmlspecialchars($userDetails->permanent_address) : 'N/A'; ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Present Address:</strong> <?php echo isset($userDetails->present_address) ? htmlspecialchars($userDetails->present_address) : 'N/A'; ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="text-center mt-5 mb-4">
+                                                        <h5 class="form-info-title">Father's Information</h5>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Father's Name:</strong> <?php echo isset($userDetails->father_name) ? htmlspecialchars($userDetails->father_name) : 'N/A'; ?></p>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Father's Contact No:</strong> <?php echo isset($userDetails->father_contact_no) ? htmlspecialchars($userDetails->father_contact_no) : 'N/A'; ?></p>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Father's Profession:</strong> <?php echo isset($userDetails->father_profession) ? htmlspecialchars($userDetails->father_profession) : 'N/A'; ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Father's Monthly Income:</strong> <?php echo isset($userDetails->father_monthly_income) ? htmlspecialchars($userDetails->father_monthly_income) : 'N/A'; ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="text-center mt-5 mb-4">
+                                                        <h5 class="form-info-title">Mother's Information</h5>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Mother's Name:</strong> <?php echo isset($userDetails->mother_name) ? htmlspecialchars($userDetails->mother_name) : 'N/A'; ?></p>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Mother's Contact No:</strong> <?php echo isset($userDetails->mother_contact_no) ? htmlspecialchars($userDetails->mother_contact_no) : 'N/A'; ?></p>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Mother's Profession:</strong> <?php echo isset($userDetails->mother_profession) ? htmlspecialchars($userDetails->mother_profession) : 'N/A'; ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Mother's Monthly Income:</strong> <?php echo isset($userDetails->mother_monthly_income) ? htmlspecialchars($userDetails->mother_monthly_income) : 'N/A'; ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="text-center mt-5 mb-4">
+                                                        <h5 class="form-info-title">Guardian's Information</h5>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Guardian's Name:</strong> <?php echo isset($userDetails->guardian_name) ? htmlspecialchars($userDetails->guardian_name) : 'N/A'; ?></p>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Guardian's Contact No:</strong> <?php echo isset($userDetails->guardian_contact_no) ? htmlspecialchars($userDetails->guardian_contact_no) : 'N/A'; ?></p>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Guardian's Address:</strong> <?php echo isset($userDetails->guardian_address) ? htmlspecialchars($userDetails->guardian_address) : 'N/A'; ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="text-center mt-5 mb-4">
+                                                        <h5 class="form-info-title">Other Information</h5>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Document file:
+                                                                    <a href="../uploads1/<?php echo isset($userDetails->document_id) ? htmlspecialchars($file2->file_new_name) : '0.jpg'; ?>" target="_blank">Click to view</strong> </a>
+                                                            </p>
+                                                        </div>
+                                                        <!-- <div class="col-lg-4">
                                                         <p><strong>Note IDs:</strong> <?php echo isset($userDetails->note_ids) ? htmlspecialchars($userDetails->note_ids) : 'N/A'; ?></p>
                                                     </div> -->
-                                                    <div class="col-lg-4">
-                                                        <p><strong>Created:</strong> <?php echo isset($userDetails->created) ? htmlspecialchars($userDetails->created) : 'N/A'; ?></p>
-                                                        <p><strong>Modified:</strong> <?php echo isset($userDetails->modified) ? htmlspecialchars($userDetails->modified) : 'N/A'; ?></p>
+                                                        <div class="col-lg-4">
+                                                            <p><strong>Created:</strong> <?php echo isset($userDetails->created) ? htmlspecialchars($userDetails->created) : 'N/A'; ?></p>
+                                                            <p><strong>Modified:</strong> <?php echo isset($userDetails->modified) ? htmlspecialchars($userDetails->modified) : 'N/A'; ?></p>
+                                                        </div>
                                                     </div>
-                                                </div>
 
 
-                                                <!-- Additional details can be added here -->
-                                                <div class="col-lg-12 d-flex align-items-center justify-content-center mt-4">
-                                                    <button class="btn btn-danger" data-bs-toggle="collapse"
-                                                        data-bs-target="#<?php echo $collapseId; ?>">Close</button>
+                                                    <!-- Additional details can be added here -->
+                                                    <div class="col-lg-12 d-flex align-items-center justify-content-center mt-4">
+                                                        <button class="btn btn-danger" data-bs-toggle="collapse"
+                                                            data-bs-target="#<?php echo $collapseId; ?>">Close</button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                            <?php
+                                <?php
+                                    }
+                                } else {
+                                    echo "<p>No users found.</p>";
                                 }
-                            } else {
-                                echo "<p>No users found.</p>";
-                            }
-                            ?>
-                        </div>
+                                ?>
+                            </div>
 
-                        <!-- Pagination Controls (placed after the user list) -->
-                        <nav aria-label="User list pagination">
-                            <ul class="pagination justify-content-center" id="paginationContainer"></ul>
-                        </nav>
-                    </div>
-                </div>
-            </main>
-            <footer class="py-4 dashboard-copyright-footer mt-auto">
-                <div class="container-fluid px-4">
-                    <div class="d-flex align-items-center justify-content-between small">
-                        <div class="text-muted">Copyright &copy; Just 2024</div>
-                        <div>
-                            <a href="#">Privacy Policy</a>
-                            &middot;
-                            <a href="#">Terms &amp; Conditions</a>
+                            <!-- Pagination Controls (placed after the user list) -->
+                            <nav aria-label="User list pagination">
+                                <ul class="pagination justify-content-center" id="paginationContainer"></ul>
+                            </nav>
                         </div>
                     </div>
-                </div>
-            </footer>
+                </main>
         </div>
     </div>
 
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <!-- JS Libraries -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-        crossorigin="anonymous"></script>
+    
     <script src="script.js"></script>
 
     <!-- JavaScript for Search Filtering and Pagination -->

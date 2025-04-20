@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Dashboard</title>
 
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
         rel="stylesheet" />
     <!-- for sidebar -->
-    <link href="../css2/sidebar-admin.css" rel="stylesheet" />
+    <link href="../css2/sidebar-admin.css" rel="stylesheet"/>
 
 </head>
 
@@ -33,6 +33,7 @@
                     aria-label="Toggle navigation">
                     ☰ Menu
                 </button>
+                
                 <div class="p-3" style="height: 100vh; overflow-y: auto;">
                     <h1>Welcome to Admin Panel</h1>
                 </div>

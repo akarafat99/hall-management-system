@@ -45,7 +45,7 @@ $navbarDir .= '/';
             </ul>
           </li>
           <li class="nav-item">
-            <a class="nav-link text-white" href="<?= $navbarDir ?>../about-us.php">About Us</a>
+            <a class="nav-link text-white" href="<?= $navbarDir ?>../about.php">About</a>
           </li>
           <li class="nav-item">
             <a class="nav-link text-white" href="<?= $navbarDir ?>../contact-us.php">Contact Us</a>

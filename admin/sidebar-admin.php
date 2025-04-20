@@ -4,7 +4,8 @@
         <!-- Header with close button for phone view -->
         <div
             class="px-3 py-3 flex-shrink-0 border-bottom border-secondary d-flex justify-content-between align-items-center">
-            <h3 class="mb-0">My Sidebar</h3>
+            
+            <small class="text-muted">Hall Management System</small>
             <!-- Close button (visible on small screens only) -->
             <button
                 type="button"
@@ -19,49 +20,45 @@
                 <li class="nav-item">
                     <!-- Dashboard Link -->
                     <a class="nav-link text-white" href="dashboard.php">
-                        <div class="sb-nav-link-icon"><i class="fa-solid fa-house"></i></div>
                         Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
                     <!-- User Review Link -->
                     <a class="nav-link text-white" href="pending-registration.php">
-                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                         Users Review
                     </a>
                 </li>
                 <li class="nav-item">
                     <!-- Manage User Link -->
                     <a class="nav-link text-white" href="manage-user.php">
-                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                         Manage User
                     </a>
                 </li>
                 <li class="nav-item">
                     <!-- Profile update request -->
                     <a class="nav-link text-white" href="update-profile-requests.php">
-                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                         Profile Update Requests
                     </a>
                 </li>
+
+                <hr>
+
                 <li class="nav-item">
                     <!-- Manage Departments -->
                     <a class="nav-link text-white" href="manage-departments.php">
-                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                         Manage Departments
                     </a>
                 </li>
                 <li class="nav-item">
                     <!-- Seat Management Link -->
                     <a class="nav-link text-white" href="seat-management.php">
-                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                         Seat Management
                     </a>
                 </li>
                 <li class="nav-item">
                     <!-- Create Event Link -->
                     <a class="nav-link text-white" href="create-hall-seat-allocation-event.php">
-                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                         Create Hall Seat Allocation Event
                     </a>
                 </li>
@@ -69,7 +66,6 @@
                 <li class="nav-item">
                     <!-- Event Management Link -->
                     <a class="nav-link text-white" href="hall-seat-allocation-event-management.php">
-                        <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                         Hall Seat Allocation Event Management
                     </a>
                 </li>

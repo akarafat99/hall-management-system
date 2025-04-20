@@ -4,102 +4,37 @@ include_once '../class-file/HallSeatDetails.php';
 include_once '../class-file/PriorityList.php';
 include_once '../class-file/Department.php';
 
-// Fetch the priority list from PriorityList.php
-$priorityMapping = getPriorityList();  // This returns an associative array, e.g., [1 => "District", 2 => "Academic Result", 3 => "Father's Monthly Income"]
-
-$department = new Department();
-$departmentList = $department->getDepartments(null, 1); // Fetching all departments with status 1
-
-$hallSeatDetails = new HallSeatDetails();
+// Fetch priority criteria
+$priorityMapping     = getPriorityList();
+// Load active departments
+$department          = new Department();
+$departmentList      = $department->getDepartments(null, 1);
+// Load seat‑detail helper
+$hallSeatDetails     = new HallSeatDetails();
 $totalAvailableSeats = $hallSeatDetails->countSeatsByStatus(0);
 
 $hallSeatAllocationEvent = new HallSeatAllocationEvent();
+$deptDistribution = $hallSeatAllocationEvent->distributeSeatsByDeptTotalMinOne();
 
-$message = "";
-$isEditMode = false;
-$editEventId = "";
+// Semester labels
+$labels = [
+    'bsc11' => 'B. Sc. 1st Year 1st Sem',
+    'bsc12' => 'B. Sc. 1st Year 2nd Sem',
+    'bsc21' => 'B. Sc. 2nd Year 1st Sem',
+    'bsc22' => 'B. Sc. 2nd Year 2nd Sem',
+    'bsc31' => 'B. Sc. 3rd Year 1st Sem',
+    'bsc32' => 'B. Sc. 3rd Year 2nd Sem',
+    'bsc41' => 'B. Sc. 4th Year 1st Sem',
+    'bsc42' => 'B. Sc. 4th Year 2nd Sem',
+    'msc11' => 'M. Sc. 1st Year 1st Sem',
+    'msc12' => 'M. Sc. 1st Year 2nd Sem',
+    'msc21' => 'M. Sc. 2nd Year 1st Sem',
+    'msc22' => 'M. Sc. 2nd Year 2nd Sem'
+];
 
-
-$quotaValues = array_fill(0, 12, ""); // initialize 12 empty values
-
-// Check if we are in edit mode
-if (isset($_GET['editEvent']) && !empty($_GET['editEvent'])) {
-    $editEventId = intval($_GET['editEvent']);
-    $hallSeatAllocationEvent->event_id = $editEventId;
-    // Load the event details for editing
-    if ($hallSeatAllocationEvent->load() !== false) {
-        $quotaValues = explode(",", $hallSeatAllocationEvent->seat_distribution_quota);
-        $totalReservedSeats = array_sum($quotaValues);
-        $totalAvailableSeats += $totalReservedSeats;
-        $isEditMode = true;
-    } else {
-        $message = "Could not load event with ID: " . $editEventId;
-    }
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Gathering priority list values from the form submission
-    $priorityList   = isset($_POST['priorityList']) ? trim($_POST['priorityList']) : "";
-    // Build the seat distribution quota as a comma-separated string from the 12 seat quota inputs.
-    $quotaValues = array(
-        $_POST['bsc11'],
-        $_POST['bsc12'],
-        $_POST['bsc21'],
-        $_POST['bsc22'],
-        $_POST['bsc31'],
-        $_POST['bsc32'],
-        $_POST['bsc41'],
-        $_POST['bsc42'],
-        $_POST['msc11'],
-        $_POST['msc12'],
-        $_POST['msc21'],
-        $_POST['msc22']
-    );
-    $seat_distribution_quota = implode(",", $quotaValues);
-
-    $hallSeatAllocationEvent->title = $_POST['eventTitle'];
-    $hallSeatAllocationEvent->details = $_POST['eventdetails'];
-    $hallSeatAllocationEvent->application_start_date = $_POST['startDate'];
-    $hallSeatAllocationEvent->application_end_date = $_POST['endDate'];
-    $hallSeatAllocationEvent->viva_notice_date = $_POST['vivaNoticeDate'];
-    $hallSeatAllocationEvent->priority_list = $_POST['priorityList'];
-    $hallSeatAllocationEvent->seat_distribution_quota = $seat_distribution_quota;
-    $hallSeatAllocationEvent->status = 1;
-
-    // Check if we're in edit mode by verifying the hidden field.
-    if (isset($_POST['editEventId']) && !empty($_POST['editEventId'])) {
-        $hallSeatAllocationEvent->event_id = intval($_POST['editEventId']);
-    }
-
-    // If editing, update the event; otherwise, insert a new record.
-    if (isset($_POST['editEventId']) && !empty($_POST['editEventId'])) {
-        //Update the previous and new total seat quota in the hall seat details table.
-        $previousTotalSeatQuota = $hallSeatDetails->countRowsByEventId($hallSeatAllocationEvent->event_id);
-        $newTotalSeatQuota = array_sum($quotaValues);
-        $hallSeatDetails->updateReservedSeatsBasedOnDelta($previousTotalSeatQuota, $newTotalSeatQuota, $hallSeatAllocationEvent->event_id);
-
-        $result = $hallSeatAllocationEvent->update();
-    } else {
-        $result = $hallSeatAllocationEvent->insert();
-        // Calculate the total seat quota from the submitted quota values.
-        $totalSeatQuota = array_sum($quotaValues);
-
-        // Update hall seat details: update rows with status 0 to status 2,
-        // and assign the reserved_by_event_id using the event id,
-        // but limit the number of affected rows to the total seat quota.
-        $result = $hallSeatDetails->updateRowsByStatusAndEventIdAndLimit(0, 2, $hallSeatAllocationEvent->event_id, null, $totalSeatQuota);
-    }
-    if ($result === 1 || $result === true || $result >= 0) {
-        $message = "Event saved successfully with ID: " . $hallSeatAllocationEvent->event_id;
-    } else {
-        $message = "Error saving event.";
-    }
-
-    include_once '../popup-1.php';
-    showPopup($message);
-}
+// Prepare empty quotas (for create vs. edit)
+$quotaValuesByDept = [];
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -107,286 +42,306 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="description" content="" />
-    <meta name="author" content="" />
+    <title>Create Hall Seat Allocation Event</title>
 
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link href="../css/Dashboard/dashboard.css" rel="stylesheet" />
-    <title>Event Create - Dashboard</title>
-    <style>
-        .form-info-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .primary-button {
-            background-color: #007bff;
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        /* New: Set the cursor for priority list items to a move icon */
-        #priorityList li {
-            cursor: move;
-        }
-    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet" />
+    <!-- Sidebar CSS -->
+    <link href="../css2/sidebar-admin.css" rel="stylesheet" />
 </head>
 
-<body class="sb-nav-fixed">
-    <div id="layoutSidenav">
-        <?php include 'admin-sidebar.php'; ?>
-        <div id="layoutSidenav_content">
-            <main>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <?php include 'sidebar-admin.php'; ?>
+
+            <main id="mainContent" class="col">
+                <!-- Toggle button for small screens -->
+                <button
+                    class="btn btn-dark d-lg-none mt-3 mb-3"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#sidebarMenu"
+                    aria-controls="sidebarMenu"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    ☰ Menu
+                </button>
+
                 <div class="container-fluid px-4">
-                    <?php if ($isEditMode): ?>
-                        <h3>Edit Hall Seat Allocation Event (ID: <?php echo htmlspecialchars($editEventId); ?>)</h3>
-                    <?php else: ?>
-                        <h3>Create Hall Seat Allocation Event</h3>
-                    <?php endif; ?>
-                    <div class="card shadow mb-4">
+                    <!-- Page Header -->
+                    <h3 class="mt-4 mb-4">Create Hall Seat Allocation Event</h3>
+
+                    <!-- Form Card -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-calendar-alt me-2"></i>Event Information
+                        </div>
                         <div class="card-body">
-                            <?php if (!empty($message)) { ?>
-                                <div class="alert <?php echo ($result === 1 || $result === true) ? 'alert-success' : 'alert-danger'; ?>" role="alert">
-                                    <?php echo $message; ?>
-                                </div>
-                            <?php } ?>
+                            <form method="post" class="needs-validation" novalidate>
 
-                            <!-- Form submission uses POST method and posts to the same page -->
-                            <form method="post">
-                                <?php if ($isEditMode): ?>
-                                    <input type="hidden" name="editEventId" value="<?php echo $editEventId; ?>">
-                                <?php endif; ?>
-
-                                <!-- Title & Details -->
+                                <!-- Event Title (full width) -->
                                 <div class="mb-3">
-                                    <label class="form-label">Event Title</label>
-                                    <input type="text" name="eventTitle" class="form-control" required
-                                        value="<?php echo htmlspecialchars($hallSeatAllocationEvent->title); ?>">
+                                    <label for="eventTitle" class="form-label">Event Title</label>
+                                    <input type="text"
+                                        class="form-control"
+                                        id="eventTitle"
+                                        name="eventTitle"
+                                        placeholder="Enter event title"
+                                        required>
+                                    <div class="invalid-feedback">Please enter an event title.</div>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Event Details</label>
-                                    <input name="eventdetails" class="form-control" rows="3"
-                                        value="<?php echo htmlspecialchars($hallSeatAllocationEvent->details); ?>" required>
+
+                                <!-- Event Details (full width) -->
+                                <div class="mb-4">
+                                    <label for="eventdetails" class="form-label">Event Details</label>
+                                    <textarea class="form-control"
+                                        id="eventdetails"
+                                        name="eventdetails"
+                                        rows="3"
+                                        placeholder="Enter event details"
+                                        required></textarea>
+                                    <div class="invalid-feedback">Please provide event details.</div>
                                 </div>
 
                                 <!-- Dates -->
-                                <div class="row mb-4">
+                                <div class="row g-3 mb-4">
                                     <?php
                                     $dates = [
-                                        ['startDate', 'Application Start Date', 'fa-calendar-day', $hallSeatAllocationEvent->application_start_date],
-                                        ['endDate', 'Application End Date', 'fa-calendar-check', $hallSeatAllocationEvent->application_end_date],
-                                        ['vivaNoticeDate', 'Viva Notice Date', 'fa-bell', $hallSeatAllocationEvent->viva_notice_date],
+                                        ['startDate', 'Start Date', 'fa-calendar-day'],
+                                        ['endDate', 'End Date', 'fa-calendar-check'],
+                                        ['vivaNoticeDate', 'Viva Notice Date', 'fa-bell']
                                     ];
-                                    foreach ($dates as [$name, $label, $icon, $val]) {
+                                    foreach ($dates as $d):
                                     ?>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label"><?php echo $label; ?></label>
+                                        <div class="col-md-4">
+                                            <label for="<?php echo $d[0]; ?>" class="form-label"><?php echo $d[1]; ?></label>
                                             <div class="input-group">
-                                                <span class="input-group-text"><i class="fas <?php echo $icon; ?>"></i></span>
-                                                <input type="date" name="<?php echo $name; ?>" class="form-control" required
-                                                    value="<?php echo htmlspecialchars($val); ?>">
+                                                <span class="input-group-text"><i class="fas <?php echo $d[2]; ?>"></i></span>
+                                                <input type="date"
+                                                    class="form-control"
+                                                    id="<?php echo $d[0]; ?>"
+                                                    name="<?php echo $d[0]; ?>"
+                                                    required>
                                             </div>
-                                        </div>
-                                    <?php } ?>
-                                </div>
-
-                                <!-- Priority List -->
-                                <div class="text-center my-4">
-                                    <h5 class="form-info-title">Priority List</h5>
-                                </div>
-                                <ul id="priorityList" class="list-group mb-3">
-                                    <?php
-                                    // If in edit mode and a stored priority order exists, use it:
-                                    if ($isEditMode && !empty($hallSeatAllocationEvent->priority_list)) {
-                                        // The stored priority_list is assumed to be a comma-separated string (e.g., "3,1,2")
-                                        $priorityOrder = explode(",", $hallSeatAllocationEvent->priority_list);
-                                        foreach ($priorityOrder as $key) {
-                                            // Only show the item if it exists in the mapping.
-                                            if (isset($priorityMapping[$key])) {
-                                                echo '<li class="list-group-item" data-value="' . htmlspecialchars($key) . '">' . htmlspecialchars($priorityMapping[$key]) . '</li>';
-                                            }
-                                        }
-                                    } else {
-                                        // New event: Show the default order based on getPriorityList() output.
-                                        foreach ($priorityMapping as $idx => $txt) {
-                                            echo '<li class="list-group-item" data-value="' . htmlspecialchars($idx) . '">' . htmlspecialchars($txt) . '</li>';
-                                        }
-                                    }
-                                    ?>
-                                </ul>
-                                <input type="hidden" id="priorityListInput" name="priorityList" value="">
-
-                                <!-- Seat Quota -->
-                                <div class="text-center my-4">
-                                    <h5 class="form-info-title">Seat Quota</h5>
-                                </div>
-                                <div class="text-center mb-3">
-                                    <strong>Total Available Seats:</strong>
-                                    <span id="totalAvailable"><?php echo $totalAvailableSeats; ?></span>
-                                    &nbsp;|&nbsp;
-                                    <strong>Total Selected Seats:</strong>
-                                    <span id="totalSelected">0</span>
-                                    <div id="exceedInfo" class="mt-2 text-danger"></div>
-                                    <button type="button" id="redistributeBtn" class="btn btn-secondary mt-2">
-                                        Redistribute Equally
-                                    </button>
-                                </div>
-                                <div id="quotaWarning" class="alert alert-danger d-none">
-                                    The total seat quota exceeds the available seats.
-                                </div>
-
-                                <div class="row">
-                                    <?php
-                                    $labels = [
-                                        'bsc11' => 'B. Sc. 1st Year 1st Sem',
-                                        'bsc12' => 'B. Sc. 1st Year 2nd Sem',
-                                        'bsc21' => 'B. Sc. 2nd Year 1st Sem',
-                                        'bsc22' => 'B. Sc. 2nd Year 2nd Sem',
-                                        'bsc31' => 'B. Sc. 3rd Year 1st Sem',
-                                        'bsc32' => 'B. Sc. 3rd Year 2nd Sem',
-                                        'bsc41' => 'B. Sc. 4th Year 1st Sem',
-                                        'bsc42' => 'B. Sc. 4th Year 2nd Sem',
-                                        'msc11' => 'M. Sc. 1st Year 1st Sem',
-                                        'msc12' => 'M. Sc. 1st Year 2nd Sem',
-                                        'msc21' => 'M. Sc. 2nd Year 1st Sem',
-                                        'msc22' => 'M. Sc. 2nd Year 2nd Sem',
-                                    ];
-                                    $i = 0;
-                                    foreach ($labels as $field => $label):
-                                    ?>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label" for="<?php echo $field; ?>"><?php echo $label; ?></label>
-                                            <input type="number" class="form-control seat-quota" id="<?php echo $field; ?>"
-                                                name="<?php echo $field; ?>" required
-                                                value="<?php echo htmlspecialchars($quotaValues[$i++]); ?>">
+                                            <div class="invalid-feedback">Select a <?php echo strtolower($d[1]); ?>.</div>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
 
-                                <div class="text-center mt-4">
-                                    <button type="submit" id="submitBtn" class="btn btn-primary">
-                                        <?php echo $isEditMode ? 'Update Event' : 'Create Event'; ?>
-                                    </button>
-                                    <div id="submitWarning" class="text-danger mt-2 d-none">
-                                        Quota exceeds available seats. Please adjust before submitting.
+                                <!-- Priority List -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">Priority List</label>
+                                    <div class="form-text mb-1">
+                                        Press and hold the <i class="fas fa-grip-lines"></i> icon to drag items into your preferred order.
+                                    </div>
+                                    <div class="form-text mb-3 text-muted">
+                                        Priority decreases from top to bottom.
+                                    </div>
+                                    <ul id="priorityList" class="list-group mb-2">
+                                        <?php foreach ($priorityMapping as $key => $txt): ?>
+                                            <li class="list-group-item d-flex align-items-center" data-value="<?php echo $key; ?>">
+                                                <i class="fas fa-grip-lines me-3 text-muted" style="cursor: move;"></i>
+                                                <?php echo htmlspecialchars($txt); ?>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                    <input type="hidden" id="priorityListInput" name="priorityList">
+                                </div>
+
+
+                                <!-- Semester Priority (drag‑to‑reorder) -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">Semester Priority</label>
+                                    <div class="form-text mb-2">
+                                        Drag the handle to reorder. Priority decreases from top to bottom.
+                                    </div>
+                                    <ul id="semesterList" class="list-group mb-3">
+                                        <?php foreach ($labels as $key => $text): ?>
+                                            <li class="list-group-item d-flex align-items-center" data-value="<?php echo $key; ?>">
+                                                <i class="fas fa-grip-lines me-3 text-muted" style="cursor: move;"></i>
+                                                <?php echo htmlspecialchars($text); ?>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                    <input type="hidden" id="semesterOrder" name="semesterOrder">
+                                </div>
+
+                                <?php
+                                // just above your HTML, compute original total
+                                $originalTotal = array_sum($deptDistribution);
+                                $jsonDefaults  = json_encode($deptDistribution);
+                                ?>
+                                <!-- Seat Distribution by Department -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">Seat Distribution by Department</label>
+
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <button id="resetDistribution" type="button" class="btn btn-sm btn-secondary">
+                                            <i class="fas fa-undo me-1"></i>Reset Distribution
+                                        </button>
+                                        <!-- Status for how many exceeds calculation -->
+                                        <div id="distroWarning" class="text-danger fw-semibold" style="display:none;"></div>
+
+                                    </div>
+
+                                    <div class="table-responsive shadow-sm rounded">
+                                        <table class="table table-striped table-bordered align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th class="text-center">Dept&nbsp;ID</th>
+                                                    <th>Department Name</th>
+                                                    <th class="text-end">Seats</th>
+                                                    <th class="text-end">%</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($departmentList as $dept):
+                                                    $did   = $dept['department_id'];
+                                                    $count = isset($deptDistribution[$did]) ? $deptDistribution[$did] : 0;
+                                                ?>
+                                                    <tr data-did="<?php echo $did; ?>">
+                                                        <td class="text-center"><?php echo $did; ?></td>
+                                                        <td><?php echo htmlspecialchars($dept['department_name']); ?></td>
+                                                        <td>
+                                                            <input
+                                                                type="number"
+                                                                name="deptSeats[<?php echo $did; ?>]"
+                                                                class="form-control form-control-sm text-end distro-input"
+                                                                min="0"
+                                                                value="<?php echo $count; ?>"
+                                                                data-default="<?php echo $count; ?>"
+                                                                required>
+                                                        </td>
+                                                        <td class="text-end percent-cell">0%</td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
 
-                            </form>
+                                <!-- Submit Button Only -->
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        Create Event
+                                    </button>
+                                </div>
 
+                            </form>
                         </div>
                     </div>
-
-
                 </div>
             </main>
-
-
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-    <script src="script.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
-    <script src="assets/demo/chart-area-demo.js"></script>
-    <script src="assets/demo/chart-bar-demo.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Sortable.js for priority drag/drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
-        (function($, document) {
-            // Get current time in Asia/Dhaka as a locale string and then create a Date object from it.
-            const dhakaTimeString = new Date().toLocaleString("en-US", {
+        // Set min date on startDate, endDate, vivaNoticeDate to today in Asia/Dhaka
+        (function() {
+            const dhakaString = new Date().toLocaleString("en-US", {
                 timeZone: "Asia/Dhaka"
             });
-            const dhakaDate = new Date(dhakaTimeString);
+            const dhakaDate = new Date(dhakaString);
 
-            const dd = String(dhakaDate.getDate()).padStart(2, '0');
-            const mm = String(dhakaDate.getMonth() + 1).padStart(2, '0');
             const yyyy = dhakaDate.getFullYear();
-            const minD = `${yyyy}-${mm}-${dd}`;
+            const mm = String(dhakaDate.getMonth() + 1).padStart(2, "0");
+            const dd = String(dhakaDate.getDate()).padStart(2, "0");
+            const minDate = `${yyyy}-${mm}-${dd}`;
 
-            // Set today's date as the minimum for all date fields.
-            document.querySelectorAll('input[type="date"]').forEach(el => el.min = minD);
+            ["startDate", "endDate", "vivaNoticeDate"].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.min = minDate;
+            });
+        })();
 
-            // If in edit mode, override the min attribute for Application Start, End, and Viva Notice Dates.
-            <?php if ($isEditMode): ?>
-                const minStartDate = '<?php echo $hallSeatAllocationEvent->application_start_date; ?>';
-                document.querySelector('input[name="startDate"]').min = minStartDate;
-                document.querySelector('input[name="endDate"]').min = minStartDate;
-                document.querySelector('input[name="vivaNoticeDate"]').min = minStartDate;
-            <?php endif; ?>
+        // Bootstrap validation
+        (function() {
+            'use strict';
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
 
-            // Priority list initialization.
-            function updatePriorityList() {
-                const vals = $('#priorityList').children()
-                    .map((_, li) => $(li).data('value'))
-                    .get()
+        // Initialize Sortable on priorityList
+        new Sortable(document.getElementById('priorityList'), {
+            animation: 150,
+            handle: '.fa-grip-lines',
+            onSort: () => {
+                const vals = Array.from(document.querySelectorAll('#priorityList li'))
+                    .map(li => li.dataset.value)
                     .join(',');
-                $('#priorityListInput').val(vals);
+                document.getElementById('priorityListInput').value = vals;
             }
-            $('#priorityList')
-                .sortable({
-                    update: updatePriorityList
-                })
-                .disableSelection();
-            updatePriorityList();
+        });
 
-            // Seat quota logic.
-            const totalAvailable = parseInt($('#totalAvailable').text(), 10) || 0;
-            const inputs = $('.seat-quota').toArray();
-            const submitBtn = $('#submitBtn');
-            const submitWarning = $('#submitWarning');
+        // Initialize drag‑and‑drop on semesterList
+        new Sortable(document.getElementById('semesterList'), {
+            animation: 150,
+            handle: '.fa-grip-lines',
+            onSort: () => {
+                const order = Array
+                    .from(document.querySelectorAll('#semesterList li'))
+                    .map(li => li.dataset.value)
+                    .join(',');
+                document.getElementById('semesterOrder').value = order;
+            }
+        });
+
+        // Seat distribution logic
+        (function() {
+            const defaults = <?php echo $jsonDefaults; ?>;
+            const originalTotal = <?php echo $originalTotal; ?>;
+
+            const inputs = document.querySelectorAll('.distro-input');
+            const percentCells = document.querySelectorAll('.percent-cell');
+            const warning = document.getElementById('distroWarning');
+            const resetBtn = document.getElementById('resetDistribution');
 
             function recalc() {
-                const sum = inputs.reduce((s, el) => s + (parseInt(el.value, 10) || 0), 0);
-                $('#totalSelected').text(sum);
+                let sum = 0;
+                inputs.forEach(i => sum += parseInt(i.value, 10) || 0);
 
-                if (sum > totalAvailable) {
-                    $('#quotaWarning').removeClass('d-none');
-                    $('#exceedInfo').text(`Exceeded by ${sum - totalAvailable} seat(s).`);
-                    submitBtn.prop('disabled', true);
-                    submitWarning.removeClass('d-none');
+                if (sum > originalTotal) {
+                    const over = sum - originalTotal;
+                    warning.textContent = `🚨 Exceeded by ${over} seat${over>1?'s':''}! (Max ${originalTotal})`;
+                    warning.style.display = '';
                 } else {
-                    $('#quotaWarning').addClass('d-none');
-                    $('#exceedInfo').text('');
-                    submitBtn.prop('disabled', false);
-                    submitWarning.addClass('d-none');
+                    warning.style.display = 'none';
                 }
+
+                inputs.forEach((i, idx) => {
+                    const val = parseInt(i.value, 10) || 0;
+                    const pct = sum > 0 ? (val / sum * 100).toFixed(1) : 0;
+                    percentCells[idx].textContent = pct + '%';
+                });
             }
 
-            $('#redistributeBtn').on('click', () => {
-                const n = inputs.length;
-                const base = Math.floor(totalAvailable / n);
-                let rem = totalAvailable - base * n;
-                inputs.forEach((el, i) => el.value = base + (i < rem ? 1 : 0));
+            inputs.forEach(i => i.addEventListener('input', recalc));
+            resetBtn.addEventListener('click', () => {
+                inputs.forEach(i => {
+                    const did = i.closest('tr').dataset.did;
+                    i.value = defaults[did] || 0;
+                });
                 recalc();
             });
 
-            $('.seat-quota').on('input', recalc);
-            recalc();
-
-            <?php if (!$isEditMode): ?>
-                $('#redistributeBtn').trigger('click');
-            <?php endif; ?>
-
-        })(jQuery, document);
+            document.addEventListener('DOMContentLoaded', recalc);
+        })();
     </script>
-
-
-
 
 </body>
 

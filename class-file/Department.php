@@ -175,6 +175,20 @@ class Department
     }
 
     /**
+     * Update department status by department_id
+     * @param int $department_id
+     * @param int $status
+     * @return bool
+     */
+    public function updateStatusByDepartmentId($department_id, $status)
+    {
+        $department_id = intval($department_id);
+        $status = intval($status);
+        $sql = "UPDATE tbl_department SET status = $status WHERE department_id = $department_id";
+        return mysqli_query($this->conn, $sql);
+    }
+
+    /**
      * Load department by id
      * @param int $id
      * @return bool

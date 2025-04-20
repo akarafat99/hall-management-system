@@ -271,7 +271,7 @@ class HallSeatAllocationEvent
                 $rows[] = $row;
             }
 
-            if(count($rows) === 1) {
+            if (count($rows) === 1) {
                 $this->setProperties($rows[0]);
             }
             return $rows;
@@ -342,29 +342,291 @@ class HallSeatAllocationEvent
      * @param string $applicationEndDate The application end date in 'Y-m-d' format.
      * @return int Returns 1 if the application is closed, 0 otherwise.
      */
-    function isApplicationClosed($applicationEndDate) {
+    function isApplicationClosed($applicationEndDate)
+    {
         // Set timezone for Asia/Dhaka.
         $tz = new DateTimeZone('Asia/Dhaka');
-    
+
         // Get the current DateTime in Asia/Dhaka.
         $currentTime = new DateTime('now', $tz);
-    
+
         // Create a DateTime object from the provided application end date.
         $endTime = new DateTime($applicationEndDate, $tz);
-    
+
         // Calculate the time difference in seconds.
         $diffSeconds = $currentTime->getTimestamp() - $endTime->getTimestamp();
-    
+
         // If more than 24 hours (86400 seconds) have passed since the application end date, return 1 (closed)
         if ($diffSeconds > 86400) {
             return 1;
         }
-    
+
         // Otherwise, return 0 (still open for application)
         return 0;
     }
-    
+
+    /**
+     * Distribute all currently available hall seats across departments
+     * in proportion to each department's total‐student count, then split
+     * each department’s quota evenly (with juniors favored for remainders)
+     * across the 12 semesters:
+     *   0 → BSc 1‑1, 1 → BSc 1‑2, …, 11 → MSc 2‑2
+     *
+     * @return array map: dept_id => [12‑element integer array]
+     */
+    public function distributeSeatsByDepartmentRatio(): array
+    {
+        /* ──────────────────────────────── 1. dependencies ──────────────────────────────── */
+        include_once '../class-file/Department.php';
+        include_once '../class-file/HallSeatDetails.php';
+
+        /* ──────────────────────────────── 2. input data ────────────────────────────────── */
+        // 2‑a  get active departments, largest student body first
+        $deptModel  = new Department();
+        $deptRows   = $deptModel->getDepartments(null, 1, "department_total_student", "DESC");
+
+        // 2‑b  total seats available (status 0)
+        $seatModel  = new HallSeatDetails();
+        $totalSeats = $seatModel->countSeatsByStatus(0);
+
+        if (!$deptRows || $totalSeats <= 0) return [];
+
+        /* ──────────────────────────────── 3. proportional share ───────────────────────── */
+        $totalStudents = array_sum(array_column($deptRows, 'department_total_student'));
+        if ($totalStudents == 0) return [];
+
+        $deptShare  = [];  // dept_id => floorSeats
+        $fractions  = [];  // dept_id => fractional part
+        $allocated  = 0;
+
+        foreach ($deptRows as $d) {
+            $stud   = (int)$d['department_total_student'];
+            $raw    = ($totalSeats * $stud) / $totalStudents;  // exact quota
+            $floor  = (int)floor($raw);
+            $deptId = $d['department_id'];
+
+            $deptShare[$deptId] = $floor;
+            $fractions[$deptId] = $raw - $floor;
+            $allocated         += $floor;
+        }
+
+        /* ──────────────────────────────── 4. distribute leftovers ─────────────────────── */
+        $left = $totalSeats - $allocated;                // seats still unassigned
+        arsort($fractions);                              // give extras to largest fractions
+        foreach (array_keys($fractions) as $deptId) {
+            if ($left-- <= 0) break;
+            $deptShare[$deptId] += 1;
+        }
+
+        /* ──────────────────────────────── 5. split into 12 slots ──────────────────────── */
+        $distribution = [];                              // final map
+        foreach ($deptShare as $deptId => $quota) {
+            $base = intdiv($quota, 12);                  // equal part for every slot
+            $rem  = $quota - $base * 12;                // remainder seats
+            $slots = array_fill(0, 12, $base);          // start with base share
+
+            // Extra seats go to junior semesters first (index 0 → 11)
+            for ($i = 0; $i < $rem; $i++) {
+                $slots[$i]++;
+            }
+
+            $distribution[$deptId] = $slots;            // 12‑element array saved
+        }
+
+        echo "<br>Distribution: <pre>";
+        print_r($distribution);
+        echo "</pre>";
+        /* ──────────────────────────────── 6. return result ────────────────────────────── */
+        return $distribution;
+    }
+
+
+    /**
+     * Debug version of distributeSeatsByDepartmentRatio(): prints each phase in HTML tables.
+     *
+     * @return array map: dept_id => [12‑element integer array]
+     */
+    public function distributeSeatsByDepartmentRatioDebug(): array
+    {
+        /* ──────────────────────────────── 1. dependencies ──────────────────────────────── */
+        include_once '../class-file/Department.php';
+        include_once '../class-file/HallSeatDetails.php';
+
+        /* ──────────────────────────────── 2. input data ────────────────────────────────── */
+        $deptModel   = new Department();
+        $deptRows    = $deptModel->getDepartments(null, 1, "department_total_student", "DESC");
+        $seatModel   = new HallSeatDetails();
+        $totalSeats  = $seatModel->countSeatsByStatus(0);
+
+        echo "<h4>Phase 2: Input Data</h4>";
+        echo "<table class='table table-bordered'><tr><th>Total Available Seats</th><td>{$totalSeats}</td></tr></table>";
+
+        if (!$deptRows || $totalSeats <= 0) {
+            echo "<div class='alert alert-warning'>No departments or no seats available.</div>";
+            return [];
+        }
+
+        /* ──────────────────────────────── 3. proportional share ───────────────────────── */
+        $totalStudents = array_sum(array_column($deptRows, 'department_total_student'));
+        echo "<h4>Phase 3: Proportional Share (Total Students = {$totalStudents})</h4>";
+        echo "<table class='table table-striped table-bordered'>
+                <thead><tr>
+                  <th>Dept ID</th><th>Dept Name</th><th>Students</th>
+                  <th>Exact Quota (raw)</th><th>Floor Quota</th><th>Fractional Part</th>
+                </tr></thead><tbody>";
+
+        $deptShare = [];
+        $fractions = [];
+        $allocated = 0;
+        foreach ($deptRows as $d) {
+            $deptId = $d['department_id'];
+            $name   = htmlspecialchars($d['department_name']);
+            $stud   = (int)$d['department_total_student'];
+            $raw    = ($totalSeats * $stud) / $totalStudents;
+            $floor  = (int)floor($raw);
+            $frac   = $raw - $floor;
+            $deptShare[$deptId] = $floor;
+            $fractions[$deptId] = $frac;
+            $allocated += $floor;
+
+            echo "<tr>
+                    <td>{$deptId}</td>
+                    <td>{$name}</td>
+                    <td>{$stud}</td>
+                    <td>" . number_format($raw, 2) . "</td>
+                    <td>{$floor}</td>
+                    <td>" . number_format($frac, 2) . "</td>
+                  </tr>";
+        }
+        echo "</tbody></table>";
+
+        /* ──────────────────────────────── 4. distribute leftovers ─────────────────────── */
+        $left = $totalSeats - $allocated;
+        echo "<h4>Phase 4: Distribute Leftovers</h4>";
+        echo "<p>Seats allocated so far: {$allocated}. Leftover seats to assign: {$left}.</p>";
+        echo "<table class='table table-bordered'><thead><tr><th>Dept ID</th><th>Fraction</th><th>Extra +1?</th></tr></thead><tbody>";
+        arsort($fractions);
+        foreach ($fractions as $deptId => $frac) {
+            $give = ($left > 0) ? 'Yes' : 'No';
+            if ($left > 0) {
+                $deptShare[$deptId] += 1;
+                $left--;
+            }
+            echo "<tr>
+                    <td>{$deptId}</td>
+                    <td>" . number_format($frac, 2) . "</td>
+                    <td>{$give}</td>
+                  </tr>";
+        }
+        echo "</tbody></table>";
+
+        /* ──────────────────────────────── 5. split into 12 slots ──────────────────────── */
+        echo "<h4>Phase 5: Split into 12 Semester Slots</h4>";
+        $semesters = ['BSc 1‑1', 'BSc 1‑2', 'BSc 2‑1', 'BSc 2‑2', 'BSc 3‑1', 'BSc 3‑2', 'BSc 4‑1', 'BSc 4‑2', 'MSc 1‑1', 'MSc 1‑2', 'MSc 2‑1', 'MSc 2‑2'];
+        $distribution = [];
+        echo "<table class='table table-sm table-bordered'><thead><tr><th>Dept ID</th>";
+        foreach ($semesters as $sem) {
+            echo "<th>{$sem}</th>";
+        }
+        echo "<th>Total</th></tr></thead><tbody>";
+
+        foreach ($deptShare as $deptId => $quota) {
+            $base = intdiv($quota, 12);
+            $rem  = $quota - $base * 12;
+            $slots = array_fill(0, 12, $base);
+            for ($i = 0; $i < $rem; $i++) {
+                $slots[$i]++;
+            }
+            $distribution[$deptId] = $slots;
+
+            echo "<tr><td>{$deptId}</td>";
+            foreach ($slots as $num) {
+                echo "<td>{$num}</td>";
+            }
+            echo "<td><strong>" . array_sum($slots) . "</strong></td>";
+            echo "</tr>";
+        }
+        echo "</tbody></table>";
+
+        /* ──────────────────────────────── 6. return result ────────────────────────────── */
+        return $distribution;
+    }
+
+    /**
+     * Distribute all available seats across departments by student‐count ratio,
+     * ensuring each department gets at least 1 seat.
+     *
+     * @return int[] map: department_id => allocated seats
+     */
+    public function distributeSeatsByDeptTotalMinOne(): array
+    {
+        // 1. Dependencies
+        include_once '../class-file/Department.php';
+        include_once '../class-file/HallSeatDetails.php';
+
+        // 2. Fetch data
+        $deptModel   = new Department();
+        $deptRows    = $deptModel->getDepartments(null, 1, 'department_total_student', 'DESC');
+        $seatModel   = new HallSeatDetails();
+        $totalSeats  = $seatModel->countSeatsByStatus(0);
+
+        if (empty($deptRows) || $totalSeats <= 0) {
+            return [];
+        }
+
+        $deptCount       = count($deptRows);
+        // 3. Baseline: give each department 1 seat
+        $deptShare       = [];
+        foreach ($deptRows as $d) {
+            $deptShare[$d['department_id']] = 1;
+        }
+        // remaining seats after baseline
+        $remainingSeats  = $totalSeats - $deptCount;
+        if ($remainingSeats <= 0) {
+            // if seats are fewer than or equal to deptCount, we just return the baseline (some seats may be unused)
+            return $deptShare;
+        }
+
+        // 4. Proportional share on the remaining seats
+        $totalStudents = array_sum(array_column($deptRows, 'department_total_student'));
+        if ($totalStudents <= 0) {
+            return $deptShare;
+        }
+
+        $floors     = [];
+        $fractions  = [];
+        $assigned   = 0;
+        foreach ($deptRows as $d) {
+            $id    = $d['department_id'];
+            $count = (int)$d['department_total_student'];
+            $raw   = ($remainingSeats * $count) / $totalStudents;
+            $floor = (int)floor($raw);
+            $floors[$id]    = $floor;
+            $fractions[$id] = $raw - $floor;
+            $assigned      += $floor;
+        }
+
+        // 5. Distribute leftover seats by largest fractional part
+        $leftover = $remainingSeats - $assigned;
+        if ($leftover > 0) {
+            arsort($fractions);
+            foreach (array_keys($fractions) as $id) {
+                if ($leftover-- <= 0) break;
+                $floors[$id] += 1;
+            }
+        }
+
+        // 6. Combine baseline + proportional to get final share
+        foreach ($floors as $id => $add) {
+            $deptShare[$id] += $add;
+        }
+
+        return $deptShare;
+    }
 }
+
+// $hallSeatAllocationEvent = new HallSeatAllocationEvent();
+// $hallSeatAllocationEvent->distributeSeatsByDepartmentRatioDebug(); // Call the debug version to see the output
 ?>
 
 <!-- end of file -->
