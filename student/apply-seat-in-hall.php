@@ -16,14 +16,15 @@ $departmentList = $department->getDepartments();
 $yearSemesterCodes = $department->getYearSemesterCodes();
 
 // Using getByEventAndStatus() to fetch active events with status 1,2,3.
-$getActiveEvents = $hallSeatAllocationEvent->getByEventAndStatus(null, [1, 2, 3], "application_end_date", "DESC");
+$getActiveEvents = $hallSeatAllocationEvent->getByEventAndStatus(null, [1, 2, 3, 4, 5, 6], "application_end_date", "DESC");
 
 // Define status meanings.
 $statusMeanings = [
     1 => "Application collection completed. Upcoming: Publish the viva schedule and result notice date.",
     2 => "Viva sessions are underway. Upcoming: Publish the viva results.",
-    3 => "Viva results have been reviewed and published. Upcoming: Set the deadline for seat confirmations.",
-    4 => "All processes completed. Final lists—including viva results and confirmed seat allocations—are now available."
+    3 => "Viva results have been reviewed and published. Upcoming: Publish the seat allocation result",
+    4 => "Seat allocation results have been published. Upcoming: Seat Confirmation Open.",
+    5 => "Event has been finalized."
 ];
 
 ?>
@@ -74,6 +75,34 @@ $statusMeanings = [
             ?>
             <!-- Navbar Section End -->
 
+            <!-- Search START -->
+            <!-- TODO: add an Event-ID filter -->
+            <h3 class="text-center my-4">Hall Seat Allocation Events</h3>
+            <p class="text-center">Find the latest updates on hall seat allocation events below.</p>
+            <form class="d-flex justify-content-center my-4">
+                <div class="input-group input-group-lg w-75 shadow-sm">
+                    <span class="input-group-text bg-white border-0">
+                        <i class="fas fa-search text-secondary"></i>
+                    </span>
+                    <input
+                        type="text"
+                        id="filterEventId"
+                        class="form-control border-0 rounded-pill ps-2"
+                        placeholder="Filter by Event ID…"
+                        aria-label="Filter by Event ID">
+                    <button
+                        class="btn btn-outline-secondary border-0"
+                        type="button"
+                        id="clearFilter">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Search END -->
+
+
+
             <div class="container my-5">
                 <!-- Accordion component -->
                 <div class="accordion" id="accordionExample">
@@ -83,6 +112,7 @@ $statusMeanings = [
                             $hallSeatAllocationEvent->setProperties($e); // sets the event properties
                             $index = $hallSeatAllocationEvent->event_id; // unique identifier for each event
                             $isApplicationClosed = $hallSeatAllocationEvent->isApplicationClosed($hallSeatAllocationEvent->application_end_date);
+                            $isProcessing = ($hallSeatAllocationEvent->status == 5) ? false : true; // Check if the event is in processing status
                             ?>
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="heading<?php echo $index; ?>">
@@ -99,6 +129,9 @@ $statusMeanings = [
                                         ?>
                                         <span class="badge bg-<?php echo $isApplicationClosed ? 'danger' : 'success'; ?> ms-2">
                                             <?php echo $isApplicationClosed ? 'Application Closed' : 'Application Open'; ?>
+                                        </span>
+                                        <span class="badge bg-<?php echo $isProcessing ? 'warning' : 'success'; ?> ms-2">
+                                            <?php echo $isProcessing ? 'Ongoing' : 'Ended'; ?>
                                         </span>
                                     </button>
                                 </h2>
@@ -118,6 +151,9 @@ $statusMeanings = [
                                                         $statusVal = isset($hallSeatAllocationEvent->status) && trim($hallSeatAllocationEvent->status) !== "" ? $hallSeatAllocationEvent->status : "not yet published";
                                                         $statusMeaning = (isset($statusMeanings[$hallSeatAllocationEvent->status]) && $hallSeatAllocationEvent->status != "") ? $statusMeanings[$hallSeatAllocationEvent->status] : "not yet published";
                                                         echo htmlspecialchars($statusMeaning);
+                                                        if ($hallSeatAllocationEvent->status == 4) {
+                                                            echo 'Check Your <i>My Hall Seat Application</i> section for details.';
+                                                        }
                                                         ?>
                                                     </td>
                                                 </tr>
@@ -300,6 +336,29 @@ $statusMeanings = [
 
     <!-- Bootstrap JS and dependencies from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Search for Event ID: -->
+    <script>
+        document.getElementById('filterEventId').addEventListener('input', function() {
+            const term = this.value.trim();
+            document.querySelectorAll('.accordion-item').forEach(item => {
+                // grab the “Event #X” from the header button text
+                const btnText = item.querySelector('.accordion-button').textContent;
+                const match = btnText.match(/Event\s+#(\d+)/);
+                const id = match ? match[1] : '';
+                // show if no filter or if the ID includes the term
+                item.style.display = (!term || id.includes(term)) ? '' : 'none';
+            });
+        });
+
+        document.getElementById('clearFilter').addEventListener('click', () => {
+            const input = document.getElementById('filterEventId');
+            input.value = '';
+            input.dispatchEvent(new Event('input'));
+            input.focus();
+        });
+    </script>
+
 </body>
 
 </html>

@@ -50,6 +50,14 @@
                         Manage Departments
                     </a>
                 </li>
+                
+                <li class="nav-item">
+                    <!-- Manage Notices -->
+                    <a class="nav-link text-white" href="manage-notice.php">
+                        Manage Notices
+                    </a>
+                </li>
+                
                 <li class="nav-item">
                     <!-- Seat Management Link -->
                     <a class="nav-link text-white" href="seat-management.php">

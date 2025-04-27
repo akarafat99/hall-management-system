@@ -191,7 +191,7 @@ $allApplications = $hallSeatApplication
                                         <td>
                                             <p>Floor: <?php echo  htmlspecialchars($hallSeatDetails->floor_no) ?></p>
                                             <p>Room: <?php echo  htmlspecialchars($hallSeatDetails->room_no) ?></p>
-                                            <p>Seat: <?php echo  htmlspecialchars($hallSeatDetails->seat_id) ?></p>
+                                            <p>Seat ID (Number): <?php echo  htmlspecialchars($hallSeatDetails->seat_id) ?></p>
                                         </td>
                                         <td>
                                             <?php

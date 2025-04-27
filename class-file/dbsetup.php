@@ -9,6 +9,7 @@ include_once 'HallSeatDetails.php';
 include_once 'HallSeatAllocationEvent.php';
 include_once 'HallSeatApplication.php';
 include_once 'Department.php';
+include_once 'NoticeManager.php';
 
 // //session 1
 // $db = new DatabaseConnector();
@@ -68,6 +69,12 @@ include_once 'Department.php';
 // $department->alterTableAddColumns();
 // echo "Department table created successfully";
 // $department->insertDefaultDepartments();
+// echo "<br><br><br>";
+
+// $noticeManager = new NoticeManager();
+// $noticeManager->createTableMinimal();
+// $noticeManager->alterTableAddColumns();
+// echo "Notice Manager table created successfully";
 // echo "<br><br><br>";
 
 

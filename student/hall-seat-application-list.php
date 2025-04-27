@@ -28,9 +28,9 @@ $statusMap = [
     -3 => 'Viva Completed. Wait for Result',
     3 => 'Failed Viva',
     -4 => 'Absent in Viva. Marked as Failed',
-    4 => 'Waiting',
+    4 => 'Passed Viva But Not Allotted For Seat',
     5 => 'Seat Allotted',
-    6 => 'Confirm Seat',
+    6 => 'Seat Confirmed',
     7 => 'Unconfirmed Seat'
 ];
 ?>
@@ -38,6 +38,7 @@ $statusMap = [
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -53,6 +54,7 @@ $statusMap = [
         }
     </style>
 </head>
+
 <body>
     <!-- Parent container with flex and min-vh-100 -->
     <div class="d-flex flex-column min-vh-100">
@@ -82,14 +84,14 @@ $statusMap = [
                             $hallSeatApplication->setProperties($application);
                             // Optionally load event details if needed.
                             $hallSeatAllocationEvent->getByEventAndStatus($hallSeatApplication->event_id);
-                            
+
                             // Determine status text.
                             $statusValue = intval($hallSeatApplication->status);
                             $statusText = isset($statusMap[$statusValue]) ? $statusMap[$statusValue] : 'Unknown';
 
                             // Generate unique IDs for accordion collapse.
                             $accordionId = "accordionItem" . $hallSeatApplication->application_id;
-                            ?>
+                    ?>
                             <div class="accordion-item app-item" data-app-id="<?php echo $hallSeatApplication->application_id; ?>">
                                 <h2 class="accordion-header" id="heading<?php echo $hallSeatApplication->application_id; ?>">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo $accordionId; ?>" aria-expanded="false" aria-controls="<?php echo $accordionId; ?>">
@@ -102,10 +104,10 @@ $statusMap = [
                                         <p><strong>User ID:</strong> <?php echo $hallSeatApplication->user_id ?: 'Not Available'; ?></p>
                                         <p><strong>User Details ID:</strong> <?php echo $hallSeatApplication->user_details_id ?: 'Not Available'; ?></p>
                                         <p>
-                                            <form action="view-profile.php" method="post" enctype="multipart/form-data" target="_blank">
-                                                <input type="hidden" name="viewEditRequest" value="<?php echo $hallSeatApplication->user_details_id; ?>">
-                                                <button type="submit" class="btn btn-outline-info">View Submitted Profile</button>
-                                            </form>
+                                        <form action="view-profile.php" method="post" enctype="multipart/form-data" target="_blank">
+                                            <input type="hidden" name="viewEditRequest" value="<?php echo $hallSeatApplication->user_details_id; ?>">
+                                            <button type="submit" class="btn btn-outline-info">View Submitted Profile</button>
+                                        </form>
                                         </p>
                                         <p><strong>Serial No:</strong> <?php echo $hallSeatApplication->serial_no ?: 'Not Assigned'; ?></p>
                                         <p><strong>Viva Date:</strong> <?php echo $hallSeatApplication->viva_date ? $hallSeatApplication->viva_date : 'Not Assigned'; ?></p>
@@ -116,7 +118,7 @@ $statusMap = [
                                     </div>
                                 </div>
                             </div>
-                            <?php
+                    <?php
                         }
                     } else {
                         echo '<div class="alert alert-info text-center">No applications found.</div>';
@@ -142,96 +144,97 @@ $statusMap = [
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- Custom JS for Search & Pagination -->
     <script>
-    $(document).ready(function() {
-        var itemsPerPage = 5;
-        var $appItems = $('.app-item');
-        
-        // Function to filter items based on search term.
-        function filterItems() {
-            var searchTerm = $('#searchInput').val().toLowerCase().trim();
-            // Filter by comparing the data-app-id attribute.
-            var $filtered = $appItems.filter(function() {
-                var appId = $(this).data('app-id').toString();
-                return appId.indexOf(searchTerm) > -1;
-            });
-            return $filtered;
-        }
-        
-        // Function to render pagination controls.
-        function renderPagination($filtered, currentPage) {
-            var total = $filtered.length;
-            var totalPages = Math.ceil(total / itemsPerPage);
-            var $pagination = $('#pagination');
-            $pagination.empty();
-            
-            // Only render if more than one page.
-            if (totalPages <= 1) return;
-            
-            // Previous button.
-            if (currentPage > 1) {
-                $pagination.append('<li class="page-item"><a class="page-link" href="#" data-page="'+(currentPage-1)+'">Previous</a></li>');
-            } else {
-                $pagination.append('<li class="page-item disabled"><span class="page-link">Previous</span></li>');
+        $(document).ready(function() {
+            var itemsPerPage = 5;
+            var $appItems = $('.app-item');
+
+            // Function to filter items based on search term.
+            function filterItems() {
+                var searchTerm = $('#searchInput').val().toLowerCase().trim();
+                // Filter by comparing the data-app-id attribute.
+                var $filtered = $appItems.filter(function() {
+                    var appId = $(this).data('app-id').toString();
+                    return appId.indexOf(searchTerm) > -1;
+                });
+                return $filtered;
             }
-            
-            // Page numbers.
-            for (var i = 1; i <= totalPages; i++) {
-                if (i === currentPage) {
-                    $pagination.append('<li class="page-item active"><span class="page-link">'+i+'</span></li>');
+
+            // Function to render pagination controls.
+            function renderPagination($filtered, currentPage) {
+                var total = $filtered.length;
+                var totalPages = Math.ceil(total / itemsPerPage);
+                var $pagination = $('#pagination');
+                $pagination.empty();
+
+                // Only render if more than one page.
+                if (totalPages <= 1) return;
+
+                // Previous button.
+                if (currentPage > 1) {
+                    $pagination.append('<li class="page-item"><a class="page-link" href="#" data-page="' + (currentPage - 1) + '">Previous</a></li>');
                 } else {
-                    $pagination.append('<li class="page-item"><a class="page-link" href="#" data-page="'+i+'">'+i+'</a></li>');
+                    $pagination.append('<li class="page-item disabled"><span class="page-link">Previous</span></li>');
+                }
+
+                // Page numbers.
+                for (var i = 1; i <= totalPages; i++) {
+                    if (i === currentPage) {
+                        $pagination.append('<li class="page-item active"><span class="page-link">' + i + '</span></li>');
+                    } else {
+                        $pagination.append('<li class="page-item"><a class="page-link" href="#" data-page="' + i + '">' + i + '</a></li>');
+                    }
+                }
+
+                // Next button.
+                if (currentPage < totalPages) {
+                    $pagination.append('<li class="page-item"><a class="page-link" href="#" data-page="' + (currentPage + 1) + '">Next</a></li>');
+                } else {
+                    $pagination.append('<li class="page-item disabled"><span class="page-link">Next</span></li>');
                 }
             }
-            
-            // Next button.
-            if (currentPage < totalPages) {
-                $pagination.append('<li class="page-item"><a class="page-link" href="#" data-page="'+(currentPage+1)+'">Next</a></li>');
-            } else {
-                $pagination.append('<li class="page-item disabled"><span class="page-link">Next</span></li>');
+
+            // Function to perform pagination.
+            function paginate() {
+                var $filtered = filterItems();
+                var currentPage = parseInt($('#currentPage').val(), 10) || 1;
+                var total = $filtered.length;
+                var totalPages = Math.ceil(total / itemsPerPage);
+                if (currentPage > totalPages) {
+                    currentPage = 1;
+                }
+                $('#currentPage').val(currentPage);
+                // Hide all items and then show only the current page's items.
+                $appItems.hide();
+                $filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).show();
+                renderPagination($filtered, currentPage);
             }
-        }
-        
-        // Function to perform pagination.
-        function paginate() {
-            var $filtered = filterItems();
-            var currentPage = parseInt($('#currentPage').val(), 10) || 1;
-            var total = $filtered.length;
-            var totalPages = Math.ceil(total / itemsPerPage);
-            if (currentPage > totalPages) {
-                currentPage = 1;
+
+            // When search input changes, reset to page 1 and paginate.
+            $('#searchInput').on('keyup', function() {
+                $('#currentPage').val(1);
+                paginate();
+            });
+
+            // Handle pagination link clicks.
+            $('#pagination').on('click', 'a.page-link', function(e) {
+                e.preventDefault();
+                var page = $(this).data('page');
+                $('#currentPage').val(page);
+                paginate();
+            });
+
+            // Hidden input to keep track of the current page.
+            if ($('#currentPage').length === 0) {
+                $('<input type="hidden" id="currentPage" value="1">').appendTo('body');
             }
-            $('#currentPage').val(currentPage);
-            // Hide all items and then show only the current page's items.
-            $appItems.hide();
-            $filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).show();
-            renderPagination($filtered, currentPage);
-        }
-        
-        // When search input changes, reset to page 1 and paginate.
-        $('#searchInput').on('keyup', function() {
-            $('#currentPage').val(1);
+
+            // Initial pagination.
             paginate();
         });
-        
-        // Handle pagination link clicks.
-        $('#pagination').on('click', 'a.page-link', function(e) {
-            e.preventDefault();
-            var page = $(this).data('page');
-            $('#currentPage').val(page);
-            paginate();
-        });
-        
-        // Hidden input to keep track of the current page.
-        if ($('#currentPage').length === 0) {
-            $('<input type="hidden" id="currentPage" value="1">').appendTo('body');
-        }
-        
-        // Initial pagination.
-        paginate();
-    });
     </script>
 </body>
+
 </html>

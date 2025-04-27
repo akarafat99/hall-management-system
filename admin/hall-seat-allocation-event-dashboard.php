@@ -630,12 +630,6 @@ $statusMeanings = [
           </div>
         <?php endif; ?>
 
-
-
-
-
-
-
       </main>
     </div>
   </div>
