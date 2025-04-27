@@ -33,8 +33,7 @@ if (isset($_POST['editDetails'])) {
   $userDetails->contact_no = isset($_POST['contactNo']) ? $_POST['contactNo'] : $userDetails->contact_no;
   $userDetails->session = isset($_POST['session']) ? $_POST['session'] : $userDetails->session;
   $userDetails->department_id = isset($_POST['departmentId']) ? $_POST['departmentId'] : $userDetails->department_id;
-  $userDetails->year = isset($_POST['year']) ? $_POST['year'] : $userDetails->year;
-  $userDetails->semester = isset($_POST['semester']) ? $_POST['semester'] : $userDetails->semester;
+  $userDetails->year_semester_code = isset($_POST['yearSemesterCode']) ? $_POST['yearSemesterCode'] : $userDetails->year_semester_code;
   $userDetails->last_semester_cgpa_or_merit = isset($_POST['lastSemesterCgpaOrMerit']) ? $_POST['lastSemesterCgpaOrMerit'] : $userDetails->last_semester_cgpa_or_merit;
   $userDetails->division = isset($_POST['division']) ? $_POST['division'] : $userDetails->division;
   $userDetails->district = isset($_POST['district']) ? $_POST['district'] : $userDetails->district;

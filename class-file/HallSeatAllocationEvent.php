@@ -4,7 +4,7 @@ include_once 'DatabaseConnector.php';
 class HallSeatAllocationEvent
 {
     public $event_id = 0;
-    public $status = 0;
+    public $status = 1;
     public $title = "";
     public $details = "";
     public $application_start_date = "";
@@ -17,7 +17,9 @@ class HallSeatAllocationEvent
     public $seat_allotment_result_notice_text = "";
     public $seat_confirm_deadline_date = "";
     public $priority_list = "";
+    public $semester_priority = "";
     public $seat_distribution_quota = "";
+    public $scoring_factor = "";
     public $created = "";
     public $modified = "";
 
@@ -87,7 +89,9 @@ class HallSeatAllocationEvent
             12 => ['priority_list', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN priority_list TEXT"],
             13 => ['seat_distribution_quota', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN seat_distribution_quota TEXT"],
             14 => ['created', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
-            15 => ['modified', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"]
+            15 => ['modified', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"],
+            16 => ['semester_priority', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN semester_priority TEXT AFTER priority_list"],
+            17 => ['scoring_factor', "ALTER TABLE tbl_hall_seat_allocation_event ADD COLUMN scoring_factor TEXT AFTER semester_priority"]
         ];
 
         // If a subset of queries is provided, filter the map.
@@ -122,8 +126,8 @@ class HallSeatAllocationEvent
         $this->ensureConnection();
         // Include the new columns viva_date_list and viva_student_count in the INSERT statement.
         $sql = "INSERT INTO tbl_hall_seat_allocation_event 
-                (status, title, details, application_start_date, application_end_date, viva_notice_date, viva_date_list, viva_student_count, priority_list, seat_distribution_quota)
-                VALUES ($this->status, '$this->title', '$this->details', '$this->application_start_date', '$this->application_end_date', '$this->viva_notice_date', '$this->viva_date_list', '$this->viva_student_count', '$this->priority_list', '$this->seat_distribution_quota')";
+                (status, title, details, application_start_date, application_end_date, viva_notice_date, viva_student_count, priority_list, semester_priority, scoring_factor, seat_distribution_quota)
+                VALUES ($this->status, '$this->title', '$this->details', '$this->application_start_date', '$this->application_end_date', '$this->viva_notice_date', '$this->viva_student_count', '$this->priority_list', '$this->semester_priority', '$this->scoring_factor', '$this->seat_distribution_quota')";
         if (mysqli_query($this->conn, $sql)) {
             $this->event_id = mysqli_insert_id($this->conn);
             return $this->event_id;
@@ -154,6 +158,8 @@ class HallSeatAllocationEvent
             $this->seat_allotment_result_notice_text = $row['seat_allotment_result_notice_text'];
             $this->seat_confirm_deadline_date = $row['seat_confirm_deadline_date'];
             $this->priority_list = $row['priority_list'];
+            $this->semester_priority = $row['semester_priority'];
+            $this->scoring_factor = $row['scoring_factor'];
             $this->seat_distribution_quota = $row['seat_distribution_quota'];
             $this->created = $row['created'];
             $this->modified = $row['modified'];
@@ -184,6 +190,8 @@ class HallSeatAllocationEvent
                     seat_allotment_result_notice_text = '$this->seat_allotment_result_notice_text',
                     seat_confirm_deadline_date = '$this->seat_confirm_deadline_date',
                     priority_list = '$this->priority_list',
+                    semester_priority = '$this->semester_priority',
+                    scoring_factor = '$this->scoring_factor',
                     seat_distribution_quota = '$this->seat_distribution_quota'
                 WHERE event_id = $this->event_id";
         if (mysqli_query($this->conn, $sql)) {
@@ -433,9 +441,9 @@ class HallSeatAllocationEvent
             $distribution[$deptId] = $slots;            // 12‑element array saved
         }
 
-        echo "<br>Distribution: <pre>";
-        print_r($distribution);
-        echo "</pre>";
+        // echo "<br>Distribution: <pre>";
+        // print_r($distribution);
+        // echo "</pre>";
         /* ──────────────────────────────── 6. return result ────────────────────────────── */
         return $distribution;
     }
@@ -553,10 +561,10 @@ class HallSeatAllocationEvent
     }
 
     /**
-     * Distribute all available seats across departments by student‐count ratio,
-     * ensuring each department gets at least 1 seat.
-     *
-     * @return int[] map: department_id => allocated seats
+     * 
+     * Distribute all currently available hall seats across departments
+     * in proportion to each department's total‐student count, then split
+     * each department’s quota evenly (with juniors favored for remainders)
      */
     public function distributeSeatsByDeptTotalMinOne(): array
     {
@@ -574,51 +582,64 @@ class HallSeatAllocationEvent
             return [];
         }
 
-        $deptCount       = count($deptRows);
-        // 3. Baseline: give each department 1 seat
-        $deptShare       = [];
-        foreach ($deptRows as $d) {
-            $deptShare[$d['department_id']] = 1;
-        }
-        // remaining seats after baseline
-        $remainingSeats  = $totalSeats - $deptCount;
-        if ($remainingSeats <= 0) {
-            // if seats are fewer than or equal to deptCount, we just return the baseline (some seats may be unused)
-            return $deptShare;
-        }
+        $deptCount = count($deptRows);
+        $deptShare = [];
 
-        // 4. Proportional share on the remaining seats
-        $totalStudents = array_sum(array_column($deptRows, 'department_total_student'));
-        if ($totalStudents <= 0) {
-            return $deptShare;
-        }
+        // 3. Check if we can assign 1 seat to each department
+        $assignBaseSeat = $totalSeats >= $deptCount;
 
-        $floors     = [];
-        $fractions  = [];
-        $assigned   = 0;
-        foreach ($deptRows as $d) {
-            $id    = $d['department_id'];
-            $count = (int)$d['department_total_student'];
-            $raw   = ($remainingSeats * $count) / $totalStudents;
-            $floor = (int)floor($raw);
-            $floors[$id]    = $floor;
-            $fractions[$id] = $raw - $floor;
-            $assigned      += $floor;
-        }
-
-        // 5. Distribute leftover seats by largest fractional part
-        $leftover = $remainingSeats - $assigned;
-        if ($leftover > 0) {
-            arsort($fractions);
-            foreach (array_keys($fractions) as $id) {
-                if ($leftover-- <= 0) break;
-                $floors[$id] += 1;
+        if ($assignBaseSeat) {
+            // 4a. Assign 1 seat to each dept
+            foreach ($deptRows as $d) {
+                $deptShare[$d['department_id']] = 1;
             }
-        }
 
-        // 6. Combine baseline + proportional to get final share
-        foreach ($floors as $id => $add) {
-            $deptShare[$id] += $add;
+            // 5a. Distribute remaining seats proportionally
+            $remainingSeats = $totalSeats - $deptCount;
+            if ($remainingSeats > 0) {
+                $totalStudents = array_sum(array_column($deptRows, 'department_total_student'));
+                if ($totalStudents > 0) {
+                    $floors = [];
+                    $fractions = [];
+                    $assigned = 0;
+
+                    foreach ($deptRows as $d) {
+                        $id = $d['department_id'];
+                        $count = (int)$d['department_total_student'];
+                        $raw = ($remainingSeats * $count) / $totalStudents;
+                        $floor = (int)floor($raw);
+                        $floors[$id] = $floor;
+                        $fractions[$id] = $raw - $floor;
+                        $assigned += $floor;
+                    }
+
+                    // Distribute remaining leftover seats
+                    $leftover = $remainingSeats - $assigned;
+                    if ($leftover > 0) {
+                        arsort($fractions);
+                        foreach (array_keys($fractions) as $id) {
+                            if ($leftover-- <= 0) break;
+                            $floors[$id]++;
+                        }
+                    }
+
+                    foreach ($floors as $id => $add) {
+                        $deptShare[$id] += $add;
+                    }
+                }
+            }
+        } else {
+            // 4b. Total seats < number of departments
+            // Assign 1 seat to top departments based on student count
+            $i = 0;
+            foreach ($deptRows as $d) {
+                if ($i < $totalSeats) {
+                    $deptShare[$d['department_id']] = 1;
+                    $i++;
+                } else {
+                    $deptShare[$d['department_id']] = 0;
+                }
+            }
         }
 
         return $deptShare;

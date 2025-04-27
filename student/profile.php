@@ -32,6 +32,8 @@ $department = new Department();
 $allDepartments = $department->getDepartments(null, 1);
 $department->getDepartments($userDetails->department_id);
 
+$yearSemesterCode = $department->getYearSemesterCodes();
+
 $editPending = $userDetails->isRecordAvailable($userDetails->user_id, null, 0);
 
 $file1 = new FileManager();
@@ -41,6 +43,8 @@ $file1->loadByFileId($file1->file_id);
 $file2 = new FileManager();
 $file2->file_id = $userDetails->document_id;
 $file2->loadByFileId($file2->file_id);
+
+
 ?>
 
 <!DOCTYPE html>
@@ -368,35 +372,35 @@ $file2->loadByFileId($file2->file_id);
                     </div>
 
 
-                    <div class="row">
-                      <!-- Year Dropdown -->
-                      <div class="col-md-4 mb-3">
-                        <label for="year" class="form-label">Year</label>
-                        <div class="custom-select-wrapper">
-                          <select class="form-control" id="year" name="year">
-                            <option value="1" <?= ($userDetails->year == 1) ? 'selected' : '' ?>>1st Year B.Sc.</option>
-                            <option value="2" <?= ($userDetails->year == 2) ? 'selected' : '' ?>>2nd Year B.Sc.</option>
-                            <option value="3" <?= ($userDetails->year == 3) ? 'selected' : '' ?>>3rd Year B.Sc.</option>
-                            <option value="4" <?= ($userDetails->year == 4) ? 'selected' : '' ?>>4th Year B.Sc.</option>
-                            <option value="5" <?= ($userDetails->year == 5) ? 'selected' : '' ?>>1st Year MSc</option>
-                            <option value="6" <?= ($userDetails->year == 6) ? 'selected' : '' ?>>2nd Year MSc</option>
-                          </select>
-                          <span class="dropdown-icon"><i class="fa fa-chevron-down"></i></span>
-                        </div>
-                      </div>
+                    <!-- Year & Semester -->
+                    <div class="row mb-4">
+                      <div class="col-md-6 mb-3">
+                        <label for="yearSemester" class="form-label">Year &amp; Semester</label>
 
-                      <!-- Semester Dropdown -->
-                      <div class="col-md-4 mb-3">
-                        <label for="semester" class="form-label">Semester</label>
                         <div class="custom-select-wrapper">
-                          <select class="form-control" id="semester" name="semester">
-                            <option value="1" <?= ($userDetails->semester == 1) ? 'selected' : '' ?>>Semester 1</option>
-                            <option value="2" <?= ($userDetails->semester == 2) ? 'selected' : '' ?>>Semester 2</option>
+                          <select
+                            id="yearSemester"
+                            name="yearSemesterCode"
+                            class="form-control"
+                            required>
+                            <?php foreach ($yearSemesterCode as $code => $label): ?>
+                              <option
+                                value="<?php echo htmlspecialchars($code, ENT_QUOTES); ?>"
+                                <?php if ($userDetails->year_semester_code == $code) {
+                                  echo ' selected';
+                                } ?>>
+                                <?php echo htmlspecialchars($label); ?>
+                              </option>
+                            <?php endforeach; ?>
                           </select>
-                          <span class="dropdown-icon"><i class="fa fa-chevron-down"></i></span>
+                          <span class="dropdown-icon">
+                            <i class="fas fa-chevron-down"></i>
+                          </span>
                         </div>
+
                       </div>
                     </div>
+
 
                 </div>
                 <div class="row">

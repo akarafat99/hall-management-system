@@ -358,6 +358,29 @@ class HallSeatDetails
     }
 
     /**
+     * get all seat IDs by event ID and status
+     * @param int $event_id Event ID to search for.
+     * @param int|null $status (Optional) Status filter.
+     */
+    public function getAllSeatIdsByEventIdAndStatus($event_id, $status = null)
+    {
+        $this->ensureConnection();
+        $sql = "SELECT seat_id FROM tbl_hall_seat_details WHERE reserved_by_event_id = $event_id";
+        if ($status !== null) {
+            $sql .= " AND status = $status";
+        }
+        $result = mysqli_query($this->conn, $sql);
+        if ($result && mysqli_num_rows($result) > 0) {
+            $data = [];
+            while ($row = mysqli_fetch_assoc($result)) {
+                $data[] = $row['seat_id'];
+            }
+            return $data;
+        }
+        return [];
+    }
+
+    /**
      * Check if a user with a specific status is available.
      * @param int $user_id User ID to check.
      * @param int|null $status (Optional) Status to filter by.

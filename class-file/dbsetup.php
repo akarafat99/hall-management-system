@@ -73,9 +73,13 @@ include_once 'Department.php';
 
 // Session 2
 // $userDetails = new UserDetails();
-// $userDetails->alterTableAddColumns([31,32]);
+// $userDetails->alterTableAddColumns([33]);
 // echo "User Details table updated successfully";
 
+// $hallSeatAllocationEvent = new HallSeatAllocationEvent();
+// $hallSeatAllocationEvent->alterTableAddColumns([17]);
+// echo "Hall Seat Allocation Event table updated successfully";
+// echo "<br><br><br>";
 
 
 ?>

@@ -335,6 +335,30 @@ class Department
             24 => ['Applied Statistics and Data Science', 'ASDS']
         ];
     }
+
+    /**
+     * Get Semester code mapping
+     * @return array
+     */
+    public function getYearSemesterCodes()
+    {
+        $semesterCode = [
+            1 => 'B. Sc. 1st Year 1st Semester',
+            2 => 'B. Sc. 1st Year 2nd Semester',
+            3 => 'B. Sc. 2nd Year 1st Semester',
+            4 => 'B. Sc. 2nd Year 2nd Semester',
+            5 => 'B. Sc. 3rd Year 1st Semester',
+            6 => 'B. Sc. 3rd Year 2nd Semester',
+            7 => 'B. Sc. 4th Year 1st Semester',
+            8 => 'B. Sc. 4th Year 2nd Semester',
+            9 => 'M. Sc. 1st Year 1st Semester',
+            10 => 'M. Sc. 1st Year 2nd Semester',
+            11 => 'M. Sc. 2nd Year 1st Semester',
+            12 => 'M. Sc. 2nd Year 2nd Semester'
+        ];
+
+        return $semesterCode;
+    }
 }
 
 ?>

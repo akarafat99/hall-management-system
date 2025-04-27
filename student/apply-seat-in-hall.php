@@ -2,6 +2,7 @@
 include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
 include_once '../class-file/HallSeatAllocationEvent.php';
+include_once '../class-file/Department.php';
 include_once '../popup-1.php';
 
 if ($session::get('msg1') !== null) {
@@ -10,6 +11,9 @@ if ($session::get('msg1') !== null) {
 }
 
 $hallSeatAllocationEvent = new HallSeatAllocationEvent();
+$department = new Department();
+$departmentList = $department->getDepartments();
+$yearSemesterCodes = $department->getYearSemesterCodes();
 
 // Using getByEventAndStatus() to fetch active events with status 1,2,3.
 $getActiveEvents = $hallSeatAllocationEvent->getByEventAndStatus(null, [1, 2, 3], "application_end_date", "DESC");
@@ -138,69 +142,116 @@ $statusMeanings = [
                                                     <td><?php echo (!empty($hallSeatAllocationEvent->viva_student_count)) ? htmlspecialchars($hallSeatAllocationEvent->viva_student_count) : "not yet published"; ?></td>
                                                 </tr>
                                                 <tr>
-                                                    <th>Seat Allotment Result Notice Date</th>
-                                                    <td><?php echo (!empty($hallSeatAllocationEvent->seat_allotment_result_notice_date)) ? htmlspecialchars($hallSeatAllocationEvent->seat_allotment_result_notice_date) : "not yet published"; ?></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Seat Allotment Result Notice Text</th>
+                                                    <th>Seat Allotment Result Notice</th>
                                                     <td><?php echo (!empty($hallSeatAllocationEvent->seat_allotment_result_notice_text)) ? htmlspecialchars($hallSeatAllocationEvent->seat_allotment_result_notice_text) : "not yet published"; ?></td>
                                                 </tr>
                                                 <tr>
-                                                    <th>Seat Confirm Deadline Date</th>
-                                                    <td><?php echo (!empty($hallSeatAllocationEvent->seat_confirm_deadline_date)) ? htmlspecialchars($hallSeatAllocationEvent->seat_confirm_deadline_date) : "not yet published"; ?></td>
-                                                </tr>
-                                                <?php
-                                                include_once '../class-file/PriorityList.php';
-                                                $priorityMapping = getPriorityList();
-
-                                                $priorityOutput = "not yet published";
-                                                if (!empty($hallSeatAllocationEvent->priority_list)) {
-                                                    $priorityKeys = array_map('trim', explode(',', $hallSeatAllocationEvent->priority_list));
-                                                    $priorityOutput = '';
-                                                    foreach ($priorityKeys as $index => $key) {
-                                                        $text = isset($priorityMapping[$key]) ? $priorityMapping[$key] : htmlspecialchars($key);
-                                                        $priorityOutput .= ($index + 1) . " - " . $text . "<br>";
-                                                    }
-                                                }
-                                                ?>
-                                                <tr>
-                                                    <th>Priority List</th>
-                                                    <td>
-                                                        <small>Note: Lower value means higher priority.</small>
-                                                        <br>
-                                                        <?php echo $priorityOutput; ?>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Seat Distribution Quota</th>
+                                                    <th>Seat Allotment Result Notice Date</th>
                                                     <td>
                                                         <?php
-                                                        if (!empty($hallSeatAllocationEvent->seat_distribution_quota)) {
-                                                            $quotaArray = array_map('trim', explode(',', $hallSeatAllocationEvent->seat_distribution_quota));
-                                                            $quotaLabels = [
-                                                                "B.Sc. First Year First Semester",
-                                                                "B.Sc. First Year Second Semester",
-                                                                "B.Sc. Second Year First Semester",
-                                                                "B.Sc. Second Year Second Semester",
-                                                                "B.Sc. Third Year First Semester",
-                                                                "B.Sc. Third Year Second Semester",
-                                                                "B.Sc. Fourth Year First Semester",
-                                                                "B.Sc. Fourth Year Second Semester",
-                                                                "M.Sc. First Year First Semester",
-                                                                "M.Sc. First Year Second Semester",
-                                                                "M.Sc. Second Year First Semester",
-                                                                "M.Sc. Second Year Second Semester"
-                                                            ];
-                                                            foreach ($quotaLabels as $i => $label) {
-                                                                $quotaValue = isset($quotaArray[$i]) ? htmlspecialchars($quotaArray[$i]) : "N/A";
-                                                                echo $label . " : " . $quotaValue . "<br>";
-                                                            }
-                                                        } else {
+                                                        // If the date is the MySQL “zero date” or empty, show the placeholder
+                                                        if (
+                                                            empty($hallSeatAllocationEvent->seat_allotment_result_notice_date)
+                                                            || $hallSeatAllocationEvent->seat_allotment_result_notice_date === '0000-00-00'
+                                                        ) {
                                                             echo "not yet published";
+                                                        } else {
+                                                            // Otherwise show the date (you can reformat it if you like)
+                                                            echo date(
+                                                                'd M Y',
+                                                                strtotime($hallSeatAllocationEvent->seat_allotment_result_notice_date)
+                                                            );
                                                         }
                                                         ?>
                                                     </td>
                                                 </tr>
+                                                <tr>
+                                                    <th>Seat Confirm Deadline Date</th>
+                                                    <td>
+                                                        <?php
+                                                        // If the date is the MySQL “zero date” or empty, show the placeholder
+                                                        if (
+                                                            empty($hallSeatAllocationEvent->seat_confirm_deadline_date)
+                                                            || $hallSeatAllocationEvent->seat_confirm_deadline_date === '0000-00-00'
+                                                        ) {
+                                                            echo "not yet published";
+                                                        } else {
+                                                            // Otherwise show the date (you can reformat it if you like)
+                                                            echo date(
+                                                                'd M Y',
+                                                                strtotime($hallSeatAllocationEvent->seat_confirm_deadline_date)
+                                                            );
+                                                        }
+                                                        ?>
+                                                    </td>
+
+                                                </tr>
+                                                <tr>
+                                                    <th>Scoring Factors</th>
+                                                    <td>
+                                                        <div class="mb-4">
+                                                            <div class="alert alert-info p-2 mb-3 small">
+                                                                These factors are used to calculate an applicant's score based on their distance from campus, academic results, and father's income.
+                                                                Each value affects the final ranking and can go up to 5 decimal places (e.g., <code>0.12345</code>).
+                                                            </div>
+                                                            <div class="d-flex flex-wrap">
+                                                                <?php
+                                                                $scoreLabels = array('Distance', 'Result', "Father's Income");
+                                                                foreach (explode(',', $hallSeatAllocationEvent->scoring_factor) as $i => $value) {
+                                                                    echo '<span class="badge bg-info text-dark me-2 mb-2">'
+                                                                        . htmlspecialchars($scoreLabels[$i] ?? 'Factor ' . ($i + 1), ENT_QUOTES)
+                                                                        . ': ' . htmlspecialchars($value, ENT_QUOTES)
+                                                                        . '</span>';
+                                                                }
+                                                                ?>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+
+                                                <tr>
+                                                    <th>Semester Priority</th>
+                                                    <td>
+                                                        <?php if (!empty($hallSeatAllocationEvent->semester_priority)): ?>
+                                                            <?php
+                                                            $keys = explode(',', $hallSeatAllocationEvent->semester_priority);
+                                                            foreach ($keys as $i => $k) {
+                                                                echo ($i + 1) . ' – ' . $yearSemesterCodes[$k] . '<br>';
+                                                            }
+                                                            ?>
+                                                        <?php else: ?>
+                                                            not yet published
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <th>Department Quotas</th>
+                                                    <td>
+                                                        <?php if (!empty($hallSeatAllocationEvent->seat_distribution_quota)): ?>
+                                                            <?php
+                                                            foreach (explode(',', $hallSeatAllocationEvent->seat_distribution_quota) as $pair) {
+                                                                list($did, $cnt) = explode('=>', $pair);
+                                                                // find dept name
+                                                                $name = $did;
+                                                                foreach ($departmentList as $d) {
+                                                                    if ($d['department_id'] == $did) {
+                                                                        $name = htmlspecialchars($d['department_name']);
+                                                                        break;
+                                                                    }
+                                                                }
+                                                                echo $name . ' – ' . intval($cnt) . '<br>';
+                                                            }
+                                                            ?>
+                                                        <?php else: ?>
+                                                            not yet published
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+
+
+
                                                 <tr>
                                                     <th>Created On</th>
                                                     <td><?php echo (!empty($hallSeatAllocationEvent->created)) ? htmlspecialchars($hallSeatAllocationEvent->created) : "not yet published"; ?></td>

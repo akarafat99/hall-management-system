@@ -11,12 +11,15 @@ if ($session::get("msg1")) {
 
 include_once '../class-file/HallSeatAllocationEvent.php';
 include_once '../class-file/HallSeatDetails.php';
+include_once '../class-file/PriorityList.php';
 include_once '../class-file/Department.php';
+
+// Fetch priority criteria
+$priorityMapping = getPriorityList();
 
 // Load active departments
 $department     = new Department();
 $departmentList = $department->getDepartments(null, 1);
-$yearSemesterCode = $department->getYearSemesterCodes();
 
 // Load seat‑detail helper & total seats
 $hallSeatDetails     = new HallSeatDetails();
@@ -26,7 +29,21 @@ $totalAvailableSeats = $hallSeatDetails->countSeatsByStatus(0);
 $hallSeatAllocationEvent = new HallSeatAllocationEvent();
 $deptDistribution         = $hallSeatAllocationEvent->distributeSeatsByDeptTotalMinOne();
 
-$distanceCofactor = $resultCofactor = $incomeCofactor = '';
+// Semester labels
+$labels = [
+    1  => 'B. Sc. 1st Year 1st Sem',
+    2  => 'B. Sc. 1st Year 2nd Sem',
+    3  => 'B. Sc. 2nd Year 1st Sem',
+    4  => 'B. Sc. 2nd Year 2nd Sem',
+    5  => 'B. Sc. 3rd Year 1st Sem',
+    6  => 'B. Sc. 3rd Year 2nd Sem',
+    7  => 'B. Sc. 4th Year 1st Sem',
+    8  => 'B. Sc. 4th Year 2nd Sem',
+    9  => 'M. Sc. 1st Year 1st Sem',
+    10 => 'M. Sc. 1st Year 2nd Sem',
+    11 => 'M. Sc. 2nd Year 1st Sem',
+    12 => 'M. Sc. 2nd Year 2nd Sem'
+];
 
 // Are we editing?
 $isEdit = isset($_GET['editEventid']) && $_GET['editEventid'];
@@ -34,12 +51,6 @@ if ($isEdit) {
     $editId = (int)$_GET['editEventid'];
     $hallSeatAllocationEvent->event_id = $editId;
     $hallSeatAllocationEvent->load();
-
-    // Scoring factors
-    $factors = explode(',', $hallSeatAllocationEvent->scoring_factor);
-    $distanceCofactor = $factors[0] ?? '';
-    $resultCofactor   = $factors[1] ?? '';
-    $incomeCofactor   = $factors[2] ?? '';
 
     // explode existing quota into array
     $quotaValuesByDept = [];
@@ -53,16 +64,11 @@ if ($isEdit) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Map fields
     $hallSeatAllocationEvent->title                  = $_POST['eventTitle'];
-    $hallSeatAllocationEvent->details                = $_POST['eventDetails'];
+    $hallSeatAllocationEvent->details                = $_POST['eventdetails'];
     $hallSeatAllocationEvent->application_start_date = $_POST['startDate'];
     $hallSeatAllocationEvent->application_end_date   = $_POST['endDate'];
     $hallSeatAllocationEvent->viva_notice_date       = $_POST['vivaNoticeDate'];
-    $factors = [
-        $_POST['distanceCofactor'],
-        $_POST['resultCofactor'],
-        $_POST['incomeCofactor']
-    ];
-    $hallSeatAllocationEvent->scoring_factor = implode(',', $factors);
+    $hallSeatAllocationEvent->priority_list          = $_POST['priorityList'];
     $hallSeatAllocationEvent->semester_priority      = $_POST['semesterOrder'];
 
     // Build seat_distribution_quota
@@ -156,15 +162,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <!-- Event Details -->
                                 <div class="mb-4">
                                     <label for="eventdetails" class="form-label">Event Details</label>
-                                    <input
+                                    <textarea
                                         class="form-control"
                                         id="eventdetails"
-                                        name="eventDetails"
+                                        name="eventdetails"
                                         rows="3"
-                                        type="text"
                                         placeholder="Enter event details"
-                                        value = "<?php echo $isEdit ? htmlspecialchars($hallSeatAllocationEvent->details) : ''; ?>"
-                                        required>
+                                        required><?php echo $isEdit ? htmlspecialchars($hallSeatAllocationEvent->details) : ''; ?></textarea>
                                     <div class="invalid-feedback">Please provide event details.</div>
                                 </div>
 
@@ -226,59 +230,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
 
 
-                                <!-- Three Cofactor Inputs for the scoring -->
-                                <div class="mb-4 p-3 border rounded bg-light shadow-sm">
-                                    <label class="form-label fw-semibold fs-5">Scoring Factors</label>
-                                    <div class="form-text text-muted">
-                                        These factors are used to calculate applicant scores based on distance, academic result, and father's income.
-                                        You can input values up to <strong>5 decimal places</strong> (e.g., <code>0.12345</code>).
+                                <!-- Priority List -->
+                                <?php
+                                // Priority List setup (works for both create & edit modes)
+                                $savedOrder = $isEdit && $hallSeatAllocationEvent->priority_list
+                                    ? explode(',', $hallSeatAllocationEvent->priority_list)
+                                    : [];
+
+                                // Ensure any unmoved items still appear
+                                $allKeys   = array_keys($priorityMapping);
+                                $remaining = array_diff($allKeys, $savedOrder);
+                                $renderKeys = array_merge($savedOrder, $remaining);
+                                ?>
+                                <!-- Priority List -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">Priority List</label>
+                                    <div class="form-text mb-1">
+                                        Press and hold <i class="fas fa-grip-lines"></i> to drag into your preferred order.
                                     </div>
+                                    <ul id="priorityList" class="list-group mb-2">
+                                        <?php foreach ($renderKeys as $key): ?>
+                                            <li class="list-group-item d-flex align-items-center" data-value="<?= $key ?>">
+                                                <i class="fas fa-grip-lines me-3 text-muted" style="cursor:move;"></i>
+                                                <?= htmlspecialchars($priorityMapping[$key]) ?>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                    <input
+                                        type="hidden"
+                                        id="priorityListInput"
+                                        name="priorityList"
+                                        value="<?= implode(',', $renderKeys) ?>">
                                 </div>
 
 
-                                <div class="row mb-4">
-                                    <div class="col-md-4">
-                                        <label for="distanceCofactor" class="form-label">Distance Cofactor</label>
-                                        <input
-                                            type="number"
-                                            step="0.00001"
-                                            class="form-control"
-                                            id="distanceCofactor"
-                                            name="distanceCofactor"
-                                            placeholder="Enter distance cofactor"
-                                            required
-                                            value="<?= htmlspecialchars($distanceCofactor) ?>">
-                                        <div class="invalid-feedback">Please enter the distance cofactor.</div>
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <label for="resultCofactor" class="form-label">Result Cofactor</label>
-                                        <input
-                                            type="number"
-                                            step="0.00001"
-                                            class="form-control"
-                                            id="resultCofactor"
-                                            name="resultCofactor"
-                                            placeholder="Enter result cofactor"
-                                            required
-                                            value="<?= htmlspecialchars($resultCofactor) ?>">
-                                        <div class="invalid-feedback">Please enter the result cofactor.</div>
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <label for="incomeCofactor" class="form-label">Father's Income Cofactor</label>
-                                        <input
-                                            type="number"
-                                            step="0.00001"
-                                            class="form-control"
-                                            id="incomeCofactor"
-                                            name="incomeCofactor"
-                                            placeholder="Enter father's income cofactor"
-                                            required
-                                            value="<?= htmlspecialchars($incomeCofactor) ?>">
-                                        <div class="invalid-feedback">Please enter the father's monthly income cofactor.</div>
-                                    </div>
-                                </div>
 
                                 <!-- Semester Priority -->
                                 <?php
@@ -287,7 +272,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     : [];
 
                                 // All possible semester keys
-                                $allSemesterKeys = array_keys($yearSemesterCode);
+                                $allSemesterKeys = array_keys($labels);
 
                                 // Anything not yet in the saved order
                                 $remainingSemesters = array_diff($allSemesterKeys, $savedSemesters);
@@ -305,7 +290,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <?php foreach ($renderSemesterKeys as $key): ?>
                                             <li class="list-group-item d-flex align-items-center" data-value="<?php echo $key; ?>">
                                                 <i class="fas fa-grip-lines me-3 text-muted" style="cursor:move;"></i>
-                                                <?php echo htmlspecialchars($yearSemesterCode[$key]); ?>
+                                                <?php echo htmlspecialchars($labels[$key]); ?>
                                             </li>
                                         <?php endforeach; ?>
                                     </ul>
@@ -330,12 +315,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <label class="form-label fw-semibold">Seat Distribution by Department</label>
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <button id="resetDistribution" type="button" class="btn btn-sm btn-secondary">
-                                            <i class="fas fa-undo me-1"></i> Reset To Default Distribution
+                                            <i class="fas fa-undo me-1"></i> Reset
                                         </button>
                                         <div id="distroWarning" class="text-danger fw-semibold" style="display:none;"></div>
                                     </div>
                                     <div class="mb-2 d-flex justify-content-between">
-                                        <div><strong>Total available seats:</strong> <?= $originalTotal ?></div>
+                                        <div><strong>Total seats:</strong> <?= $originalTotal ?></div>
                                         <div><strong>Selected seats:</strong> <span id="selectedSeats">0</span></div>
                                     </div>
 
@@ -419,6 +404,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
 
+
+        // Initialize Sortable for priority and semester lists
+        new Sortable(document.getElementById('priorityList'), {
+            animation: 150,
+            handle: '.fa-grip-lines',
+            onSort: () => {
+                const vals = Array.from(document.querySelectorAll('#priorityList li'))
+                    .map(li => li.dataset.value)
+                    .join(',');
+                document.getElementById('priorityListInput').value = vals;
+            }
+        });
         new Sortable(document.getElementById('semesterList'), {
             animation: 150,
             handle: '.fa-grip-lines',
@@ -438,38 +435,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const percells = document.querySelectorAll('.percent-cell');
             const warn = document.getElementById('distroWarning');
             const resetBtn = document.getElementById('resetDistribution');
-            const createBtn = document.querySelector('button[name="createEvent"]');
-            const editBtn = document.querySelector('button[name="editEvent"]');
 
             function recalc() {
                 let sum = 0;
-                inputs.forEach(i => sum += parseInt(i.value, 10) || 0);
-
-                // warning if over
+                inputs.forEach(i => sum += parseInt(i.value) || 0);
                 if (sum > originalTotal) {
                     const over = sum - originalTotal;
                     warn.textContent = `🚨 Exceeded by ${over} seat${over>1?'s':''}!`;
                     warn.style.display = '';
-                } else {
-                    warn.style.display = 'none';
-                }
+                } else warn.style.display = 'none';
 
-                // update selected seats display
                 document.getElementById('selectedSeats').textContent = sum;
 
-                // update percentages
                 inputs.forEach((i, idx) => {
-                    const v = parseInt(i.value, 10) || 0;
+                    const v = parseInt(i.value) || 0;
                     const p = sum ? (v / sum * 100).toFixed(1) : 0;
                     percells[idx].textContent = p + '%';
                 });
-
-                // disable if sum === 0 OR sum > originalTotal
-                const shouldDisable = (sum === 0 || sum > originalTotal);
-                if (createBtn) createBtn.disabled = shouldDisable;
-                if (editBtn) editBtn.disabled = shouldDisable;
             }
-
             inputs.forEach(i => i.addEventListener('input', recalc));
             resetBtn.addEventListener('click', () => {
                 inputs.forEach(i => {
@@ -478,8 +461,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
                 recalc();
             });
-
-            // initial calculation
             document.addEventListener('DOMContentLoaded', recalc);
         })();
     </script>

@@ -1,6 +1,7 @@
 <?php
 include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
+
 include_once '../class-file/HallSeatAllocationEvent.php';
 include_once '../class-file/HallSeatApplication.php';
 include_once '../popup-1.php';
@@ -17,7 +18,7 @@ $alreadyPublished = false;
 if (isset($_GET['eventId'])) {
   $eventId = $_GET['eventId'];
   $hallSeatAllocationEvent->getByEventAndStatus($eventId);
-  if ($hallSeatAllocationEvent->status == 2) {
+  if ($hallSeatAllocationEvent->status >= 2) {
     $alreadyPublished = true;
   }
 } else {
@@ -25,7 +26,7 @@ if (isset($_GET['eventId'])) {
   exit;
 }
 
-$allApplicationIds = $hallSeatApplication->getApplicationIdsByEventAndStatus($eventId, null, "created", "DESC");
+$allApplicationIds = $hallSeatApplication->getApplicationIdsByEventAndStatus($eventId, null, "created", "ASC");
 $totalApplications = count($allApplicationIds);
 
 // If the form has been submitted via POST, capture the submitted values.
@@ -35,13 +36,15 @@ if (isset($_POST['submitViva'])) {
   $savedStudents  = isset($_POST['students_day']) ? $_POST['students_day'] : array();
   $savedResultDate = isset($_POST['result_date']) ? $_POST['result_date'] : null;
   $savedResultNotice = isset($_POST['result_notice']) ? $_POST['result_notice'] : null;
+  $savedSeatConfirmDeadline = isset($_POST['seat_confirm_deadline']) ? $_POST['seat_confirm_deadline'] : null;
 
   $hallSeatAllocationEvent->getByEventAndStatus($eventId);
   $hallSeatAllocationEvent->viva_date_list = implode(',', $savedVivaDates);
   $hallSeatAllocationEvent->viva_student_count = implode(',', $savedStudents);
   $hallSeatAllocationEvent->seat_allotment_result_notice_date = $savedResultDate;
   $hallSeatAllocationEvent->seat_allotment_result_notice_text = $savedResultNotice;
-  $hallSeatAllocationEvent->status = 2;
+  $hallSeatAllocationEvent->seat_confirm_deadline_date = $savedSeatConfirmDeadline;
+  $hallSeatAllocationEvent->status = ($hallSeatAllocationEvent->status == 1) ? 2 : $hallSeatAllocationEvent->status; // Update status to 2 if it was 1.
   $hallSeatAllocationEvent->update();
 
   $hallSeatApplication->updateVivaDetailsByStudentCount($allApplicationIds, $savedVivaDates, $savedStudents);
@@ -60,11 +63,12 @@ if (isset($_POST['submitViva'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <title>Event Management - Dashboard</title>
 
-  <!-- CSS Libraries -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet" />
-  <link href="../css/Dashboard/dashboard.css" rel="stylesheet" />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
+    rel="stylesheet" />
+  <!-- for sidebar -->
+  <link href="../css2/sidebar-admin.css" rel="stylesheet" />
+
 
   <style>
     /* Card header styling */
@@ -111,11 +115,36 @@ if (isset($_POST['submitViva'])) {
   </style>
 </head>
 
-<body class="sb-nav-fixed">
-  <div id="layoutSidenav">
-    <?php include 'admin-sidebar.php'; ?>
-    <div id="layoutSidenav_content">
-      <main>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar Menu -->
+      <?php include 'sidebar-admin.php'; ?>
+
+      <!-- Main Content Area -->
+      <main id="mainContent" class="col">
+        <!-- Toggle button for sidebar on small screens -->
+        <button
+          class="btn btn-dark d-lg-none mt-3 mb-3"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#sidebarMenu"
+          aria-controls="sidebarMenu"
+          aria-expanded="false"
+          aria-label="Toggle navigation">
+          ☰ Menu
+        </button>
+
+        <!-- Back to event dashboard -->
+        <div class="p-4">
+          <a href="hall-seat-allocation-event-dashboard.php?eventId=<?php echo $eventId; ?>" class="btn btn-secondary mb-3">Back to Event Dashboard</a>
+        </div>
+
+        <div class="p-4">
+          <h1>Publish Viva Dates and Result Publication Date</h1>
+          <p>Total Applications: <strong><?php echo $totalApplications; ?></strong></p>
+        </div>
+
         <div class="container-fluid px-4">
           <!-- Card Start: Display Saved Data (shown after submit or if already published) -->
           <?php if ($_SERVER['REQUEST_METHOD'] === 'POST' || $alreadyPublished):
@@ -125,12 +154,14 @@ if (isset($_POST['submitViva'])) {
               $displayStudents  = isset($savedStudents) ? $savedStudents : array();
               $displayResultDate = isset($savedResultDate) ? $savedResultDate : '';
               $displayResultNotice = isset($savedResultNotice) ? $savedResultNotice : '';
+              $displaySeatConfirmDeadline = isset($savedSeatConfirmDeadline) ? $savedSeatConfirmDeadline : '';
             } else {
               // Retrieve from the $hallSeatAllocationEvent object.
               $displayVivaDates = !empty($hallSeatAllocationEvent->viva_date_list) ? explode(',', $hallSeatAllocationEvent->viva_date_list) : array();
               $displayStudents  = !empty($hallSeatAllocationEvent->viva_student_count) ? explode(',', $hallSeatAllocationEvent->viva_student_count) : array();
               $displayResultDate = $hallSeatAllocationEvent->seat_allotment_result_notice_date;
               $displayResultNotice = $hallSeatAllocationEvent->seat_allotment_result_notice_text;
+              $displaySeatConfirmDeadline = $hallSeatAllocationEvent->seat_confirm_deadline_date;
             }
           ?>
             <div class="card mb-4">
@@ -152,6 +183,7 @@ if (isset($_POST['submitViva'])) {
                   ?>
                 </ul>
                 <p><strong>Result Publication Date:</strong> <?php echo htmlspecialchars($displayResultDate); ?></p>
+                <p><strong>Seat Confirmation Deadline Date:</strong> <?php echo htmlspecialchars($displaySeatConfirmDeadline); ?></p>
                 <p><strong>Notice:</strong> <?php echo htmlspecialchars($displayResultNotice); ?></p>
               </div>
             </div>
@@ -159,9 +191,10 @@ if (isset($_POST['submitViva'])) {
           <!-- End Card -->
 
           <!-- Card Start: Form to enter Viva & Result Details -->
+           <?php if ($hallSeatAllocationEvent->status <=3): ?>
           <div class="card mb-4">
             <div class="card-header">
-              <h5>Publish Viva Dates(s) and Seat Allotment Result Date and Notice</h5>
+              <h5><?php echo $alreadyPublished ? "Update" : "Enter"; ?> Viva & Result Details</h5>
             </div>
             <div class="card-body">
               <!-- Set action="" to post to the same page -->
@@ -181,10 +214,16 @@ if (isset($_POST['submitViva'])) {
                 <!-- Display of Student Total will appear here -->
                 <div id="studentsTotal" class="message-card info"></div>
 
-                <!-- Result Publication Date Section (2nd Part) -->
+                <!-- Viva Result Publication Date Section (2nd Part) -->
                 <div class="mb-3">
                   <label for="resultDate" class="form-label">Result Publication Date:</label>
                   <input type="date" id="resultDate" name="result_date" class="form-control" required>
+                </div>
+
+                <!-- Seat Confirmation Deadline Date Section -->
+                <div class="mb-3">
+                  <label for="seatConfirmDeadline" class="form-label">Seat Confirmation Deadline Date:</label>
+                  <input type="date" id="seatConfirmDeadline" name="seat_confirm_deadline" class="form-control" required>
                 </div>
 
                 <!-- Notice Section (3rd Part) -->
@@ -198,28 +237,24 @@ if (isset($_POST['submitViva'])) {
             </div>
           </div>
           <!-- End Card -->
+        <?php else: ?>
+          <div class="alert alert-info" role="alert">
+            The viva result and the seat allocation result have already been published. You cannot change the dates or notice anymore.
+          </div>
+        <?php endif; ?>
 
 
         </div>
       </main>
-      <footer class="py-4 dashboard-copyright-footer mt-auto">
-        <div class="container-fluid px-4">
-          <div class="d-flex align-items-center justify-content-between small">
-            <div class="text-muted">&copy; Just 2024</div>
-            <div>
-              <a href="#">Privacy Policy</a>
-              &middot;
-              <a href="#">Terms &amp; Conditions</a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   </div>
 
+  <!-- Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
   <!-- JavaScript Libraries -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
   <script>
@@ -261,8 +296,12 @@ if (isset($_POST['submitViva'])) {
         var lastViva = vivaDates.last().val();
         if (lastViva) {
           $('#resultDate').attr('min', addOneDay(lastViva));
+
+          // ** new: enforce today-only on seat confirmation **
+          $('#seatConfirmDeadline').attr('min', addOneDay(lastViva)) // can't pick before today
         } else {
           $('#resultDate').attr('min', todayDhaka);
+          $('#seatConfirmDeadline').attr('min', todayDhaka);
         }
       }
 

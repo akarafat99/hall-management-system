@@ -24,8 +24,8 @@ $department = new Department();
 $yearSemesterCode = $department->getYearSemesterCodes();
 
 // load user details
-if (isset($_POST['viewEditRequest']) || isset($_GET['viewEditRequest'])) {
-  $userDetails->details_id = $_POST['viewEditRequest'] ?? $_GET['viewEditRequest'];
+if (isset($_POST['userDetailsId']) || isset($_GET['userDetailsId'])) {
+  $userDetails->details_id = $_POST['userDetailsId'] ?? $_GET['userDetailsId'];
   $userDetails->getByDetailsId($userDetails->details_id);
   $user->user_id = $userDetails->user_id;
   $user->load();
@@ -202,12 +202,6 @@ $file2->loadByFileId($file2->file_id);
 </head>
 
 <body>
-  <div class="d-flex flex-column min-vh-100">
-    <div class="flex-grow-1">
-      <!-- Navbar Section Start -->
-      <?php include_once 'navbar-student-1.php'; ?>
-      <!-- Navbar Section End  -->
-
       <!-- Main Content Area -->
       <main>
         <div class="container-fluid px-4">
@@ -388,16 +382,6 @@ $file2->loadByFileId($file2->file_id);
             </div>
           </div>
       </main>
-
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-3 mt-auto">
-      <div class="container">
-        <p class="mb-0">&copy; <?php echo date('Y'); ?> JUST Credit by Arafat &amp; Shakil</p>
-      </div>
-    </footer>
-  </div>
 
 
   <!-- Bootstrap Bundle with Popper -->

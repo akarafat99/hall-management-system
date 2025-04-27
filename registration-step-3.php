@@ -11,6 +11,7 @@ $session = SessionStatic::class;
 $divisions = getDivisions();
 $department = new Department();
 $departmentList = $department->getDepartments(null, 1);
+$yearSemesterCodes = $department->getYearSemesterCodes();
 
 if (isset($_POST['register'])) {
     // Insert User
@@ -29,8 +30,7 @@ if (isset($_POST['register'])) {
     $detail->contact_no                 = $_POST['contactNo'];
     $detail->session                    = $_POST['session'];
     $detail->department_id              = $_POST['department'];
-    $detail->year                       = $_POST['year'];
-    $detail->semester                   = $_POST['semester'];
+    $detail->year_semester_code         = $_POST['year_semester_code'];
     $detail->last_semester_cgpa_or_merit = $_POST['university-merit-or-cgpa'];
     $detail->division                   = $_POST['division'];
     $detail->district                   = $_POST['district'];
@@ -139,7 +139,7 @@ if (isset($_POST['register'])) {
 
 <body>
     <div class="d-flex flex-column min-vh-100">
-        
+
         <?php include_once 'student/navbar-student-2.php'; ?>
 
         <div class="container my-5">
@@ -216,24 +216,19 @@ if (isset($_POST['register'])) {
                             </div>
 
 
-                            <!-- Year & Semester side‑by‑side -->
-                            <div class="col-12 col-md-6 mb-3">
-                                <label for="year" class="form-label fw-semibold">Year</label>
-                                <select class="form-select" id="year" name="year" required>
-                                    <option value="1">B.Sc 1st year</option>
-                                    <option value="2">B.Sc 2nd year</option>
-                                    <option value="3">B.Sc 3rd year</option>
-                                    <option value="4">B.Sc 4th year</option>
-                                    <option value="5">M.Sc 1st year</option>
-                                    <option value="6">M.Sc 2nd year</option>
-                                </select>
-                            </div>
-
-                            <div class="col-12 col-md-6 mb-3">
-                                <label for="semester" class="form-label fw-semibold">Semester</label>
-                                <select class="form-select" id="semester" name="semester" required>
-                                    <option value="1">1st semester</option>
-                                    <option value="2">2nd semester</option>
+                            <!-- Year & Semester -->
+                            <div class="col-12 mb-3">
+                                <label for="yearSemester" class="form-label fw-semibold">Year &amp; Semester</label>
+                                <select
+                                    id="yearSemester"
+                                    name="year_semester_code"
+                                    class="form-select w-100 text-truncate"
+                                    required>
+                                    <?php foreach ($yearSemesterCodes as $code => $label): ?>
+                                        <option value="<?php echo htmlspecialchars($code, ENT_QUOTES); ?>">
+                                            <?php echo htmlspecialchars($label); ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
 

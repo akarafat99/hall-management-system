@@ -17,8 +17,7 @@ class UserDetails
     public $contact_no = "";
     public $session = "";
     public $department_id = 0;
-    public $year = 0;
-    public $semester = 0;
+    public $year_semester_code = 0;
     public $last_semester_cgpa_or_merit = 0.0;
     public $district = "";
     public $division = "";
@@ -135,7 +134,8 @@ class UserDetails
             29 => ['created',                  "ALTER TABLE $table ADD COLUMN created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
             30 => ['modified',                 "ALTER TABLE $table ADD COLUMN modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"],
             31 => ['modified_by',              "ALTER TABLE $table ADD COLUMN modified_by INT DEFAULT 0"],
-            32 => ['department_id',            "ALTER TABLE $table ADD COLUMN department_id INT DEFAULT 0 AFTER session"]
+            32 => ['department_id',            "ALTER TABLE $table ADD COLUMN department_id INT DEFAULT 0 AFTER session"],
+            33 => ['year_semester_code',        "ALTER TABLE $table ADD COLUMN year_semester_code INT DEFAULT 0 AFTER department_id"]
         ];
 
         if ($selectedNums !== null && is_array($selectedNums)) {
@@ -167,15 +167,14 @@ class UserDetails
     {
         $sql = "INSERT INTO tbl_user_details (
             status, user_id, profile_picture_id, full_name, student_id, gender, contact_no, session, department_id,
-            year, semester, last_semester_cgpa_or_merit, district, division, permanent_address, present_address,
+            year_semester_code, last_semester_cgpa_or_merit, district, division, permanent_address, present_address,
             father_name, father_contact_no, father_profession, father_monthly_income,
             mother_name, mother_contact_no, mother_profession, mother_monthly_income,
             guardian_name, guardian_contact_no, guardian_address, document_id, note_ids,
             modified_by
         ) VALUES (
             $this->status, $this->user_id, $this->profile_picture_id, '$this->full_name', $this->student_id, 
-            '$this->gender', '$this->contact_no', '$this->session', $this->department_id,
-            $this->year, $this->semester,
+            '$this->gender', '$this->contact_no', '$this->session', $this->department_id, $this->year_semester_code,
             $this->last_semester_cgpa_or_merit, '$this->district', '$this->division', '$this->permanent_address', '$this->present_address', 
             '$this->father_name', '$this->father_contact_no', '$this->father_profession', 
             $this->father_monthly_income, '$this->mother_name', '$this->mother_contact_no', 
@@ -213,8 +212,7 @@ class UserDetails
             contact_no = '$this->contact_no',
             session = '$this->session',
             department_id = $this->department_id,
-            year = $this->year,
-            semester = $this->semester,
+            year_semester_code = $this->year_semester_code,
             last_semester_cgpa_or_merit = $this->last_semester_cgpa_or_merit,
             district = '$this->district',
             division = '$this->division',
@@ -525,8 +523,7 @@ class UserDetails
         $this->contact_no = $row['contact_no'];
         $this->session = $row['session'];
         $this->department_id = $row['department_id'];
-        $this->year = $row['year'];
-        $this->semester = $row['semester'];
+        $this->year_semester_code = $row['year_semester_code'];
         $this->last_semester_cgpa_or_merit = $row['last_semester_cgpa_or_merit'];
         $this->district = $row['district'];
         $this->division = $row['division'];

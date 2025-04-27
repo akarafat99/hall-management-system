@@ -29,6 +29,8 @@ if (isset($_POST['approve']) || isset($_POST['decline'])) {
 $user = new User();
 $userList = $user->getDistinctUsersByStatus(0, "user"); // Get all pending users
 $department = new Department();
+$departmentList = $department->getDepartments(); // Get all departments
+$yearSemesterCode = $department->getYearSemesterCodes(); // Get all year-semester codes
 ?>
 
 <!DOCTYPE html>
@@ -50,7 +52,6 @@ $department = new Department();
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet" />
-    <link href="../css/Dashboard/dashboard.css" rel="stylesheet" />
     <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
     <style>
         /* Enhanced Search Field Styling */
@@ -258,36 +259,10 @@ $department = new Department();
                                                             <p><strong>Department:</strong> <?php echo isset($userDetails->department_id) ? htmlspecialchars($department->department_name) : 'N/A'; ?></p>
                                                         </div>
                                                     </div>
-                                                    <?php
-                                                    /* --- Friendly labels --- */
-                                                    $yearMap = [
-                                                        1 => 'B.Sc 1st Year',
-                                                        2 => 'B.Sc 2nd Year',
-                                                        3 => 'B.Sc 3rd Year',
-                                                        4 => 'B.Sc 4th Year',
-                                                        5 => 'M.Sc 1st Year',
-                                                        6 => 'M.Sc 2nd Year',
-                                                    ];
-
-                                                    $semMap  = [
-                                                        1 => '1st Semester',
-                                                        2 => '2nd Semester',
-                                                    ];
-
-                                                    /* resolve labels or fall back to raw value / “N/A” */
-                                                    $yearLabel = isset($userDetails->year)
-                                                        ? ($yearMap[$userDetails->year] ?? htmlspecialchars($userDetails->year))
-                                                        : 'N/A';
-
-                                                    $semLabel  = isset($userDetails->semester)
-                                                        ? ($semMap[$userDetails->semester] ?? htmlspecialchars($userDetails->semester))
-                                                        : 'N/A';
-                                                    ?>
 
                                                     <div class="row pt-4">
                                                         <div class="col-lg-4">
-                                                            <p><strong>Year:</strong> <?php echo $yearLabel; ?></p>
-                                                            <p><strong>Semester:</strong> <?php echo $semLabel; ?></p>
+                                                            <p><strong>Academic Status:</strong> <?php echo $yearSemesterCode[$userDetails->year_semester_code]; ?></p>
                                                         </div>
                                                     </div>
 

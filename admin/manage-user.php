@@ -28,6 +28,7 @@ $userListDeactive = $user->getDistinctUsersByStatus(2, "user"); // Get all users
 // Merge the arrays (using an empty array fallback if one of the lists is false)
 $userList = array_merge($userListActive ?: [], $userListDeactive ?: []);
 $department = new Department();
+$yearSemesterCode = $department->getYearSemesterCodes(); // Get the year and semester code for the current user
 ?>
 
 <!DOCTYPE html>
@@ -270,8 +271,7 @@ $department = new Department();
                                                             <p><strong>Department:</strong> <?php echo isset($userDetails->department_id) ? htmlspecialchars($department->department_name) : 'N/A'; ?></p>
                                                         </div>
                                                         <div class="col-lg-4">
-                                                            <p><strong>Year:</strong> <?php echo isset($userDetails->year) ? htmlspecialchars($userDetails->year) : 'N/A'; ?></p>
-                                                            <p><strong>Semester:</strong> <?php echo isset($userDetails->semester) ? htmlspecialchars($userDetails->semester) : 'N/A'; ?></p>
+                                                            <p><strong>Academic Status:</strong> <?php echo $yearSemesterCode[$userDetails->year_semester_code]; ?></p>
                                                         </div>
                                                     </div>
                                                     <div class="row pt-4">

@@ -45,6 +45,8 @@ $departmentCurrent = new Department();
 $departmentNew->department_id = $userDetails->department_id;
 $departmentCurrent->department_id = $userDetails->department_id;
 
+$yearSemesterCode = $departmentCurrent->getYearSemesterCodes();
+
 // Requested
 $detailsList = $userDetails->cutsomGetUsersDetailByStatus(1, 0, 'user');  // Now returns an array of associative arrays (full rows)
 if (is_array($detailsList)) {
@@ -84,7 +86,7 @@ if (is_array($detailsList)) {
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
         rel="stylesheet" />
     <!-- for sidebar -->
-    <link href="../css2/sidebar-admin.css" rel="stylesheet"/>
+    <link href="../css2/sidebar-admin.css" rel="stylesheet" />
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -146,10 +148,10 @@ if (is_array($detailsList)) {
 </head>
 
 <body>
-<div class="container-fluid">
+    <div class="container-fluid">
         <div class="row">
             <!-- Sidebar Menu -->
-             <?php include 'sidebar-admin.php'; ?>
+            <?php include 'sidebar-admin.php'; ?>
 
             <!-- Main Content Area -->
             <main id="mainContent" class="col">
@@ -165,429 +167,421 @@ if (is_array($detailsList)) {
                     ☰ Menu
                 </button>
 
-            <main>
-                <div class="container-fluid px-4">
-                    <div class="card__wrapper">
-                        <div class="card__title-wrap mb-20">
-                            <h3 class="table__heading-title">Profile Update Requests</h3>
-                        </div>
-
-                        <!-- Enhanced Search Options -->
-                        <div id="searchContainer" class="container">
-                            <div class="row g-3 align-items-center">
-                                <div class="col-auto">
-                                    <label for="searchUserId" class="col-form-label">User ID</label>
-                                </div>
-                                <div class="col-auto">
-                                    <input type="text" id="searchUserId" class="form-control" placeholder="Enter User ID" />
-                                </div>
-                                <div class="col-auto">
-                                    <label for="searchStudentId" class="col-form-label">Student ID</label>
-                                </div>
-                                <div class="col-auto">
-                                    <input type="text" id="searchStudentId" class="form-control" placeholder="Enter Student ID" />
-                                </div>
-                                <div class="col-auto">
-                                    <label for="searchEmail" class="col-form-label">Email</label>
-                                </div>
-                                <div class="col-auto">
-                                    <input type="text" id="searchEmail" class="form-control" placeholder="Enter Email" />
-                                </div>
+                <main>
+                    <div class="container-fluid px-4">
+                        <div class="card__wrapper">
+                            <div class="card__title-wrap mb-20">
+                                <h3 class="table__heading-title">Profile Update Requests</h3>
                             </div>
-                        </div>
 
-                        <!-- Accordion with User List -->
-                        <div class="accordion" id="faqAccordion">
-                            <div class="faq-heading">
-                                <div class="row">
-                                    <div class="col-lg-2">
-                                        <p>User ID</p>
+                            <!-- Enhanced Search Options -->
+                            <div id="searchContainer" class="container">
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-auto">
+                                        <label for="searchUserId" class="col-form-label">User ID</label>
                                     </div>
-                                    <div class="col-lg-2">
-                                        <p>Student ID</p>
+                                    <div class="col-auto">
+                                        <input type="text" id="searchUserId" class="form-control" placeholder="Enter User ID" />
                                     </div>
-                                    <div class="col-lg-4">
-                                        <p>Current and Requested</p>
+                                    <div class="col-auto">
+                                        <label for="searchStudentId" class="col-form-label">Student ID</label>
                                     </div>
-                                    <div class="col-lg-4">
-                                        <p>Action</p>
+                                    <div class="col-auto">
+                                        <input type="text" id="searchStudentId" class="form-control" placeholder="Enter Student ID" />
+                                    </div>
+                                    <div class="col-auto">
+                                        <label for="searchEmail" class="col-form-label">Email</label>
+                                    </div>
+                                    <div class="col-auto">
+                                        <input type="text" id="searchEmail" class="form-control" placeholder="Enter Email" />
                                     </div>
                                 </div>
                             </div>
 
-                            <?php
-                            function getYearDescription($year)
-                            {
-                                switch ($year) {
-                                    case 1:
-                                        return 'B.Sc. 1st Year';
-                                    case 2:
-                                        return 'B.Sc. 2nd Year';
-                                    case 3:
-                                        return 'B.Sc. 3rd Year';
-                                    case 4:
-                                        return 'B.Sc. 4th Year';
-                                    case 5:
-                                        return 'M.Sc. 1st Year';
-                                    case 6:
-                                        return 'M.Sc. 2nd Year';
-                                    default:
-                                        return 'Unknown Year';
-                                }
-                            }
-
-                            if ($allNewList && $allCurrentList && count($allNewList) > 0 && count($allCurrentList) > 0) {
-                                $length = min(count($allNewList), count($allCurrentList));
-                                for ($i = 0; $i < $length; $i++) {
-                                    $userDetailsNew = $allNewList[$i];
-                                    $userDetailsCurrent = $allCurrentList[$i];
-
-                                    $collapseId = "collapse{$userDetailsCurrent->user_id}";
-                                    $userObj1 = new User();
-                                    $userObj1->user_id = $userDetailsCurrent->user_id;
-                                    $userObj1->load();
-
-                                    $file1 = new FileManager();
-                                    $file1->loadByFileId($userDetailsCurrent->profile_picture_id);
-                                    // echo $userDetailsCurrent->profile_picture_id . "<br>";
-
-                                    $file2 = new FileManager();
-                                    $file2->loadByFileId($userDetailsCurrent->document_id);
-
-                                    $file3 = new FileManager();
-                                    $file3->loadByFileId($userDetailsNew->profile_picture_id);
-
-                                    $file4 = new FileManager();
-                                    $file4->loadByFileId($userDetailsNew->document_id);
-                            ?>
-                                    <div class="accordion-item faq-item"
-                                        data-userid="<?php echo $userDetailsCurrent->user_id; ?>"
-                                        data-studentid="<?php echo $userDetailsCurrent->student_id; ?>"
-                                        data-email="<?php echo $userObj1->email; ?>">
-                                        <div class="row">
-                                            <div class="col-lg-2 d-flex align-items-center">
-                                                <p><?php echo $userDetailsCurrent->user_id; ?></p>
-                                            </div>
-                                            <div class="col-lg-2 d-flex align-items-center">
-                                                <p><?php echo $userDetailsCurrent->student_id; ?></p>
-                                            </div>
-                                            <div class="col-lg-4 d-flex align-items-center">
-                                                <button class="btn btn-primary" data-bs-toggle="collapse"
-                                                    data-bs-target="#<?php echo $collapseId; ?>">Details</button>
-                                            </div>
-                                            <div class="col-lg-4 d-flex align-items-center">
-                                                <div>
-                                                    <form action="" method="post">
-                                                        <button type="submit" name="approve" value="<?php echo htmlspecialchars($userDetailsCurrent->user_id); ?>" class="btn btn-success">Approved</button>
-                                                        <button type="submit" name="decline" value="<?php echo htmlspecialchars($userDetailsCurrent->user_id); ?>" class="btn btn-danger">Declined</button>
-                                                    </form>
-                                                </div>
-                                            </div>
+                            <!-- Accordion with User List -->
+                            <div class="accordion" id="faqAccordion">
+                                <div class="faq-heading">
+                                    <div class="row">
+                                        <div class="col-lg-2">
+                                            <p>User ID</p>
                                         </div>
-                                        <div id="<?php echo $collapseId; ?>" class="accordion-collapse collapse"
-                                            data-bs-parent="#faqAccordion">
-                                            <div class="accordion-body">
-                                                <div class="profile-info-flex">
-                                                    <div class="profile-wrap">
-                                                        <img src="../uploads1/<?php echo $file1->file_new_name; ?>" alt="User Image" class="img-fluid">
-                                                    </div>
-                                                </div>
-
-                                                <div class="row">
-                                                    <div class="col-lg-12">
-                                                        <p><strong>Email:</strong> <?php echo htmlspecialchars($userObj1->email); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Student ID -->
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Student ID (Current):</strong> <?php echo htmlspecialchars($userDetailsCurrent->student_id); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Student ID (Requested):</strong> <?php echo htmlspecialchars($userDetailsNew->student_id); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Row: Full Name -->
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Name (Current):</strong> <?php echo htmlspecialchars($userDetailsCurrent->full_name); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Name (Requested):</strong> <?php echo htmlspecialchars($userDetailsNew->full_name); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Row: Gender -->
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Gender (Current):</strong> <?php echo htmlspecialchars($userDetailsCurrent->gender); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Gender (Requested):</strong> <?php echo htmlspecialchars($userDetailsNew->gender); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Row: Contact No -->
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Contact No (Current):</strong> <?php echo htmlspecialchars($userDetailsCurrent->contact_no); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Contact No (Requested):</strong> <?php echo htmlspecialchars($userDetailsNew->contact_no); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Row: Session -->
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Session (Current):</strong> <?php echo   htmlspecialchars($userDetailsCurrent->session); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Session (Requested):</strong> <?php echo   htmlspecialchars($userDetailsNew->session); ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Department (Current):</strong> <?php echo   htmlspecialchars($departmentCurrent->department_name); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Department (Requested):</strong> <?php echo   htmlspecialchars($departmentNew->department_name); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Year (Current):</strong> <?php echo htmlspecialchars(getYearDescription($userDetailsCurrent->year)); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Year (Requested):</strong> <?php echo htmlspecialchars(getYearDescription($userDetailsNew->year)); ?></p>
-                                                    </div>
-                                                </div>
-
-
-                                                <!-- Row: Semester -->
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Semester (Current):</strong> <?php echo   htmlspecialchars($userDetailsCurrent->semester); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Semester (Requested):</strong> <?php echo   htmlspecialchars($userDetailsNew->semester); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Row: Last Semester CGPA/Merit -->
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Last Semester CGPA/Merit (Current):</strong> <?php echo   htmlspecialchars($userDetailsCurrent->last_semester_cgpa_or_merit); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Last Semester CGPA/Merit (Requested):</strong> <?php echo htmlspecialchars($userDetailsNew->last_semester_cgpa_or_merit); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Row: District -->
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>District (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->district); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>District (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->district); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Row: Division -->
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Division (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->division); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Division (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->division); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Row: Permanent Address -->
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Permanent Address (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->permanent_address); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Permanent Address (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->permanent_address); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Row: Present Address -->
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Present Address (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->present_address); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Present Address (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->present_address); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Row: Father's Information -->
-                                                <div class="text-center mt-5 mb-4">
-                                                    <h5 class="form-info-title">Father's Information</h5>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Father's Name (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->father_name); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Father's Name (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->father_name); ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Father's Contact No (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->father_contact_no); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Father's Contact No (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->father_contact_no); ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Father's Profession (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->father_profession); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Father's Profession (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->father_profession); ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Father's Monthly Income (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->father_monthly_income); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Father's Monthly Income (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->father_monthly_income); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Row: Mother's Information -->
-                                                <div class="text-center mt-5 mb-4">
-                                                    <h5 class="form-info-title">Mother's Information</h5>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Mother's Name (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->mother_name); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Mother's Name (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->mother_name); ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Mother's Contact No (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->mother_contact_no); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Mother's Contact No (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->mother_contact_no); ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Mother's Profession (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->mother_profession); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Mother's Profession (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->mother_profession); ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Mother's Monthly Income (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->mother_monthly_income); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Mother's Monthly Income (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->mother_monthly_income); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Row: Guardian's Information -->
-                                                <div class="text-center mt-5 mb-4">
-                                                    <h5 class="form-info-title">Guardian's Information</h5>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Guardian's Name (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->guardian_name); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Guardian's Name (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->guardian_name); ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Guardian's Contact No (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->guardian_contact_no); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Guardian's Contact No (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->guardian_contact_no); ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Guardian's Address (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->guardian_address); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Guardian's Address (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->guardian_address); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Row: Other Information -->
-                                                <div class="text-center mt-5 mb-4">
-                                                    <h5 class="form-info-title">Other Information</h5>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Document File (Current):</strong>
-                                                            <a href="../uploads1/<?php echo  htmlspecialchars($file2->file_new_name); ?>" target="_blank">Click to view</a>
-                                                        </p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Document File (Requested):</strong>
-                                                            <a href="../uploads1/<?php echo  htmlspecialchars($file4->file_new_name); ?>" target="_blank">Click to view</a>
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Created (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->created); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Created (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->created); ?></p>
-                                                    </div>
-                                                </div>
-                                                <div class="row pt-4">
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Modified (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->modified); ?></p>
-                                                    </div>
-                                                    <div class="col-lg-6">
-                                                        <p><strong>Modified (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->modified); ?></p>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Additional details can be added here -->
-                                                <div class="col-lg-12 d-flex align-items-center justify-content-center mt-4">
-                                                    <button class="btn btn-danger" data-bs-toggle="collapse"
-                                                        data-bs-target="#<?php echo $collapseId; ?>">Close</button>
-                                                </div>
-                                            </div>
+                                        <div class="col-lg-2">
+                                            <p>Student ID</p>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <p>Current and Requested</p>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <p>Action</p>
                                         </div>
                                     </div>
-                            <?php
-                                }
-                            } else {
-                                echo "<p>No users found.</p>";
-                            }
-                            ?>
-                        </div>
+                                </div>
 
-                        <!-- Pagination Controls (placed after the user list) -->
-                        <nav aria-label="User list pagination">
-                            <ul class="pagination justify-content-center" id="paginationContainer"></ul>
-                        </nav>
+                                <?php
+                                function getYearDescription($year)
+                                {
+                                    switch ($year) {
+                                        case 1:
+                                            return 'B.Sc. 1st Year';
+                                        case 2:
+                                            return 'B.Sc. 2nd Year';
+                                        case 3:
+                                            return 'B.Sc. 3rd Year';
+                                        case 4:
+                                            return 'B.Sc. 4th Year';
+                                        case 5:
+                                            return 'M.Sc. 1st Year';
+                                        case 6:
+                                            return 'M.Sc. 2nd Year';
+                                        default:
+                                            return 'Unknown Year';
+                                    }
+                                }
+
+                                if ($allNewList && $allCurrentList && count($allNewList) > 0 && count($allCurrentList) > 0) {
+                                    $length = min(count($allNewList), count($allCurrentList));
+                                    for ($i = 0; $i < $length; $i++) {
+                                        $userDetailsNew = $allNewList[$i];
+                                        $userDetailsCurrent = $allCurrentList[$i];
+
+                                        $collapseId = "collapse{$userDetailsCurrent->user_id}";
+                                        $userObj1 = new User();
+                                        $userObj1->user_id = $userDetailsCurrent->user_id;
+                                        $userObj1->load();
+
+                                        $departmentCurrent->getDepartments($userDetailsCurrent->department_id);
+                                        $departmentNew->getDepartments($userDetailsNew->department_id);
+
+                                        $file1 = new FileManager();
+                                        $file1->loadByFileId($userDetailsCurrent->profile_picture_id);
+                                        // echo $userDetailsCurrent->profile_picture_id . "<br>";
+
+                                        $file2 = new FileManager();
+                                        $file2->loadByFileId($userDetailsCurrent->document_id);
+
+                                        $file3 = new FileManager();
+                                        $file3->loadByFileId($userDetailsNew->profile_picture_id);
+
+                                        $file4 = new FileManager();
+                                        $file4->loadByFileId($userDetailsNew->document_id);
+                                ?>
+                                        <div class="accordion-item faq-item"
+                                            data-userid="<?php echo $userDetailsCurrent->user_id; ?>"
+                                            data-studentid="<?php echo $userDetailsCurrent->student_id; ?>"
+                                            data-email="<?php echo $userObj1->email; ?>">
+                                            <div class="row">
+                                                <div class="col-lg-2 d-flex align-items-center">
+                                                    <p><?php echo $userDetailsCurrent->user_id; ?></p>
+                                                </div>
+                                                <div class="col-lg-2 d-flex align-items-center">
+                                                    <p><?php echo $userDetailsCurrent->student_id; ?></p>
+                                                </div>
+                                                <div class="col-lg-4 d-flex align-items-center">
+                                                    <button class="btn btn-primary" data-bs-toggle="collapse"
+                                                        data-bs-target="#<?php echo $collapseId; ?>">Details</button>
+                                                </div>
+                                                <div class="col-lg-4 d-flex align-items-center">
+                                                    <div>
+                                                        <form action="" method="post">
+                                                            <button type="submit" name="approve" value="<?php echo htmlspecialchars($userDetailsCurrent->user_id); ?>" class="btn btn-success">Approved</button>
+                                                            <button type="submit" name="decline" value="<?php echo htmlspecialchars($userDetailsCurrent->user_id); ?>" class="btn btn-danger">Declined</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="<?php echo $collapseId; ?>" class="accordion-collapse collapse"
+                                                data-bs-parent="#faqAccordion">
+                                                <div class="accordion-body">
+                                                    <div class="profile-info-flex">
+                                                        <div class="profile-wrap">
+                                                            <img src="../uploads1/<?php echo $file1->file_new_name; ?>" alt="User Image" class="img-fluid">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <div class="col-lg-12">
+                                                            <p><strong>Email:</strong> <?php echo htmlspecialchars($userObj1->email); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Student ID -->
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Student ID (Current):</strong> <?php echo htmlspecialchars($userDetailsCurrent->student_id); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Student ID (Requested):</strong> <?php echo htmlspecialchars($userDetailsNew->student_id); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Row: Full Name -->
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Name (Current):</strong> <?php echo htmlspecialchars($userDetailsCurrent->full_name); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Name (Requested):</strong> <?php echo htmlspecialchars($userDetailsNew->full_name); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Row: Gender -->
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Gender (Current):</strong> <?php echo htmlspecialchars($userDetailsCurrent->gender); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Gender (Requested):</strong> <?php echo htmlspecialchars($userDetailsNew->gender); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Row: Contact No -->
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Contact No (Current):</strong> <?php echo htmlspecialchars($userDetailsCurrent->contact_no); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Contact No (Requested):</strong> <?php echo htmlspecialchars($userDetailsNew->contact_no); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Row: Session -->
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Session (Current):</strong> <?php echo   htmlspecialchars($userDetailsCurrent->session); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Session (Requested):</strong> <?php echo   htmlspecialchars($userDetailsNew->session); ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Department (Current):</strong> <?php echo   htmlspecialchars($departmentCurrent->department_name); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Department (Requested):</strong> <?php echo   htmlspecialchars($departmentNew->department_name); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Academic Status (Current):</strong> <?php echo $yearSemesterCode[$userDetailsCurrent->year_semester_code]; ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Academic Status (Requested):</strong> <?php echo $yearSemesterCode[$userDetailsNew->year_semester_code]; ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Row: Last Semester CGPA/Merit -->
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Last Semester CGPA/Merit (Current):</strong> <?php echo   htmlspecialchars($userDetailsCurrent->last_semester_cgpa_or_merit); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Last Semester CGPA/Merit (Requested):</strong> <?php echo htmlspecialchars($userDetailsNew->last_semester_cgpa_or_merit); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Row: District -->
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>District (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->district); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>District (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->district); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Row: Division -->
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Division (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->division); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Division (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->division); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Row: Permanent Address -->
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Permanent Address (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->permanent_address); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Permanent Address (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->permanent_address); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Row: Present Address -->
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Present Address (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->present_address); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Present Address (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->present_address); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Row: Father's Information -->
+                                                    <div class="text-center mt-5 mb-4">
+                                                        <h5 class="form-info-title">Father's Information</h5>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Father's Name (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->father_name); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Father's Name (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->father_name); ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Father's Contact No (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->father_contact_no); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Father's Contact No (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->father_contact_no); ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Father's Profession (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->father_profession); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Father's Profession (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->father_profession); ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Father's Monthly Income (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->father_monthly_income); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Father's Monthly Income (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->father_monthly_income); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Row: Mother's Information -->
+                                                    <div class="text-center mt-5 mb-4">
+                                                        <h5 class="form-info-title">Mother's Information</h5>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Mother's Name (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->mother_name); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Mother's Name (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->mother_name); ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Mother's Contact No (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->mother_contact_no); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Mother's Contact No (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->mother_contact_no); ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Mother's Profession (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->mother_profession); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Mother's Profession (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->mother_profession); ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Mother's Monthly Income (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->mother_monthly_income); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Mother's Monthly Income (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->mother_monthly_income); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Row: Guardian's Information -->
+                                                    <div class="text-center mt-5 mb-4">
+                                                        <h5 class="form-info-title">Guardian's Information</h5>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Guardian's Name (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->guardian_name); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Guardian's Name (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->guardian_name); ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Guardian's Contact No (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->guardian_contact_no); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Guardian's Contact No (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->guardian_contact_no); ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Guardian's Address (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->guardian_address); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Guardian's Address (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->guardian_address); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Row: Other Information -->
+                                                    <div class="text-center mt-5 mb-4">
+                                                        <h5 class="form-info-title">Other Information</h5>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Document File (Current):</strong>
+                                                                <a href="../uploads1/<?php echo  htmlspecialchars($file2->file_new_name); ?>" target="_blank">Click to view</a>
+                                                            </p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Document File (Requested):</strong>
+                                                                <a href="../uploads1/<?php echo  htmlspecialchars($file4->file_new_name); ?>" target="_blank">Click to view</a>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Created (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->created); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Created (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->created); ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row pt-4">
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Modified (Current):</strong> <?php echo  htmlspecialchars($userDetailsCurrent->modified); ?></p>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <p><strong>Modified (Requested):</strong> <?php echo  htmlspecialchars($userDetailsNew->modified); ?></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Additional details can be added here -->
+                                                    <div class="col-lg-12 d-flex align-items-center justify-content-center mt-4">
+                                                        <button class="btn btn-danger" data-bs-toggle="collapse"
+                                                            data-bs-target="#<?php echo $collapseId; ?>">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                <?php
+                                    }
+                                } else {
+                                    echo "<p>No users found.</p>";
+                                }
+                                ?>
+                            </div>
+
+                            <!-- Pagination Controls (placed after the user list) -->
+                            <nav aria-label="User list pagination">
+                                <ul class="pagination justify-content-center" id="paginationContainer"></ul>
+                            </nav>
+                        </div>
                     </div>
-                </div>
-            </main>
-            </div>
+                </main>
+        </div>
     </div>
 
     <!-- Bootstrap Bundle with Popper -->

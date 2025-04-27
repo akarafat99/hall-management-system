@@ -1,6 +1,7 @@
 <?php
 include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
+
 include_once '../class-file/User.php';
 include_once '../class-file/UserDetails.php';
 include_once '../class-file/HallSeatAllocationEvent.php';
@@ -26,6 +27,7 @@ $statusMap = [
     2 => 'Pass Viva and Verified',
     -3 => 'Viva Completed. Wait for Result',
     3 => 'Failed Viva',
+    -4 => 'Absent in Viva. Marked as Failed',
     4 => 'Waiting',
     5 => 'Seat Allotted',
     6 => 'Confirm Seat',

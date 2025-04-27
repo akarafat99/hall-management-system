@@ -532,7 +532,7 @@ class HallSeatApplication
             }
             return $applications;
         }
-        return false;
+        return [];
     }
 
 
@@ -581,7 +581,326 @@ class HallSeatApplication
         // Return true if a record is found, otherwise false.
         return ($result && mysqli_num_rows($result) > 0) ? true : false;
     }
+
+
+    /**
+     * Get all approved (status=2) applications for an event,
+     * fetch their user_details rows, and group by department.
+     *
+     * @param int $event_id
+     * @return array  [ department_id => [ user_details_row1, user_details_row2, … ], … ]
+     */
+    public function getDeptWiseUserDetailsByEvent($event_id)
+    {
+        $this->ensureConnection();
+        $event_id = intval($event_id);
+
+        $sql = "
+      SELECT d.*, a.application_id
+      FROM tbl_hall_seat_application AS a
+      JOIN tbl_user_details      AS d
+        ON a.user_details_id = d.details_id
+      WHERE a.event_id = {$event_id}
+        AND a.status   = 2
+      ORDER BY d.department_id
+    ";
+
+        $res = mysqli_query($this->conn, $sql);
+        $deptWise = [];
+
+        if ($res && mysqli_num_rows($res) > 0) {
+            while ($row = mysqli_fetch_assoc($res)) {
+                $deptWise[$row['department_id']][] = $row;
+            }
+        }
+
+        return $deptWise;
+    }
+
+    /**
+     * Flatten the dept‐grouped applications into a simple map of metrics:
+     *   application_id => [
+     *     district,
+     *     distance,
+     *     academic result,
+     *     father monthly income,
+     *     department_id,
+     *     year_semester_code,
+     *     details_id
+     *   ]
+     *
+     * @param array $deptWise  [ dept_id => [ row1, row2, … ], … ]
+     * @return array           [ application_id => [...], … ]
+     */
+    public function mapApplicationMetrics(array $deptWise, $event_id): array
+    {
+        // load your division→district→distance table
+        include_once 'Division.php';
+        $divisions = getDivisions();
+
+        include_once 'HallSeatAllocationEvent.php';
+        $event = new HallSeatAllocationEvent();
+        $event->event_id = $event_id;
+        $event->load();
+        $scoring_factor = array_map(
+            'doubleval',
+            explode(',', $event->scoring_factor)
+        );
+
+
+        $allApplications = [];
+
+        foreach ($deptWise as $deptId => $applications) {
+            foreach ($applications as $row) {
+                $appId    = $row['application_id'];
+                $userId = $row['user_id'];
+                $detailsId = $row['details_id'];
+                $division = $row['division'];
+                $district = $row['district'];
+                $distance = $divisions[$division][$district] ?? 0;
+                $result   = $row['last_semester_cgpa_or_merit'];
+                $income   = $row['father_monthly_income'];
+                $semCode  = $row['year_semester_code'];
+                $score = $scoring_factor[0] * $distance +
+                    $scoring_factor[1] * $result -
+                    $scoring_factor[2] * $income;
+                
+                if($semCode == 1 || $semCode == 9) {
+                    $score = $scoring_factor[0] * $distance -
+                        $scoring_factor[1] * $result -
+                        $scoring_factor[2] * $income;
+                }
+
+                $allApplications[$appId] = [
+                    (int)$deptId,
+                    $semCode,
+                    $userId,
+                    (int)$detailsId,
+                    $division,
+                    $district,
+                    $distance,
+                    $result,
+                    $income,
+                    $score
+                ];
+            }
+        }
+
+        return $allApplications;
+    }
+
+    /**
+     * Shortlist applications by dept, semester priority, and score
+     *
+     * @param array $applications  [ application_id => [deptId, semCode, detailsId, division, district, distance, result, income, score], … ]
+     * @param int   $event_id
+     * @return array               [ deptId => [appId1, appId2, …], … ]
+     */
+    public function shortlisting(array $applications, $event_id): array
+    {
+        include_once 'HallSeatAllocationEvent.php';
+        $event = new HallSeatAllocationEvent();
+        $event->event_id = intval($event_id);
+        $event->load();
+
+        // 1) Parse seat_distribution_quota
+        $seatQuota = [];
+        if (!empty($event->seat_distribution_quota)) {
+            foreach (explode(',', $event->seat_distribution_quota) as $pair) {
+                list($d, $cnt) = explode('=>', $pair);
+                $seatQuota[(int)$d] = (int)$cnt;
+                // echo $d . " - " . $cnt . "<br>";
+            }
+        }
+
+        // 1b) Parse semester_priority
+        $semesterPriority = !empty($event->semester_priority)
+            ? array_map('intval', explode(',', $event->semester_priority))
+            : [];
+
+        $selectedApplications = [];
+        $selectedApplicationIds = [];
+
+        // For each department…
+        foreach ($seatQuota as $deptId => $deptSeats) {
+            // filter apps belonging to this dept
+            $byDept = array_filter($applications, function ($m) use ($deptId) {
+                return $m[0] == $deptId;
+            });
+
+            $remaining = $deptSeats;
+
+            // foreach ($byDept as $appId => $data) {
+            //     echo "Dept: {$deptId} - {$appId} - semester {$data[1]}  . <br>";
+            // }
+            // echo "<br>";
+
+            // echo "------------- Department: {$deptId} <br>";
+
+            // allocate seats in semester-priority order
+            foreach ($semesterPriority as $semCode) {
+                // echo "Semester: {$semCode} <br>";
+                if ($remaining <= 0) break;
+
+                // 2) select only this semester’s apps
+                $bySem = array_filter($byDept, function ($m) use ($semCode) {
+                    return $m[1] == $semCode;
+                });
+
+                // foreach ($bySem as $appId => $data) {
+                //     echo "Pre Dept: {$deptId} - {$appId} - semester {$data[1]}  . <br>";
+                // }
+                // echo "<br> Sorted by score: <br>";
+
+                if (empty($bySem)) continue;
+
+                // 3) sort by score descending (score is at index 8)
+                uasort($bySem, function ($a, $b) {
+                    return $b[9] <=> $a[9];
+                });
+
+                // foreach ($bySem as $appId => $data) {
+                //     echo "Post Dept: {$deptId} - {$appId} - semester {$data[1]}  score {$data[8]} . <br>";
+                // }
+
+                // 4) take up to $remaining applications
+                foreach ($bySem as $appId => $_metrics) {
+                    if ($remaining <= 0) break;
+                    $selectedApplications[$deptId][] = $appId;
+                    $selectedApplicationIds[$appId][] = 1;
+                    // echo "Selected: {$deptId} - {$appId} - semester {$_metrics[1]}  . <br>";
+                    $remaining--;
+                }
+            }
+        }
+
+        include_once 'HallSeatDetails.php';
+        $hallSeatDetails = new HallSeatDetails();
+        $allSeatId = $hallSeatDetails->getAllSeatIdsByEventIdAndStatus($event_id, 2);
+
+        // Assign a randomized seat to each app ID
+        // Randomize the available seat IDs
+        shuffle($allSeatId);
+
+        // Build a new map: application_id => allotted_seat_id
+        $appSeatMap = [];
+        $idx = 0;
+        foreach (array_keys($selectedApplicationIds) as $appId) {
+            if (isset($allSeatId[$idx])) {
+                $appSeatMap[$appId] = $allSeatId[$idx];
+                $idx++;
+            } else {
+                // No more seats to assign
+                break;
+            }
+        }
+
+        // Replace the simple presence‐map with a seat‐map
+        $selectedApplicationIds = $appSeatMap;
+
+
+        // foreach ($selectedApplications as $deptId => $appIds) {
+        //     echo "Selected for dept {$deptId}: " . implode(', ', $appIds) . "<br>";
+        // }
+        // echo "<br>";
+        // foreach ($selectedApplicationIds as $appId) {
+        //     echo "Selected application ID: {$appId} <br>";
+        // }
+
+        return [
+            'deptWise' => $selectedApplications,
+            'appIds'   => $selectedApplicationIds
+        ];
+    }
+
+    /**
+     * Build a publish‐ready map of application → [user_id, seat, status].
+     *
+     * @param array $allApplication  [ application_id => [deptId, userId, detailsId, semCode, division, district, distance, result, income, score], … ]
+     * @param array $submittedMap    [ application_id => allotted_seat_id, … ]
+     * @return array                 [ application_id => ['user_id'=>int,'allotted_seat_id'=>int,'status'=>int], … ]
+     *                                 status = 5 if allotted, 4 if not
+     */
+    public function buildPublishMap(array $allApplication, array $submittedMap): array
+    {
+        $publishMap = [];
+
+        foreach ($allApplication as $appId => $metrics) {
+            // <-- now pulling user_id from index 1 -->
+            $userId = (int)$metrics[2];
+
+            if (isset($submittedMap[$appId])) {
+                $publishMap[$appId] = [
+                    'user_id'          => $userId,
+                    'allotted_seat_id' => (int)$submittedMap[$appId],
+                    'status'           => 5,
+                ];
+            } else {
+                $publishMap[$appId] = [
+                    'user_id'          => $userId,
+                    'allotted_seat_id' => 0,
+                    'status'           => 4,
+                ];
+            }
+        }
+
+        return $publishMap;
+    }
+
+    /**
+     * Bulk‐update a set of applications in one SQL statement.
+     *
+     * @param array $publishMap  [ application_id => ['user_id'=>…, 'allotted_seat_id'=>…, 'status'=>…], … ]
+     * @return bool|string       true on success, or error message
+     */
+    public function bulkUpdateApplications(array $publishMap)
+    {
+        $this->ensureConnection();
+
+        if (empty($publishMap)) {
+            return true;
+        }
+
+        $ids = array_keys($publishMap);
+        $idList = implode(',', array_map('intval', $ids));
+
+        // Build CASE clauses for each column
+        $userCase = "CASE application_id\n";
+        $seatCase = "CASE application_id\n";
+        $statusCase = "CASE application_id\n";
+
+        foreach ($publishMap as $appId => $data) {
+            $app  = intval($appId);
+            $uid  = intval($data['user_id']);
+            $sid  = intval($data['allotted_seat_id']);
+            $st   = intval($data['status']);
+
+            $userCase   .= "  WHEN {$app} THEN {$uid}\n";
+            $seatCase   .= "  WHEN {$app} THEN {$sid}\n";
+            $statusCase .= "  WHEN {$app} THEN {$st}\n";
+        }
+        $userCase   .= "  ELSE user_id END";
+        $seatCase   .= "  ELSE allotted_seat_id END";
+        $statusCase .= "  ELSE status END";
+
+        $sql = "
+            UPDATE tbl_hall_seat_application
+            SET
+                user_id = {$userCase},
+                allotted_seat_id = {$seatCase},
+                status = {$statusCase}
+            WHERE application_id IN ({$idList})
+        ";
+
+        if (!mysqli_query($this->conn, $sql)) {
+            return "Error bulk‐updating applications: " . mysqli_error($this->conn);
+        }
+        return true;
+    }
 }
+
+
+
 ?>
 
 <!-- end -->
