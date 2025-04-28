@@ -35,7 +35,7 @@ $allNotices = $noticeManager->getByStatus();
     <div class="flex-grow-1">
       <!-- Navbar Section Start -->
       <?php
-      if ($session::get('user') !== null) {
+      if ($session::get('user') != null) {
         include_once 'student/navbar-student-1.php';
       } else {
         include_once 'student/navbar-student-2.php';

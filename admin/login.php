@@ -1,225 +1,129 @@
 <?php
 include_once '../class-file/SessionManager.php';
-
 $session = SessionStatic::class;
+$session::ensureSessionStarted();
+
 include_once '../popup-1.php';
-$session::get('msg1') ? showPopup($session::get('msg1')) : '';
-$session::delete('msg1');
-// $session::destroy();
+if ($session::get('msg1') != null) {
+    showPopup($session::get('msg1'));
+    $session::delete('msg1');
+}
 
 if (isset($_POST['login'])) {
     $email = $_POST['email'];
     $password = $_POST['password'];
+    $userType = $_POST['userType'];
 
     include_once '../class-file/User.php';
     $user = new User();
     $user->email = $email;
     $user->password = $password;
-    $userCheck = $user->checkUserEmailWithStatus($user->email, $user->password, "admin");
+    $user->user_type = $userType;
+    $userCheck = $user->checkUserEmailWithStatus($user->email, $user->password, $user->user_type);
 
-    if ($userCheck[0] == "1") {
-        // echo 'all ok <br>';
+    if ($userCheck[0] == 1) {
         include_once '../popup-1.php';
-        showPopup($userCheck[1]);
-        $session::storeObject('admin_user', $user);
-        echo '<script>window.location.href = "dashboard.php";</script>';
-    } elseif ($userCheck[0] == "10") {
-        include_once '../popup-1.php';
-        showPopup($userCheck[1]);
+        $session::storeObject('userObj', $user);
+        $session::set('admin', $user->user_type);
+        $session::set('msg1', $userCheck[1]);
     } else {
         include_once '../popup-1.php';
         showPopup($userCheck[1]);
     }
 }
 
-$alreadyLoggedIn = false;
-if ($session::getObject('admin_user') !== null) {
-    $alreadyLoggedIn = true;
+if ($session::get('admin') != null) {
+    echo '<script type="text/javascript">
+            window.location.href = "dashboard.php";
+          </script>';
 }
-
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-
-    <link href="https://fonts.googleapis.com/css?family=Muli:300,400,700,900" rel="stylesheet">
-    <link rel="stylesheet" href="../fonts/icomoon/style.css">
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="../css/jquery-ui.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css">
-    <link rel="stylesheet" href="../css/owl.carousel.min.css">
-    <link rel="stylesheet" href="../css/owl.theme.default.min.css">
-    <link rel="stylesheet" href="../css/owl.theme.default.min.css">
-
-    <link rel="stylesheet" href="../css/jquery.fancybox.min.css">
-
-    <link rel="stylesheet" href="../css/bootstrap-datepicker.css">
-
-    <link rel="stylesheet" href="../fonts/flaticon/font/flaticon.css">
-
-    <link rel="stylesheet" href="../css/aos.css">
-
-    <link rel="stylesheet" href="../css/style.css">
-
-    <title>JUST Hall</title>
-
+    <title>MM Hall</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Roboto for Material Design look -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 
-<body data-spy="scroll" data-target=".site-navbar-target" data-offset="300">
+<body>
+    <!-- Parent container with flex and min-vh-100 -->
+    <div class="d-flex flex-column min-vh-100">
+        <!-- Main content area -->
+        <div class="flex-grow-1">
+            <!-- Navbar Section Start -->
+            
+            <!-- Navbar Section End -->
 
-    <div class="site-wrap">
-        <div class="intro-section" id="home-section">
-            <div class="slide-1" style="background-image: url('images/hero-bannar.jpg');"
-                data-stellar-background-ratio="0.5">
+            <!-- Login Section Start -->
+            <section class="auth-section mt-5">
                 <div class="container">
-                    <div class="row align-items-center">
-                        <div class="col-12">
-                            <div class="row align-items-center">
-                                <div class="col-lg-6 mb-4">
-                                    <h1 class="hero-title" data-aos="fade-up" data-aos-delay="100">MM Hall</h1>
-                                    <p class="hero-sub-text mb-4" data-aos="fade-up" data-aos-delay="200">Lorem ipsum
-                                        dolor sit amet
-                                        consectetur adipisicing elit. Maxime ipsa nulla sed quis rerum amet natus quas
-                                        necessitatibus.</p>
-
-                                    <div class="button-wrapper" data-aos="fade-up" data-aos-delay="300">
-                                        <a href="#" class="primary-button  py-3 px-5 text-uppercase">Get
-                                            Started</a>
-                                    </div>
-
+                    <div class="row justify-content-center">
+                        <!-- Adjusted column width for responsiveness -->
+                        <div class="col-md-6">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-primary text-white text-center">
+                                    <h4 class="mb-0">Admin Login</h4>
                                 </div>
-
-                                <div class="col-lg-5 ml-auto" data-aos="fade-up" data-aos-delay="500">
-                                    <?php if ($alreadyLoggedIn === false) { ?>
-                                        <form action="" method="post" class="form-box" enctype="multipart/form-data">
-                                            <h3 class="h4 text-black mb-4">Admin Login</h3>
-                                            <div class="form-group">
-                                                <input type="text" class="form-control" name="email" placeholder="Email Addresss">
-                                            </div>
-                                            <div class="form-group">
-                                                <input type="password" class="form-control" name="password" placeholder="Password">
-                                            </div>
-                                            <div class="form-group">
-                                                <div class="button-wrapper">
-                                                    <button type="submit" name="login" class="primary-button">Login</button>
-                                                </div>
-                                            </div>
-                                            <!-- dont have an account please register -->
-                                            <div class="">
-                                                <p>Don't have an account? <a href="registration-step-1.php"
-                                                        style="color:#f4e90a">Register</a></p>
-                                            </div>
-                                        </form>
-                                    <?php } else { ?>
-                                        <h3 class="h4 form-box text-black mb-4">Welcome to Munshi Mohammad Meherulla Hall</h3>
-                                    <?php } ?>
+                                <div class="card-body">
+                                    <form method="post" action="" enctype="multipart/form-data">
+                                        <!-- dropdown of admin and super-admin -->
+                                        <div class="mb-4">
+                                            <label for="userType" class="form-label">User Type</label>
+                                            <select class="form-select" id="userType" name="userType" required>
+                                                <option value="admin">Admin</option>
+                                                <option value="super-admin">Super Admin</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-4">
+                                            <label for="email" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="email" name="email" required>
+                                        </div>
+                                        <div class="mb-4">
+                                            <label for="password" class="form-label">Password</label>
+                                            <input type="password" class="form-control" id="password" name="password" required>
+                                        </div>
+                                        <!-- Forgot password link -->
+                                        <div class="mb-3 text-end">
+                                            <a href="reset-pass-1.php" class="small text-decoration-none">Forgot Password?</a>
+                                        </div>
+                                        <div class="text-center">
+                                            <button type="submit" name="login" class="btn btn-primary px-4">Login</button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
+                            <!-- Sign Up Section Start -->
+                            <div class="card mt-4 shadow-sm border-0">
+                                <div class="card-body text-center">
+                                    <p class="mb-3">Don't have an account?</p>
+                                    <a href="registration-step-1.php" class="btn btn-success px-4">Sign Up</a>
+                                </div>
+                            </div>
+                            <!-- Sign Up Section End -->
                         </div>
-
                     </div>
                 </div>
-            </div>
+            </section>
+            <!-- Login Section End -->
         </div>
 
+        <!-- Footer Section -->
+        <footer class="bg-dark text-white mt-auto">
+            <div class="container py-4 text-center">
+                <p class="mb-0">&copy; 2025 MM Hall. All rights reserved.</p>
+            </div>
+        </footer>
     </div>
 
-    
-    <!-- Footer Section -->
-    <footer class="footer-section ">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="footer-logo-wrapper">
-                        <h3>HMS</h3>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-                    </div>
-                </div>
-
-                <div class="col-md-3 ml-auto">
-                    <div class="footer-link-col">
-                        <h3>Links</h3>
-                        <ul class="list-unstyled footer-links">
-                            <li><a href="#">Home</a></li>
-                            <li><a href="#">Courses</a></li>
-                            <li><a href="#">Programs</a></li>
-                            <li><a href="#">Teachers</a></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="col-md-3 ml-auto">
-                    <div class="footer-link-col">
-                        <h3>Links</h3>
-                        <ul class="list-unstyled footer-links">
-                            <li><a href="#">Home</a></li>
-                            <li><a href="#">Courses</a></li>
-                            <li><a href="#">Programs</a></li>
-                            <li><a href="#">Teachers</a></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="col-md-3 ml-auto">
-                    <div class="footer-link-col">
-                        <h3>Social Media</h3>
-                        <ul class="list-unstyled footer-social-links">
-                            <li><a href="#"><i class="fa-brands fa-facebook"></i></a></li>
-                            <li><a href="#"><i class="fa-brands fa-linkedin"></i></a></li>
-                            <li><a href="#"><i class="fa-brands fa-twitter"></i></a></li>
-                        </ul>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="row pt-5 mt-5 text-center">
-                <div class="col-md-12">
-                    <div class="border-top pt-5">
-                        <p class="footer-copyright-text">
-                            <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                            Copyright &copy;
-                            <script>
-                                document.write(new Date().getFullYear());
-                            </script> JUST Credit <i class="icon-heart"
-                                aria-hidden="true"></i> by <a href="#" target="_blank">Arafat &
-                                Shakil</a>
-
-                        </p>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </footer>
-
-    <script src="../js/jquery-3.3.1.min.js"></script>
-    <script src="../js/jquery-migrate-3.0.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
-    <script src="../js/jquery-ui.js"></script>
-    <script src="../js/popper.min.js"></script>
-    <script src="../js/bootstrap.min.js"></script>
-    <script src="../js/owl.carousel.min.js"></script>
-    <script src="../js/jquery.stellar.min.js"></script>
-    <script src="../js/jquery.countdown.min.js"></script>
-    <script src="../js/bootstrap-datepicker.min.js"></script>
-    <script src="../js/jquery.easing.1.3.js"></script>
-    <script src="../js/aos.js"></script>
-    <script src="../js/jquery.fancybox.min.js"></script>
-    <script src="../js/jquery.sticky.js"></script>
-
-
-    <script src="../js/main.js"></script>
-
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

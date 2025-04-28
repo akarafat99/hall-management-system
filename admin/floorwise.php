@@ -1,6 +1,8 @@
 <?php
 include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
+include_once '../class-file/Auth.php';
+auth('admin');
 
 include_once '../class-file/HallSeatDetails.php';
 include_once '../popup-1.php';

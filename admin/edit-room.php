@@ -1,8 +1,9 @@
 <?php
-/* roomwise.php – show seats for one room */
-
 include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
+include_once '../class-file/Auth.php';
+auth('admin');
+
 if ($session::get('msg1')) {
     include_once '../popup-1.php';
     showPopup($session::get('msg1'));

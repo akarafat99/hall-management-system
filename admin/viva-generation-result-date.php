@@ -1,6 +1,8 @@
 <?php
 include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
+include_once '../class-file/Auth.php';
+auth('admin'); // Check if the user is authenticated as an admin
 
 include_once '../class-file/HallSeatAllocationEvent.php';
 include_once '../class-file/HallSeatApplication.php';
@@ -141,7 +143,7 @@ if (isset($_POST['submitViva'])) {
         </div>
 
         <div class="p-4">
-          <h1>Publish Viva Dates and Result Publication Date</h1>
+          <h1>Publish Viva Dates and Result Publication Date With Seat Confirmation Deadline</h1>
           <p>Total Applications: <strong><?php echo $totalApplications; ?></strong></p>
         </div>
 

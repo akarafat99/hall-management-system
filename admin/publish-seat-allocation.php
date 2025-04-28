@@ -1,6 +1,8 @@
 <?php
 include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
+include_once '../class-file/Auth.php';
+auth('admin'); 
 
 include_once '../class-file/HallSeatApplication.php';
 include_once '../class-file/Department.php';
@@ -131,6 +133,15 @@ $appIds  = $shortlist['appIds'];
                     aria-label="Toggle navigation">
                     ☰ Menu
                 </button>
+
+                <!-- Title -->
+                <div class="p-4">
+                    <h1>Publish Result</h1>
+                    <p class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        You are about to publish the seat allocation result for the event <strong><?php echo htmlspecialchars($event->title); ?></strong>.
+                    </p>
+                </div>
 
                 <!-- TODO 1: Publish form with warning and forward $appIds -->
                 <div class="m-4 p-4 border rounded shadow-sm">

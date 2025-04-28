@@ -3,6 +3,9 @@ include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
 $session::ensureSessionStarted();
 
+include_once '../class-file/Auth.php';
+auth('admin');
+
 include_once '../popup-1.php';
 if ($session::get("msg1")) {
     showPopup($session::get("msg1"));

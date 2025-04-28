@@ -1,6 +1,8 @@
 <?php
 include_once "../class-file/SessionManager.php";
 $session = SessionStatic::class;
+include_once "../class-file/Auth.php";
+auth('admin');
 
 include_once "../popup-1.php";
 if ($session::get("msg1")) {
@@ -99,36 +101,57 @@ $allNotices = $noticeManager->getByStatus();
                 </div>
 
                 <!-- New Notice Form -->
-                <div class="p-3">
-                    <h2>Create New Notice</h2>
-                    <form action="" method="post">
-                        <input type="hidden" name="action" value="create">
-                        <div class="mb-3">
-                            <label for="newTitle" class="form-label">Notice Title</label>
-                            <input
-                                type="text"
-                                id="newTitle"
-                                name="title"
-                                class="form-control"
-                                placeholder="Enter title"
-                                required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="newDescription" class="form-label">Notice Description</label>
-                            <textarea
-                                id="newDescription"
-                                name="description"
-                                class="form-control"
-                                rows="3"
-                                placeholder="Enter description"
-                                required></textarea>
-                        </div>
-                        <button
-                            type="submit"
-                            name="submit"
-                            class="btn btn-success">Submit</button>
-                    </form>
-                </div>
+                <div class="accordion" id="noticeAccordion">
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingNotice">
+      <button
+        class="accordion-button collapsed"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#collapseNotice"
+        aria-expanded="false"
+        aria-controls="collapseNotice">
+        Create New Notice
+      </button>
+    </h2>
+    <div
+      id="collapseNotice"
+      class="accordion-collapse collapse"
+      aria-labelledby="headingNotice"
+      data-bs-parent="#noticeAccordion">
+      <div class="accordion-body p-3">
+        <form action="" method="post">
+          <input type="hidden" name="action" value="create">
+          <div class="mb-3">
+            <label for="newTitle" class="form-label">Notice Title</label>
+            <input
+              type="text"
+              id="newTitle"
+              name="title"
+              class="form-control"
+              placeholder="Enter title"
+              required>
+          </div>
+          <div class="mb-3">
+            <label for="newDescription" class="form-label">Notice Description</label>
+            <textarea
+              id="newDescription"
+              name="description"
+              class="form-control"
+              rows="3"
+              placeholder="Enter description"
+              required></textarea>
+          </div>
+          <button
+            type="submit"
+            name="submit"
+            class="btn btn-success">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 
                 <hr>
 

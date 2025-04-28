@@ -1,10 +1,12 @@
 <?php
-// seat-management.php
 
-require_once '../class-file/SessionManager.php';
+include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
 
-require_once '../class-file/HallSeatDetails.php';
+include_once '../class-file/Auth.php';
+auth('admin');
+
+include_once '../class-file/HallSeatDetails.php';
 $seatDetails = new HallSeatDetails();
 
 // Handle “Create Floor” submission
@@ -84,18 +86,18 @@ if ($isCreateFloor) {
                     ☰ Menu
                 </button>
 
-                <h3 class="mb-4">
+                <h3 class="mb-4 mt-4">
                     <?= $isCreateFloor
                         ? 'Create Floor, Rooms & Seats'
                         : "Add Room(s) to Floor {$existingFloorNo}" ?>
                 </h3>
 
                 <?php if (! $isCreateFloor): ?>
-          <a href="floorwise.php?floorNo=<?= $existingFloorNo ?>" class="btn btn-secondary mb-4"
-             class="btn btn-secondary mb-3">
-            <i class="fas fa-arrow-left me-1"></i>Back to Floors
-          </a>
-        <?php endif; ?>
+                    <a href="floorwise.php?floorNo=<?= $existingFloorNo ?>" class="btn btn-secondary mb-4"
+                        class="btn btn-secondary mb-3">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Floors
+                    </a>
+                <?php endif; ?>
 
                 <div class="card mb-4">
                     <div class="card-body">

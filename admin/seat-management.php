@@ -1,6 +1,10 @@
 <?php
 include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
+
+include_once '../class-file/Auth.php';
+auth('admin');
+
 if ($session::get('msg1')) {
     include_once '../popup-1.php';
     showPopup($session::get('msg1'));
@@ -51,10 +55,10 @@ $totalFloors = $seatDetails->getMaxFloorNo();
           ☰ Menu
         </button>
 
-        <div class="px-4 py-3">
+        <div class="px-4 py-3 mt-4">
           <!-- Header & Create button -->
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h4">Seat Management</h2>
+            <h2 class="h2">Seat Management</h2>
             <a
               href="create-floor-room-seat.php"
               class="btn btn-success btn-md rounded-pill px-4 fw-semibold">

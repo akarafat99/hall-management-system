@@ -1,6 +1,8 @@
 <?php
 include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
+include_once '../class-file/Auth.php';
+auth('admin'); 
 
 include_once '../popup-1.php';
 if ($session::get("msg1")) {
@@ -82,7 +84,7 @@ $statusMeanings = [
                 <div class="d-flex align-items-center">
                   <h4 class="mb-0">#<?php echo $event->event_id; ?> – <?php echo htmlspecialchars($event->title); ?></h4>
                   <span class="badge <?php echo $event->status != 4 ? 'bg-warning text-dark' : 'bg-success'; ?> ms-3">
-                    <?php echo $event->status != 4 ? 'Ongoing' : 'Completed'; ?>
+                    <?php echo $event->status != 5 ? 'Ongoing' : 'Completed'; ?>
                   </span>
                 </div>
               </div>
@@ -393,12 +395,16 @@ $statusMeanings = [
                         class="btn btn-primary">
                         Proceed to Schedule & Notice
                       </a>
-                    <?php else: ?>
+                    <?php elseif ($event->status == 2 || $event->status == 3): ?>
                       <a
                         href="viva-generation-result-date.php?eventId=<?php echo $event->event_id; ?>&amp;action=reschedule"
                         class="btn btn-warning">
                         Proceed to View & Reschedule
                       </a>
+                    <?php else: ?>
+                      <div class="alert alert-warning mt-4" role="alert">
+                        <strong>✅ Viva Schedule &amp; Result Notice Published. You Can Not Change Them Now.</strong>
+                      </div>
                     <?php endif; ?>
 
                   </div>

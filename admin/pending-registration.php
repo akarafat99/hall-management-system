@@ -1,9 +1,21 @@
 <?php
+include_once '../class-file/SessionManager.php';
+$session = SessionStatic::class;
+
+include_once '../class-file/Auth.php';
+auth('admin');
+
+include_once '../popup-1.php';
+if ($session::get('msg1') != null) {
+    showPopup($session::get('msg1'));
+    $session::delete('msg1');
+}
+
+
 include_once '../class-file/User.php';
 include_once '../class-file/UserDetails.php';
 include_once '../class-file/FileManager.php';
 include_once '../class-file/Department.php';
-include_once '../popup-1.php';
 
 // Process approve/decline actions.
 if (isset($_POST['approve']) || isset($_POST['decline'])) {
@@ -130,8 +142,8 @@ $yearSemesterCode = $department->getYearSemesterCodes(); // Get all year-semeste
                 <main>
                     <div class="container-fluid px-4">
                         <div class="card__wrapper">
-                            <div class="card__title-wrap mb-20">
-                                <h3 class="table__heading-title">Review Account Registration</h3>
+                            <div class="card__title-wrap mt-4 mb-20">
+                                <h3 class="table__heading-title">Review Student Account Registration</h3>
                             </div>
 
                             <!-- Enhanced Search Options -->

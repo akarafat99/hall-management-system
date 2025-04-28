@@ -1,12 +1,15 @@
 <?php
+include_once '../class-file/SessionManager.php';
+$session = SessionStatic::class;
+include_once '../class-file/Auth.php';
+auth('admin'); 
+
 include_once '../class-file/User.php';
 include_once '../class-file/UserDetails.php';
 include_once '../class-file/FileManager.php';
-include_once '../class-file/SessionManager.php';
 include_once '../class-file/Department.php';
 include_once '../popup-1.php';
 
-$session = SessionStatic::class;
 
 if ($session::get('user') == null) {
   echo "<script>window.location.href = '../login.php';</script>";

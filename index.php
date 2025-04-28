@@ -161,7 +161,7 @@ $session::delete('msg1');
 
 <body>
   <?php
-  if ($session::get('user') !== null) include_once 'student/navbar-student-1.php';
+  if ($session::get('user') != null) include_once 'student/navbar-student-1.php';
   else include_once 'student/navbar-student-2.php';
   ?>
   <main>

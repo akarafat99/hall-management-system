@@ -6,6 +6,8 @@ include_once '../class-file/User.php';
 include_once '../class-file/UserDetails.php';
 include_once '../class-file/HallSeatAllocationEvent.php';
 include_once '../class-file/HallSeatApplication.php';
+include_once '../class-file/Auth.php';
+auth('user');
 
 $sUser = $session::getObject('userObj');
 $user = new User();

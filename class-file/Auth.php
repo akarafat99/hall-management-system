@@ -12,17 +12,18 @@ function auth($role)
 {
     $session = SessionStatic::class;
     $roleObj = $session::get($role);
+    
+    $currentDir = dirname($_SERVER['PHP_SELF']);
+    if ($role == 'admin') {
+        if ($roleObj == null) {
+            // Get the current directory from the URL (e.g. "/php-class-file")
+            $currentDir = dirname($_SERVER['PHP_SELF']);
 
-    // If no session object exists for the given role, forward to the appropriate login page.
-    if ($roleObj === null) {
-        // Get the current directory from the URL (e.g. "/php-class-file")
-        $currentDir = dirname($_SERVER['PHP_SELF']);
-
-        if ($role === 'admin') {
-            $session::set('msg1', 'Please login as an admin to access.');
-            // This constructs a URL like "/php-class-file/../admin/login.php"
-            // echo "<script>location.href='{$currentDir}/../admin/login.php';</script>";
-        } elseif ($role === 'user') {
+            $session::set('msg1', 'Please login to access.');
+            echo "<script>location.href='{$currentDir}/../admin/login.php';</script>";
+        }
+    } else {
+        if ($roleObj == null) {
             $session::set('msg1', 'Please login as a user to access.');
             // This constructs a URL like "/php-class-file/../login.php"
             echo "<script>location.href='{$currentDir}/../login.php';</script>";
@@ -30,6 +31,5 @@ function auth($role)
     }
 }
 
-// Example usage:
-// auth('user');
 ?>
+<!-- end -->

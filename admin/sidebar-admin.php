@@ -83,7 +83,7 @@
         <!-- Footer (Fixed) with full-width button -->
         <div class="py-3 flex-shrink-0 border-top border-secondary">
             <p> <i>Logged in as admin </i></p>
-            <button class="btn btn-danger w-100">Logout</button>
+            <a class="btn btn-danger w-100" href="logout.php" role="button">Logout</a>
         </div>
     </div>
 </nav>

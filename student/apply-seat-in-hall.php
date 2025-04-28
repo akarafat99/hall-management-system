@@ -1,6 +1,7 @@
 <?php
 include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
+
 include_once '../class-file/HallSeatAllocationEvent.php';
 include_once '../class-file/Department.php';
 include_once '../popup-1.php';
@@ -67,7 +68,7 @@ $statusMeanings = [
         <div class="flex-grow-1">
             <!-- navbar section start -->
             <?php
-            if ($session::get('user') !== null) {
+            if ($session::get('user') != null) {
                 include_once 'navbar-student-1.php';
             } else {
                 include_once 'navbar-student-2.php';

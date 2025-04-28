@@ -1,3 +1,19 @@
+<?php
+include_once '../class-file/SessionManager.php';
+$session = SessionStatic::class;
+
+include_once '../class-file/Auth.php';
+auth('admin');
+
+include_once '../popup-1.php';
+if ($session::get('msg1') != null) {
+    showPopup($session::get('msg1'));
+    $session::delete('msg1');
+}
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 

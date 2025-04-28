@@ -22,7 +22,7 @@ if (isset($_POST['login'])) {
     if ($userCheck[0] == 1) {
         include_once 'popup-1.php';
         $session::storeObject('userObj', $user);
-        $session::set('user', 1);
+        $session::set('user', 'user');
         $session::set('msg1', $userCheck[1]);
     } else {
         include_once 'popup-1.php';
@@ -30,7 +30,7 @@ if (isset($_POST['login'])) {
     }
 }
 
-if ($session::get('user') !== null) {
+if ($session::get('user') != null) {
     echo '<script type="text/javascript">
             window.location.href = "index.php";
           </script>';

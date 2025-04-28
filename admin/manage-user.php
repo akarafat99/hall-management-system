@@ -1,9 +1,20 @@
 <?php
+include_once '../class-file/SessionManager.php';
+$session = SessionStatic::class;
+
+include_once '../class-file/Auth.php';
+auth('admin');
+
+include_once '../popup-1.php';
+if ($session::get('msg1') != null) {
+    showPopup($session::get('msg1'));
+    $session::delete('msg1');
+}
+
 include_once '../class-file/User.php';
 include_once '../class-file/UserDetails.php';
 include_once '../class-file/FileManager.php';
 include_once '../class-file/Department.php';
-include_once '../popup-1.php';
 
 if (isset($_POST['active']) || isset($_POST['deactive'])) {
     $user2 = new User();
@@ -129,7 +140,7 @@ $yearSemesterCode = $department->getYearSemesterCodes(); // Get the year and sem
                     <div class="container-fluid px-4">
                         <div class="card__wrapper">
                             <div class="card__title-wrap mb-20">
-                                <h3 class="table__heading-title">Manage User</h3>
+                                <h3 class="table__heading-title">Manage Student Account</h3>
                             </div>
 
                             <!-- Enhanced Search Options -->

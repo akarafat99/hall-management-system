@@ -1,6 +1,8 @@
 <?php
 include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
+include_once '../class-file/Auth.php';
+auth('admin'); // Check if the user is authenticated as an admin
 
 include_once '../class-file/User.php';
 include_once '../class-file/UserDetails.php';
