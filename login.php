@@ -17,7 +17,7 @@ if (isset($_POST['login'])) {
     $user = new User();
     $user->email = $email;
     $user->password = $password;
-    $userCheck = $user->checkUserEmailWithStatus($user->email, $user->password);
+    $userCheck = $user->checkUserEmailWithStatus($user->email, $user->password, "user");
 
     if ($userCheck[0] == 1) {
         include_once 'popup-1.php';
@@ -27,6 +27,11 @@ if (isset($_POST['login'])) {
     } else {
         include_once 'popup-1.php';
         showPopup($userCheck[1]);
+
+        if($userCheck[0] == -1) {
+            $user->user_id = (int)$userCheck[2];
+            $user->updateStatus($user->user_id, -2);
+        }
     }
 }
 

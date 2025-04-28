@@ -168,10 +168,12 @@ $session::delete('msg1');
     <!-- Section 1: Hero -->
     <section id="hero">
       <div class="hero-content">
-        <h1 class="hero-heading">MM Hall</h1>
+        <h1>
+          Munshi Mohammad Meherulla Hall 
+          <small class="text-light fs-5">JUST</small>
+        </h1>
         <p class="hero-text">Welcome to MM Hall—your home away from home. Discover comfort, community, and convenience.</p>
-        <p class="hero-subtext">This is <span id="dynamic-word">Good</span></p>
-        <button class="btn-simple">Explore</button>
+        <p class="hero-subtext"> <span id="dynamic-word">Good</span></p>
       </div>
     </section>
 
@@ -181,7 +183,7 @@ $session::delete('msg1');
         <div class="text-col col-md-6">
           <h2>Notices</h2>
           <p>Stay updated with the latest hall announcements, deadlines, and event notifications.</p>
-          <button class="btn-simple">View Notices</button>
+          <a class="btn-simple decoration-none" href="notice.php">View Notices</a>
         </div>
         <div class="img-col col-md-6"></div>
       </div>
@@ -196,7 +198,18 @@ $session::delete('msg1');
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <!-- Dynamic word script -->
   <script>
-    const words = ['Good', 'Great', 'Awesome', 'Inspiring', 'Welcoming'];
+    const words = [
+      "Digitally integrated",
+      "Administratively efficient",
+      "Academically oriented",
+      "Operationally streamlined",
+      "User-centric",
+      "Time-optimized",
+      "Process-driven",
+      "Virtually accessible",
+      "Compliance-assured",
+      "Resource-adaptive"
+    ];
     let idx = 0;
     const dynamicEl = document.getElementById('dynamic-word');
 

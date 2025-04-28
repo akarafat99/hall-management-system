@@ -6,6 +6,7 @@ include_once '../class-file/User.php';
 include_once '../class-file/UserDetails.php';
 include_once '../class-file/FileManager.php';
 include_once '../class-file/Department.php';
+include_once '../class-file/Division.php';
 include_once '../popup-1.php';
 include_once '../class-file/Auth.php';
 auth('user');
@@ -29,6 +30,8 @@ $session::storeObject('userDetails', $userDetails);
 $department = new Department();
 $allDepartments = $department->getDepartments(null, 1);
 $department->getDepartments($userDetails->department_id);
+
+$divisions = getDivisions();
 
 $yearSemesterCode = $department->getYearSemesterCodes();
 
@@ -406,12 +409,30 @@ $file2->loadByFileId($file2->file_id);
                     <label for="lastSemesterCgpa" class="form-label">Last Semester CGPA/Merit</label>
                     <input type="text" class="form-control" id="lastSemesterCgpa" name="lastSemesterCgpa" value="<?= htmlspecialchars($userDetails->last_semester_cgpa_or_merit) ?>">
                   </div>
+                </div>
+
+                <!-- Division and district -->
+                <div class="row mb-4">
                   <div class="col-md-6 mb-3">
-                    <label for="zilla" class="form-label">Zilla</label>
-                    <!-- Using district value here -->
-                    <input type="text" class="form-control" id="zilla" name="zilla" value="<?= htmlspecialchars($userDetails->district) ?>">
+                    <label for="division" class="form-label fw-semibold">Division</label>
+                    <select class="form-select" id="division" name="division" required>
+                      <?php foreach ($divisions as $divisionName => $districtList): ?>
+                        <option
+                          value="<?= htmlspecialchars($divisionName, ENT_QUOTES) ?>"
+                          <?= $userDetails->division === $divisionName ? 'selected' : '' ?>>
+                          <?= htmlspecialchars($divisionName) ?>
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
+                  </div>
+
+                  <div class="col-md-6 mb-3">
+                    <label for="district" class="form-label fw-semibold">District</label>
+                    <select class="form-select" id="district" name="district" required></select>
                   </div>
                 </div>
+
+
                 <div class="mb-3">
                   <label for="permanentAddress" class="form-label">Permanent Address</label>
                   <textarea class="form-control" id="permanentAddress" name="permanentAddress" rows="2"><?= htmlspecialchars($userDetails->permanent_address) ?></textarea>
@@ -533,7 +554,7 @@ $file2->loadByFileId($file2->file_id);
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-3 mt-auto">
       <div class="container">
-        <p class="mb-0">&copy; <?php echo date('Y'); ?> JUST Credit by Arafat &amp; Shakil</p>
+        <p class="mb-0">&copy; <?php echo date('Y'); ?> JUST MM Hall</p>
       </div>
     </footer>
   </div>
@@ -541,8 +562,41 @@ $file2->loadByFileId($file2->file_id);
 
   <!-- Bootstrap Bundle with Popper -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- for the sidebar and phone menu -->
-  <script src="../js2/custom1.js"></script>
+
+  <!-- Division → District cascade -->
+  <script>
+    const divisionData = <?= json_encode($divisions, JSON_UNESCAPED_UNICODE) ?>;
+    const selectedDistrict = <?= json_encode($userDetails->district, JSON_UNESCAPED_UNICODE) ?>;
+
+    function populateDistricts(divName) {
+      const distSel = document.getElementById('district');
+      distSel.innerHTML = '';
+
+      // grab whatever is stored under this division
+      let list = divisionData[divName] || [];
+
+      // if it's an object, turn its keys into an array
+      if (!Array.isArray(list) && typeof list === 'object') {
+        list = Object.keys(list);
+      }
+
+      // now list.forEach is safe
+      list.forEach(d => {
+        const opt = new Option(d, d);
+        if (d === selectedDistrict) opt.selected = true;
+        distSel.add(opt);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const divSel = document.getElementById('division');
+      populateDistricts(divSel.value);
+      divSel.addEventListener('change', e => {
+        populateDistricts(e.target.value);
+      });
+    });
+  </script>
+
 
 </body>
 

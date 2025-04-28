@@ -319,7 +319,7 @@ class HallSeatDetails
             while ($row = mysqli_fetch_assoc($result)) {
                 $data[] = $row;
             }
-            if (count($data) === 1) {
+            if (count($data) == 1) {
                 $this->setProperties($data[0]);
             }
             return $data;
@@ -349,7 +349,7 @@ class HallSeatDetails
             while ($row = mysqli_fetch_assoc($result)) {
                 $data[] = $row;
             }
-            if (count($data) === 1) {
+            if (count($data) == 1) {
                 $this->setProperties($data[0]);
             }
             return $data;

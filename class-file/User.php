@@ -168,7 +168,7 @@ class User
                     user_type = '$this->user_type'
                 WHERE user_id = $this->user_id";
 
-        return mysqli_query($this->conn, $sql) ? true : "Error updating record: " . mysqli_error($this->conn);
+        return mysqli_query($this->conn, $sql) ? true : false;
     }
 
     /**
@@ -196,6 +196,17 @@ class User
         } else {
             return "Error updating user status: " . mysqli_error($this->conn);
         }
+    }
+
+    /**
+     * Encrypt the password using bcrypt.
+     * 
+     * @param string $password The password to encrypt.
+     * @return string The encrypted password.
+     */
+    public function encryptPassword($password)
+    {
+        return password_hash($password, PASSWORD_DEFAULT);
     }
 
     /**
@@ -272,6 +283,7 @@ class User
             // Iterate through each row to check statuses
             foreach ($rows as $row) {
                 $status = (int)$row['status'];
+                $user_id = (int)$row['user_id'];
 
                 // Check for deleted status (-2)
                 if ($status == -2) {
@@ -305,7 +317,7 @@ class User
                 // Check for declined status (-1)
                 if ($status == -1) {
                     $hasDeclined = true;
-                    return ["-1", "Your account registration was declined by the admin. Please register again using <b>this email<b> or other email account."];
+                    return ["-1", "Your account registration was declined by the admin. Please register again using <b>this email<b> or other email account.", $user_id];
                 }
             }
         }
@@ -360,6 +372,10 @@ class User
         }
 
         $result = mysqli_query($this->conn, $sql);
+        if ($result){
+            $data = mysqli_fetch_assoc($result);
+            $this->user_id = $data['user_id'];
+        }
 
         return ($result && mysqli_num_rows($result) > 0) ? 1 : 0;
     }

@@ -6,7 +6,7 @@ class Admin
     public $user_id = 0;
     public $status = 1; // You can adjust this if needed (e.g., 1 for active)
     public $email = "admin@admin";
-    public $password = "password";
+    public $password = 'pa$$w0rd';
     public $user_type = "admin";
     public $created;
     public $modified;
@@ -50,10 +50,29 @@ class Admin
 
         if ($result) {
             $this->user_id = mysqli_insert_id($this->conn);
+            
+            include_once 'UserDetails.php';
+            $userDetails = new UserDetails();
+            $userDetails->user_id = $this->user_id;
+            $userDetails->status = 1;
+            $userDetails->full_name = "Admin";
+            $userDetails->insert();
             return true;
         } else {
-            return "Error inserting admin: " . mysqli_error($this->conn);
+            return false;
         }
+    }
+
+    /**
+     * Insert super-admin and admin
+     * 
+     */
+    public function createSuperAdmin()
+    {
+        $this->email = "super@admin";
+        $this->user_type = "super-admin";
+        $res = $this->insertAdmin();
+        return $res;
     }
 }
 ?>

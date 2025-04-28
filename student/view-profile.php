@@ -289,7 +289,11 @@ $file2->loadByFileId($file2->file_id);
                     </div>
                   </div>
                   <div class="mb-2">
-                    <label class="form-label">Zilla</label>
+                    <label class="form-label">Division</label>
+                    <p><?php echo  htmlspecialchars($userDetails->division) ?></p>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">District</label>
                     <p><?php echo  htmlspecialchars($userDetails->district) ?></p>
                   </div>
                   <div class="mb-2">
@@ -392,7 +396,7 @@ $file2->loadByFileId($file2->file_id);
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-3 mt-auto">
       <div class="container">
-        <p class="mb-0">&copy; <?php echo date('Y'); ?> JUST Credit by Arafat &amp; Shakil</p>
+        <p class="mb-0">&copy; <?php echo date('Y'); ?> JUST MM Hall</p>
       </div>
     </footer>
   </div>

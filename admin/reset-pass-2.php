@@ -1,23 +1,25 @@
 <?php
-include_once 'class-file/SessionManager.php';
+include_once '../class-file/SessionManager.php';
 $session = SessionStatic::class;
 
-include_once 'class-file/EmailSender.php';
-include_once 'class-file/User.php';
+include_once '../class-file/EmailSender.php';
 
-if ($session::get('step') !== 2) {
+if($session::get('admin') != null) {
+    echo '<script type="text/javascript">
+            window.location.href = "dashboard.php";
+          </script>';
+    exit;
+}
+
+if ($session::get('step') != 2) {
     $session::set('msg1', 'Please complete the <b>step 1</b> first.');
     echo $session::get('msg1');
-    echo '<script> window.location.href = "registration-step-1.php";</script>';
+    echo '<script> window.location.href = "reset-pass-1.php";</script>';
     exit();
 }
 
 if ($session::get('step') == 2) {
 }
-
-$sUser = $session::getObject('signup_user');
-$user = new User();
-$session::copyProperties($sUser, $user);
 
 if (isset($_POST['register_2'])) {
     $otp = $session::get('otp');
@@ -31,7 +33,7 @@ if (isset($_POST['register_2'])) {
         $session::set('msg1', 'OTP Matched');
         $session::set('step', 3);
         // Redirect to the next step
-        echo '<script> window.location.href = "registration-step-3.php";</script>';
+        echo '<script> window.location.href = "reset-pass-3.php";</script>';
         exit();
     }
 }
@@ -41,7 +43,7 @@ if (isset($_POST['resendotp']) && $session::get('step') == 2) {
     $otp = rand(1000, 9999);
     $session::set('otp', $otp);
     $emailSender = new EmailSender();
-    $emailSender->sendMail($user->email, 'Email Verification OTP #' . $otp, "Dear User, <br><br>Your OTP is: <b>$otp</b><br><br>Thank you. <br>JUST MM Hall");
+    $emailSender->sendMail($user->email, 'Password Reset OTP #' . $otp, "Dear User, <br><br>Your OTP is: <b>$otp</b><br><br>Thank you. <br>JUST MM Hall");
 }
 
 ?>
@@ -70,9 +72,6 @@ if (isset($_POST['resendotp']) && $session::get('step') == 2) {
     
     <div class="d-flex flex-column min-vh-100">
         <div class="flex-grow-1">
-            <!-- Navbar Section Start -->
-            <?php include_once 'student/navbar-student-2.php'; ?>
-            <!-- Navbar Section End  -->
 
             <!-- Registration Form -->
             <div class="container my-5">
@@ -89,6 +88,7 @@ if (isset($_POST['resendotp']) && $session::get('step') == 2) {
                                     <div class="mb-3">
                                         <label for="otp" class="form-label">
                                             OTP
+                                            <span class="fw-bold"><?php echo $session::get('otp'); ?></span>
                                         </label>
                                         <input
                                             type="text"
@@ -131,7 +131,7 @@ if (isset($_POST['resendotp']) && $session::get('step') == 2) {
         <!-- Footer -->
         <footer class="bg-dark text-white text-center py-3 mt-auto">
             <div class="container">
-                <p class="mb-0">&copy; <?php echo date('Y'); ?> JUST MM Hall</p>
+                <p class="mb-0">&copy; <?php echo date('Y'); ?> JUST Credit by Arafat &amp; Shakil</p>
             </div>
         </footer>
     </div>

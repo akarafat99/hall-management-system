@@ -22,12 +22,10 @@ if (isset($_POST['login'])) {
     $userCheck = $user->checkUserEmailWithStatus($user->email, $user->password, $user->user_type);
 
     if ($userCheck[0] == 1) {
-        include_once '../popup-1.php';
-        $session::storeObject('userObj', $user);
+        $session::storeObject('adminObj', $user);
         $session::set('admin', $user->user_type);
         $session::set('msg1', $userCheck[1]);
     } else {
-        include_once '../popup-1.php';
         showPopup($userCheck[1]);
     }
 }
@@ -91,7 +89,7 @@ if ($session::get('admin') != null) {
                                         </div>
                                         <!-- Forgot password link -->
                                         <div class="mb-3 text-end">
-                                            <a href="reset-pass-1.php" class="small text-decoration-none">Forgot Password?</a>
+                                            <a href="reset-pass-1.php" class="small text-decoration-none" target="_blank">Forgot Password?</a>
                                         </div>
                                         <div class="text-center">
                                             <button type="submit" name="login" class="btn btn-primary px-4">Login</button>
@@ -103,7 +101,7 @@ if ($session::get('admin') != null) {
                             <div class="card mt-4 shadow-sm border-0">
                                 <div class="card-body text-center">
                                     <p class="mb-3">Don't have an account?</p>
-                                    <a href="registration-step-1.php" class="btn btn-success px-4">Sign Up</a>
+                                    <a href="signup.php" class="btn btn-success px-4">Sign Up</a>
                                 </div>
                             </div>
                             <!-- Sign Up Section End -->

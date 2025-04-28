@@ -43,8 +43,9 @@ if ($session::get('msg1') != null) {
             <div class="container py-5">
                 <!-- About Text -->
                 <h2 class="mb-3">About MM Hall</h2>
-                <p>MM Hall is a vibrant residential community at XYZ University, providing students with a safe, supportive environment. Established in 2010, our hall offers comfortable accommodations and a range of amenities designed to enhance student life and foster academic success.</p>
-
+                <p class="lead">
+                    Munshi Mohammad Meherulla Hall (MM Hall) is a premier residential facility at Jashore University of Science and Technology, founded in 2010. It provides secure, thoughtfully designed accommodations and a full suite of student-centric amenities—including high-speed internet, study lounges, and recreational spaces—to foster an environment of academic excellence and personal growth.
+                </p>
                 <!-- Facilities List -->
                 <h4 class="mt-5 mb-3">Facilities</h4>
                 <ul class="list-group list-group-flush mb-5">
@@ -74,13 +75,9 @@ if ($session::get('msg1') != null) {
 
                 <!-- Location -->
                 <h4 class="mb-3">Location</h4>
-                <p>First Floor, North Wing, MM Hall Building<br>XYZ University Campus, Cityville</p>
+                <p>Ground Floor, Munshi Mohammad Meherulla Hall, Jashore University of Science and Technology, Jashore, Jashore-7408, Khulna, Bangladesh.</p>
                 <div class="ratio ratio-16x9">
-                    <iframe
-                        src="https://maps.google.com/maps?q=XYZ%20University%20Cityville&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                        loading="lazy"
-                        allowfullscreen>
-                    </iframe>
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m26!1m12!1m3!1d3613.142080202048!2d89.12364239268909!3d23.235028281434317!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m11!3e6!4m3!3m2!1d23.233646999999998!2d89.1255231!4m5!1s0x39ff1857827d6cb7%3A0xecab69d917b1a29b!2s1%20Z7031%2C%207408!3m2!1d23.233434499999998!2d89.1254175!5e1!3m2!1sen!2sbd!4v1745875193534!5m2!1sen!2sbd" width="800" height="600" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                 </div>
             </div>
 

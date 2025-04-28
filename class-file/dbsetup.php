@@ -42,8 +42,8 @@ include_once 'NoticeManager.php';
 // echo "<br><br><br>";
 
 // $admin = new Admin();
-// $admin->insertAdmin();
-// echo "Admin record inserted successfully";
+// $admin->createSuperAdmin();
+// echo "Super Admin created successfully";
 // echo "<br><br><br>";
 
 // $hallSeatDetails = new HallSeatDetails();

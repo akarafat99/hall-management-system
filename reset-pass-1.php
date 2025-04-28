@@ -4,6 +4,12 @@ $session = SessionStatic::class;
 $session::ensureSessionStarted();
 
 include_once 'class-file/EmailSender.php';
+if($session::get('user') != null) {
+    echo '<script type="text/javascript">
+            window.location.href = "index.php";
+          </script>';
+    exit;
+}
 
 include_once 'popup-1.php';
 if ($session::get('msg1') !== null) {
@@ -16,19 +22,18 @@ if (isset($_POST['register_1'])) {
 
     $user = new User();
     $user->email    = $_POST['email'];
-    $user->password = $_POST['password'];
 
     // checking for status 0, 1, 2, -1
     if ($user->isEmailAvailable($user->email, [0, 1, -1, 2], null)) {
-        showPopup("Email already exists. Please try another email.");
-    } else {
-        $session::storeObject('signup_user', $user);
+        $session::storeObject('tempUserObj', $user);
         $session::set('step', 2);
         $otp = rand(1000, 9999);
         $session::set('otp', $otp);
         $emailSender = new EmailSender();
-        $emailSender->sendMail($user->email, "Email Verification OTP #$otp", "Dear User, <br> Your OTP for email verification is: <b>$otp</b>. Please enter this OTP in the next step to verify your email address.<br><br>Thank you!<br>JUST Hall Team");
-        echo "<script>window.location.href='registration-step-2.php';</script>";
+        $emailSender->sendMail($user->email, 'Password Reset OTP #' . $otp, "Dear User, <br><br>Your OTP is: <b>$otp</b><br><br>Thank you. <br>JUST MM Hall");
+        echo "<script>window.location.href='reset-pass-2.php';</script>";
+    } else {
+        showPopup("No email found. Please try again.");
     }
 }
 ?>
@@ -44,13 +49,13 @@ if (isset($_POST['register_1'])) {
 </head>
 
 <body>
-
     <!-- Parent container with flex and min-vh-100 -->
     <div class="d-flex flex-column min-vh-100">
         <!-- Main content area -->
         <div class="flex-grow-1">
-            <!-- Navbar Section Start -->
-            <?php
+
+        <!-- Navbar Section Start -->
+        <?php
             if ($session::get('user') !== null) {
                 include_once 'student/navbar-student-1.php';
             } else {
@@ -88,21 +93,12 @@ if (isset($_POST['register_1'])) {
                                             name="email"
                                             required>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="password" class="form-label">Password</label>
-                                        <input
-                                            type="password"
-                                            class="form-control"
-                                            id="password"
-                                            name="password"
-                                            required>
-                                    </div>
                                     <div class="d-grid">
                                         <button
                                             type="submit"
                                             class="btn btn-primary"
                                             name="register_1">
-                                            Verify Email
+                                            Send OTP
                                         </button>
                                     </div>
                                 </form>

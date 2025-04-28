@@ -3,21 +3,23 @@ include_once 'class-file/SessionManager.php';
 $session = SessionStatic::class;
 
 include_once 'class-file/EmailSender.php';
-include_once 'class-file/User.php';
 
-if ($session::get('step') !== 2) {
+if ($session::get('user') != null) {
+    echo '<script type="text/javascript">
+            window.location.href = "index.php";
+          </script>';
+    exit;
+}
+
+if ($session::get('step') != 2) {
     $session::set('msg1', 'Please complete the <b>step 1</b> first.');
     echo $session::get('msg1');
-    echo '<script> window.location.href = "registration-step-1.php";</script>';
+    echo '<script> window.location.href = "reset-pass-1.php";</script>';
     exit();
 }
 
 if ($session::get('step') == 2) {
 }
-
-$sUser = $session::getObject('signup_user');
-$user = new User();
-$session::copyProperties($sUser, $user);
 
 if (isset($_POST['register_2'])) {
     $otp = $session::get('otp');
@@ -31,7 +33,7 @@ if (isset($_POST['register_2'])) {
         $session::set('msg1', 'OTP Matched');
         $session::set('step', 3);
         // Redirect to the next step
-        echo '<script> window.location.href = "registration-step-3.php";</script>';
+        echo '<script> window.location.href = "reset-pass-3.php";</script>';
         exit();
     }
 }
@@ -41,7 +43,7 @@ if (isset($_POST['resendotp']) && $session::get('step') == 2) {
     $otp = rand(1000, 9999);
     $session::set('otp', $otp);
     $emailSender = new EmailSender();
-    $emailSender->sendMail($user->email, 'Email Verification OTP #' . $otp, "Dear User, <br><br>Your OTP is: <b>$otp</b><br><br>Thank you. <br>JUST MM Hall");
+    $emailSender->sendMail($user->email, 'Password Reset OTP #' . $otp, "Dear User, <br><br>Your OTP is: <b>$otp</b><br><br>Thank you. <br>JUST MM Hall");
 }
 
 ?>
@@ -67,12 +69,18 @@ if (isset($_POST['resendotp']) && $session::get('step') == 2) {
 </head>
 
 <body>
-    
+
     <div class="d-flex flex-column min-vh-100">
         <div class="flex-grow-1">
             <!-- Navbar Section Start -->
-            <?php include_once 'student/navbar-student-2.php'; ?>
-            <!-- Navbar Section End  -->
+            <?php
+            if ($session::get('user') !== null) {
+                include_once 'student/navbar-student-1.php';
+            } else {
+                include_once 'student/navbar-student-2.php';
+            }
+            ?>
+            <!-- Navbar Section End -->
 
             <!-- Registration Form -->
             <div class="container my-5">
@@ -89,6 +97,7 @@ if (isset($_POST['resendotp']) && $session::get('step') == 2) {
                                     <div class="mb-3">
                                         <label for="otp" class="form-label">
                                             OTP
+                                            <span class="fw-bold"><?php echo $session::get('otp'); ?></span>
                                         </label>
                                         <input
                                             type="text"
@@ -138,7 +147,7 @@ if (isset($_POST['resendotp']) && $session::get('step') == 2) {
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             var resendBtn = document.getElementById('resendOTP');

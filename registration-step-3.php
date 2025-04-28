@@ -236,11 +236,13 @@ if (isset($_POST['register'])) {
                             <!-- Merit / CGPA -->
                             <div class="col-12 mb-3">
                                 <label for="dynamic-input" class="form-label fw-semibold" id="dynamic-label">
-                                    University Merit
+                                    University Merit / CGPA
                                 </label>
 
                                 <input class="form-control"
                                     type="number"
+                                    step="any"
+                                    min="0"
                                     id="dynamic-input"
                                     name="university-merit-or-cgpa"
                                     placeholder="Enter value"
@@ -351,7 +353,7 @@ if (isset($_POST['register'])) {
 
         <footer class="bg-dark text-white text-center py-3 mt-auto">
             <div class="container">
-                <p class="mb-0">&copy; <?= date('Y') ?> JUST Credit by Arafat & Shakil</p>
+                <p class="mb-0">&copy; <?= date('Y') ?> JUST MM Hall</p>
             </div>
         </footer>
     </div>
@@ -359,7 +361,6 @@ if (isset($_POST['register'])) {
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Division ➜ District cascade -->
     <!-- Division → District cascade -->
     <script>
         const divisionData = <?= json_encode($divisions, JSON_UNESCAPED_UNICODE) ?>;
@@ -385,33 +386,7 @@ if (isset($_POST['register'])) {
 
 
 
-    <!-- Dynamic label Merit ↔ CGPA -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const yearSel = document.getElementById('year');
-            const semSel = document.getElementById('semester');
-            const input = document.getElementById('dynamic-input');
-            const label = document.getElementById('dynamic-label');
-
-            const update = () => {
-                const isFirst = (yearSel.value === '1' || yearSel.value === '5') && semSel.value === '1';
-                label.textContent = isFirst ? 'University Merit' : 'Last Semester CGPA';
-                if (isFirst) {
-                    input.removeAttribute('min');
-                    input.removeAttribute('max');
-                    input.removeAttribute('step');
-                } else {
-                    input.setAttribute('min', '0');
-                    input.setAttribute('max', '4');
-                    input.setAttribute('step', '0.001');
-                }
-            };
-
-            yearSel.addEventListener('change', update);
-            semSel.addEventListener('change', update);
-            update(); // initial call
-        });
-    </script>
+    
 </body>
 
 </html>

@@ -60,7 +60,9 @@ $navbarDir .= '/';
             </a>
             <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="accountDropdown">
               <li><a class="dropdown-item text-white" href="<?= $navbarDir ?>profile.php">Profile</a></li>
+              <li><a class="dropdown-item text-white" href="<?= $navbarDir ?>hall-resident-status.php">My Hall Resident Status</a></li>
               <li><a class="dropdown-item text-white" href="<?= $navbarDir ?>hall-seat-application-list.php">My Hall Seat Applications</a></li>
+              <li><a class="dropdown-item text-white" href="<?= $navbarDir ?>change-pass-1.php">Change Password</a></li>
               <li><a class="dropdown-item text-white" href="<?= $navbarDir ?>../logout.php">Logout</a></li>
             </ul>
           </li>
