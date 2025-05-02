@@ -79,7 +79,7 @@ $allApplications = $hallSeatApplication
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MM HALL – Review Applications</title>
+    <title>MM Hall</title>
 
     <!-- 1) Bootstrap 5 CSS -->
     <link

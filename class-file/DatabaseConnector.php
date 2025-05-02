@@ -29,7 +29,7 @@ class DatabaseConnector {
         if ($conn->query($sql) !== TRUE) {
             die("Error creating database: " . $conn->error . "<br>");
         }
-        echo "************* Database created successfully <br>";
+        // echo "************* Database created successfully <br>";
         $conn->close();
     }
 

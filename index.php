@@ -169,11 +169,17 @@ $session::delete('msg1');
     <section id="hero">
       <div class="hero-content">
         <h1>
-          Munshi Mohammad Meherulla Hall 
+          Munshi Mohammad Meherulla Hall
           <small class="text-light fs-5">JUST</small>
         </h1>
-        <p class="hero-text">Welcome to MM Hall—your home away from home. Discover comfort, community, and convenience.</p>
-        <p class="hero-subtext"> <span id="dynamic-word">Good</span></p>
+        <br>
+        <p class="hero-text">
+          <i>
+            Welcome to MM Hall—your home away from home. This residence hall is affiliated with Jashore University of Science and Technology.
+          </i>
+        </p>
+        <br>
+        <p class="hero-subtext"> <span id="dynamic-word">_</span></p>
       </div>
     </section>
 

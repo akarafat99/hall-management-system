@@ -19,6 +19,7 @@ $sUser = $session::getObject('signup_user');
 $user = new User();
 $session::copyProperties($sUser, $user);
 
+echo "<script>console.log('OTP: " . $session::get('otp') . "');</script>";
 if (isset($_POST['register_2'])) {
     $otp = $session::get('otp');
 
@@ -40,6 +41,9 @@ if (isset($_POST['resendotp']) && $session::get('step') == 2) {
     // Generate a new OTP.
     $otp = rand(1000, 9999);
     $session::set('otp', $otp);
+
+    echo "<script>console.log('OTP: $otp');</script>";
+
     $emailSender = new EmailSender();
     $emailSender->sendMail($user->email, 'Email Verification OTP #' . $otp, "Dear User, <br><br>Your OTP is: <b>$otp</b><br><br>Thank you. <br>JUST MM Hall");
 }
@@ -61,7 +65,7 @@ if (isset($_POST['resendotp']) && $session::get('step') == 2) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
 
-    <title>JUST Hall</title>
+    <title>MM Hall</title>
 
 
 </head>

@@ -57,7 +57,7 @@ if ($session::get('msg1') != null) {
                 </ul>
 
                 <!-- Photo Gallery -->
-                <h4 class="mb-3">Gallery</h4>
+                <!-- <h4 class="mb-3">Gallery</h4>
                 <div class="row g-3 mb-5">
                     <div class="col-6 col-md-3">
                         <img src="https://via.placeholder.com/300x200" class="img-fluid rounded" alt="Hall exterior">
@@ -71,7 +71,7 @@ if ($session::get('msg1') != null) {
                     <div class="col-6 col-md-3">
                         <img src="https://via.placeholder.com/300x200" class="img-fluid rounded" alt="Study room">
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Location -->
                 <h4 class="mb-3">Location</h4>

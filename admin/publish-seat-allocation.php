@@ -104,7 +104,7 @@ $appIds  = $shortlist['appIds'];
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>All Applications</title>
+    <title>MM Hall</title>
 
     <!-- Bootstrap 5 CSS & DataTables CSS -->
     <link

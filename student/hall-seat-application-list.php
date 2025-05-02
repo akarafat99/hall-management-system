@@ -111,7 +111,6 @@ $statusMap = [
                                             <button type="submit" class="btn btn-outline-info">View Submitted Profile</button>
                                         </form>
                                         </p>
-                                        <p><strong>Serial No:</strong> <?php echo $hallSeatApplication->serial_no ?: 'Not Assigned'; ?></p>
                                         <p><strong>Viva Date:</strong> <?php echo $hallSeatApplication->viva_date ? $hallSeatApplication->viva_date : 'Not Assigned'; ?></p>
                                         <p><strong>Allotted Seat ID:</strong> <?php echo $hallSeatApplication->allotted_seat_id ?: 'Not Allotted'; ?></p>
                                         <p><strong>Seat Confirm Date:</strong> <?php echo $hallSeatApplication->seat_confirm_date ? $hallSeatApplication->seat_confirm_date : 'Not Confirmed'; ?></p>

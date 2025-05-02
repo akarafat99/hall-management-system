@@ -36,7 +36,7 @@ $statusMeanings = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap Accordion Sample</title>
+    <title>MM Hall</title>
 
     <!-- For navbar -->
     <!-- Bootstrap CSS -->

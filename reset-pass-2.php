@@ -4,6 +4,8 @@ $session = SessionStatic::class;
 
 include_once 'class-file/EmailSender.php';
 
+include_once 'class-file/User.php';
+
 if ($session::get('user') != null) {
     echo '<script type="text/javascript">
             window.location.href = "index.php";
@@ -20,6 +22,8 @@ if ($session::get('step') != 2) {
 
 if ($session::get('step') == 2) {
 }
+
+echo "<script>console.log('OTP: " . $session::get('otp') . "');</script>";
 
 if (isset($_POST['register_2'])) {
     $otp = $session::get('otp');
@@ -42,6 +46,13 @@ if (isset($_POST['resendotp']) && $session::get('step') == 2) {
     // Generate a new OTP.
     $otp = rand(1000, 9999);
     $session::set('otp', $otp);
+
+    $sUser = $session::getObject('tempUserObj');
+    $user = new User();
+    $session::copyProperties($sUser, $user);
+
+    echo "<script>console.log('OTP: $otp');</script>";
+
     $emailSender = new EmailSender();
     $emailSender->sendMail($user->email, 'Password Reset OTP #' . $otp, "Dear User, <br><br>Your OTP is: <b>$otp</b><br><br>Thank you. <br>JUST MM Hall");
 }
@@ -63,7 +74,7 @@ if (isset($_POST['resendotp']) && $session::get('step') == 2) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
 
-    <title>JUST Hall</title>
+    <title>MM Hall</title>
 
 
 </head>
@@ -97,7 +108,6 @@ if (isset($_POST['resendotp']) && $session::get('step') == 2) {
                                     <div class="mb-3">
                                         <label for="otp" class="form-label">
                                             OTP
-                                            <span class="fw-bold"><?php echo $session::get('otp'); ?></span>
                                         </label>
                                         <input
                                             type="text"

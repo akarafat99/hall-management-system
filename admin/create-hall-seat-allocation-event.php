@@ -166,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         rows="3"
                                         type="text"
                                         placeholder="Enter event details"
-                                        value = "<?php echo $isEdit ? htmlspecialchars($hallSeatAllocationEvent->details) : ''; ?>"
+                                        value="<?php echo $isEdit ? htmlspecialchars($hallSeatAllocationEvent->details) : ''; ?>"
                                         required>
                                     <div class="invalid-feedback">Please provide event details.</div>
                                 </div>
@@ -230,13 +230,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
                                 <!-- Three Cofactor Inputs for the scoring -->
+                                <!-- Three Cofactor Inputs for the scoring -->
                                 <div class="mb-4 p-3 border rounded bg-light shadow-sm">
                                     <label class="form-label fw-semibold fs-5">Scoring Factors</label>
-                                    <div class="form-text text-muted">
+                                    <div class="form-text text-muted mb-3">
                                         These factors are used to calculate applicant scores based on distance, academic result, and father's income.
                                         You can input values up to <strong>5 decimal places</strong> (e.g., <code>0.12345</code>).
                                     </div>
+
+                                    <!-- Always‐visible example panel -->
+                                    <div class="card card-body bg-white border">
+                                        <strong>Example:</strong>
+                                        <ul class="mt-2 mb-2">
+                                            <li><strong>Distance</strong>: 12 km</li>
+                                            <li><strong>CGPA</strong>: 3.90</li>
+                                            <li><strong>Father’s Monthly Income</strong>: 18,000 Tk</li>
+                                            <li><strong>Semester Code</strong>: 3 (Spring 2024)</li>
+                                        </ul>
+                                        <strong>Chosen Cofactors:</strong>
+                                        <ul class="mb-2">
+                                            <li>Distance factor: <code>0.10</code></li>
+                                            <li>Result factor: <code>0.50</code></li>
+                                            <li>Income factor: <code>0.0001</code></li>
+                                        </ul>
+                                        <p class="mb-0">
+                                            → <em>Score</em> =
+                                            <code>0.10×12 + 0.50×3.90 + 0.0001×18,000 = 1.20 + 1.95 + 1.80 = <strong>4.95</strong></code>
+                                        </p>
+                                    </div>
                                 </div>
+
 
 
                                 <div class="row mb-4">
@@ -299,11 +322,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $renderSemesterKeys = array_merge($savedSemesters, $remainingSemesters);
                                 ?>
                                 <!-- Semester Priority -->
+                                <!-- Separate Info Box -->
+
                                 <div class="mb-4">
                                     <label class="form-label fw-semibold">Semester Priority</label>
                                     <div class="form-text mb-1">
                                         Press and hold <i class="fas fa-grip-lines"></i> to reorder.
                                     </div>
+                                    <div class="mb-3 p-3 border rounded bg-light">
+                                        <i class="fas fa-info-circle text-info me-2"></i>
+                                        <span class="small text-muted">
+                                            Drag each semester into the order you want seats allocated.
+                                            The semester at the top of the list will have its students assigned seats first,
+                                            then the next one, and so on.
+                                            For example, if you put “3rd Year” above “2nd Year,”
+                                            all eligible 3rd-year students will get seats before any 2nd-year students.
+                                        </span>
+                                    </div>
+
                                     <ul id="semesterList" class="list-group mb-2">
                                         <?php foreach ($renderSemesterKeys as $key): ?>
                                             <li class="list-group-item d-flex align-items-center" data-value="<?php echo $key; ?>">

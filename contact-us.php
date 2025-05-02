@@ -79,8 +79,8 @@ if ($session::get('msg1') != null) {
             <i class="fas fa-envelope me-2"></i>Email
           </h5>
           <p>
-            <a href="mailto:mmhal@just.edu.bd" class="text-decoration-none">
-              mmhal@just.edu.bd
+            <a href="mailto:mmhall@just.edu.bd" class="text-decoration-none">
+              mmhall@just.edu.bd
             </a>
           </p>
 

@@ -75,7 +75,7 @@ if (isset($_POST['resetPassword'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
 
-    <title>JUST Hall</title>
+    <title>MM Hall</title>
 
 
 </head>
@@ -91,7 +91,7 @@ if (isset($_POST['resetPassword'])) {
                     <div class="col-md-6">
                         <div class="card shadow-sm">
                             <div class="card-header text-center">
-                                <h4 class="mb-0">Verify Email</h4>
+                                <h4 class="mb-0">Reset Password</h4>
                             </div>
                             <div class="card-body">
                                 <p class="text-center mb-4">Enter New Password</p>

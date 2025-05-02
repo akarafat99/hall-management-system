@@ -25,7 +25,7 @@ if (isset($_POST['register_1'])) {
     $user->email    = $_POST['email'];
 
     // checking for status 0, 1, 2, -1
-    if ($user->isEmailAvailable($user->email, [0, 1, -1, 2], null)) {
+    if ($user->isEmailAvailable($user->email, [0, 1, -1, 2], "admin")) {
         $session::storeObject('tempAdminObj', $user);
         $session::set('step', 2);
         $otp = rand(1000, 9999);
@@ -33,8 +33,19 @@ if (isset($_POST['register_1'])) {
         $emailSender = new EmailSender();
         $emailSender->sendMail($user->email, 'Password Reset OTP #' . $otp, "Dear User, <br><br>Your OTP is: <b>$otp</b><br><br>Thank you. <br>JUST MM Hall");
         echo "<script>window.location.href='reset-pass-2.php';</script>";
-    } else {
-        showPopup("No email found. Please try again.");
+    } else if ($user->isEmailAvailable($user->email, [0, 1, -1, 2], "super-admin")) {
+        $session::storeObject('tempAdminObj', $user);
+        $session::set('step', 2);
+        $otp = rand(1000, 9999);
+        $session::set('otp', $otp);
+        $emailSender = new EmailSender();
+        $emailSender->sendMail($user->email, 'Password Reset OTP #' . $otp, "Dear User, <br><br>Your OTP is: <b>$otp</b><br><br>Thank you. <br>JUST MM Hall");
+        echo "<script>window.location.href='reset-pass-2.php';</script>";
+    }
+    else {
+        $session::set('msg1', 'Email not found. Please try again.');
+        echo "<script>window.location.href='reset-pass-1.php';</script>";
+        exit;
     }
 }
 ?>
@@ -44,7 +55,7 @@ if (isset($_POST['register_1'])) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>JUST Hall – Registration Step 1</title>
+    <title>MM Hall</title>
     <!-- Only Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>

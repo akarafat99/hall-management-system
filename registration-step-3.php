@@ -81,7 +81,7 @@ if (isset($_POST['register'])) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>JUST Hall ‑ Registration</title>
+    <title>MM Hall ‑ Registration</title>
 
     <!-- Google Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css?family=Muli:300,400,700,900" rel="stylesheet">
@@ -161,11 +161,26 @@ if (isset($_POST['register'])) {
                         <h5 class="fw-semibold mb-4">Personal Information</h5>
 
                         <div class="row">
-                            <div class="col-12 col-md-6 mb-3">
+                            <div class="col-12 col-md-12 mb-3">
                                 <label for="profilePhoto" class="form-label fw-semibold">Profile Photo</label>
                                 <input class="form-control" type="file" id="profilePhoto" name="profilePhoto" accept="image/*" required>
                             </div>
-                            <div class="col-12 col-md-6 mb-3">
+
+                            <div class="col-12 mb-3">
+                                <div class="p-3 border rounded bg-light">
+                                    <i class="fas fa-info-circle text-info me-2"></i>
+                                    <span class="small text-muted">
+                                        Please combine the following into a <strong>single PDF</strong> before uploading:
+                                        <ul class="mb-0 ps-3">
+                                            <li>Nationality certificate</li>
+                                            <li>Student ID card</li>
+                                            <li>Father’s monthly income certificate</li>
+                                            <li>Last semester result or admission rank certificate</li>
+                                        </ul>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-12 mb-3">
                                 <label for="formFile" class="form-label fw-semibold">Document (scanned copy)</label>
                                 <input class="form-control" type="file" id="formFile" name="formFile" required>
                             </div>
@@ -386,7 +401,7 @@ if (isset($_POST['register'])) {
 
 
 
-    
+
 </body>
 
 </html>
