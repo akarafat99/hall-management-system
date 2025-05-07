@@ -1,5 +1,6 @@
 <?php
-class DatabaseConnector {
+class DatabaseConnector
+{
     public $servername;
     public $username;
     public $password;
@@ -7,7 +8,8 @@ class DatabaseConnector {
     public $connection;
     public $error;
 
-    public function __construct($servername = 'localhost', $username = 'root', $password = '', $dbname = 'justhall') {
+    public function __construct($servername = 'localhost', $username = 'root', $password = '', $dbname = 'justhall')
+    {
         $this->servername = $servername;
         $this->username = $username;
         $this->password = $password;
@@ -19,7 +21,8 @@ class DatabaseConnector {
     /**
      * Create the database if it does not exist
      */
-    public function createDatabase() {
+    public function createDatabase()
+    {
         $conn = new mysqli($this->servername, $this->username, $this->password);
         if ($conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
@@ -37,7 +40,8 @@ class DatabaseConnector {
      * Establish database connection
      * @return bool Returns true on success, false on failure
      */
-    public function connect() {
+    public function connect()
+    {
         $this->connection = mysqli_connect(
             $this->servername,
             $this->username,
@@ -56,7 +60,8 @@ class DatabaseConnector {
     /**
      * Close database connection
      */
-    public function disconnect() {
+    public function disconnect()
+    {
         if ($this->connection) {
             mysqli_close($this->connection);
             $this->connection = null;
@@ -67,8 +72,8 @@ class DatabaseConnector {
      * Get the database connection object
      * @return mysqli|null Returns the connection resource or null
      */
-    public function getConnection() {
+    public function getConnection()
+    {
         return $this->connection;
     }
 }
-?>
